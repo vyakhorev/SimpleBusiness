@@ -1,0 +1,17 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>icons/mail.png</file>
+    <file>icons/to_pdf.png</file>
+    <file>icons/table.png</file>
+    <file>icons/redo.png</file>
+    <file>icons/undo.png</file>
+    <file>icons/font-color.png</file>
+    <file>icons/highlight.png</file>
+    <file>icons/print.png</file>
+    <file>icons/italic.png</file>
+    <file>icons/underline.png</file>
+    <file>icons/bold.png</file>
+    <file>icons/number.png</file>
+    <file>icons/bullet.png</file>
+  </qresource>
+</RCC>
