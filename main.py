@@ -7,7 +7,7 @@ Created on Wed Mar 20 10:12:03 2013
 """
 
 if __name__ == "__main__":
-    from main_gui import *
+    from main_gui_modern import *
     import simple_locale
     reload(sys)
     sys.setdefaultencoding(simple_locale.ultimate_encoding)

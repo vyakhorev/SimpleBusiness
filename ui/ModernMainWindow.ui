@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindowModern</class>
+ <widget class="QMainWindow" name="MainWindowModern">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1352</width>
+    <height>875</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Simple Business </string>
+  </property>
+  <property name="documentMode">
+   <bool>false</bool>
+  </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout_16">
+    <item>
+     <widget class="QTabWidget" name="Global_tabs">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="tabPosition">
+       <enum>QTabWidget::North</enum>
+      </property>
+      <property name="tabShape">
+       <enum>QTabWidget::Rounded</enum>
+      </property>
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <property name="documentMode">
+       <bool>false</bool>
+      </property>
+      <widget class="QWidget" name="tab_Clients">
+       <attribute name="title">
+        <string>Клиенты и поставщики</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="QLineEdit" name="lineEdit_ClientFilter"/>
+          </item>
+          <item>
+           <widget class="QListView" name="listView_ClientList"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QPushButton" name="pushButton_DeleteClient">
+              <property name="text">
+               <string>- Удалить</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_NewClient">
+              <property name="text">
+               <string>+ Новый</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_TheClientScroll" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>400</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="baseSize">
+           <size>
+            <width>400</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_KnBase">
+       <attribute name="title">
+        <string>База знаний</string>
+       </attribute>
+       <widget class="QLineEdit" name="lineEdit_KnBase_Search">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>551</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton">
+        <property name="geometry">
+         <rect>
+          <x>580</x>
+          <y>10</y>
+          <width>75</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>PushButton</string>
+        </property>
+       </widget>
+       <widget class="QWidget" name="widget" native="true">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>90</y>
+          <width>1311</width>
+          <height>691</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_KnBaseEmptyNote">
+        <property name="geometry">
+         <rect>
+          <x>700</x>
+          <y>10</y>
+          <width>621</width>
+          <height>41</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>+ Новая заметка</string>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1352</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="AdminMenu">
+    <property name="title">
+     <string>Администрирование</string>
+    </property>
+    <addaction name="action_Run_Simulate"/>
+    <addaction name="action_Synhronize_xm_with_db"/>
+    <addaction name="action_upload_budget_csv"/>
+   </widget>
+   <widget class="QMenu" name="FastAddMenu">
+    <property name="acceptDrops">
+     <bool>true</bool>
+    </property>
+    <property name="title">
+     <string>Добавить</string>
+    </property>
+    <addaction name="action_AddFastNote"/>
+    <addaction name="separator"/>
+    <addaction name="action_AddNewContact"/>
+    <addaction name="action_AddNewCP"/>
+   </widget>
+   <addaction name="FastAddMenu"/>
+   <addaction name="AdminMenu"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_Run_Simulate">
+   <property name="text">
+    <string>Запуск симуляции</string>
+   </property>
+  </action>
+  <action name="action_Synhronize_xm_with_db">
+   <property name="text">
+    <string>Загрузить из 1С</string>
+   </property>
+  </action>
+  <action name="action_upload_budget_csv">
+   <property name="text">
+    <string>Выгрузить в 1С</string>
+   </property>
+  </action>
+  <action name="action_2">
+   <property name="text">
+    <string>#ЗапросТовара</string>
+   </property>
+  </action>
+  <action name="action_3">
+   <property name="text">
+    <string>#Бюджет</string>
+   </property>
+  </action>
+  <action name="action_4">
+   <property name="text">
+    <string>#Офер</string>
+   </property>
+  </action>
+  <action name="action_5">
+   <property name="text">
+    <string>#Прайс</string>
+   </property>
+  </action>
+  <action name="action_6">
+   <property name="text">
+    <string>#Беседа</string>
+   </property>
+  </action>
+  <action name="action_fast_NewContact">
+   <property name="text">
+    <string>Новый контакт</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>Заметка</string>
+   </property>
+  </action>
+  <action name="action_AddFastNote">
+   <property name="text">
+    <string>+ Быстрая заметка</string>
+   </property>
+  </action>
+  <action name="action_AddNewContact">
+   <property name="text">
+    <string>+ Контакт</string>
+   </property>
+  </action>
+  <action name="action_7">
+   <property name="text">
+    <string>+ Клиент</string>
+   </property>
+  </action>
+  <action name="action_8">
+   <property name="text">
+    <string>+ Поставщик</string>
+   </property>
+  </action>
+  <action name="action_AddNewCP">
+   <property name="text">
+    <string>+ Контрагент</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
