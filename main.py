@@ -6,6 +6,8 @@ Created on Wed Mar 20 10:12:03 2013
 @author: Vyakhorev, Dozdikov
 """
 
+import sys
+
 if __name__ == "__main__":
     from main_gui_modern import *
     import simple_locale

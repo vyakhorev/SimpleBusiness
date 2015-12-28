@@ -2193,6 +2193,13 @@ class c_material_price(BASE, abst_key, connected_to_DEVS):
     is_foreign_ccy = Column(Boolean)
     nonformal_conditions = Column(UnicodeText)
 
+    def __repr__(self):
+        if self.is_for_group:
+            return unicode(str(self.material_type)+"@"+str(self.price_value))
+        else:
+            return unicode(str(self.material)+"@"+str(self.price_value))
+
+
 class c_sell_price(c_material_price):
     __tablename__ = 'sell_prices'
     __mapper_args__ = {'polymorphic_identity': 'sell_price'}
