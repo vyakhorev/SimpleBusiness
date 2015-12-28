@@ -362,6 +362,9 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
     stats_std_volume = Column(SqliteNumeric)  #Отклонение объёма заказа
     stats_last_order_date = Column(DateTime)  #Последний заказ
 
+    def __repr__(self):
+        return self.log_repr()
+
     def log_repr(self):
         return "flow " + unicode(self.material_type) + " -> " + unicode(self.client_model)
 

@@ -20,7 +20,7 @@ from ui.ui_ModernMainWindow import Ui_MainWindowModern
 
 # Import custom gui logic
 from gui_forms_logic.data_models import cDataModel_CounterpartyList
-from gui_forms_logic.record_mediators import cMedSellPrice
+from gui_forms_logic.record_mediators import cMedPrice, cMedMatFlow
 
 # from c_planner import c_planner
 
@@ -81,7 +81,7 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
                 print(f_i)
             for g_i in pr_widg.iter_button_calls():
                 print(g_i)
-                g_i.do_call()  # может, вызов перегрузить?..
+                g_i()  # вот так просто вызывать
 
 
     def _iter_cp_mediator(self, cp):
@@ -93,15 +93,20 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         Returns: лист медиаторов разного рода для записей, связанных с контрагентом
         '''
         for pr_i in db_main.get_prices_list(cp):
-            print("creating a mediator")
-            new_med = cMedSellPrice(self, pr_i)
+            new_med = cMedPrice(self, pr_i)
             new_med.add_call("dlg_edit_price", u"Редактировать", pr_i)
+            yield new_med
+
+        for mf_i in db_main.get_mat_flows_list(cp):
+            new_med = cMedMatFlow(self, mf_i)
+            new_med.add_call("dlg_edit_matflow", u'Редактировать', mf_i)
             yield new_med
 
     def dlg_edit_price(self, price_instance):
         print("editing " + str(price_instance))
 
-
+    def dlg_edit_matflow(self, matflow_instance):
+        print("editing " + str(matflow_instance))
 
 
 
