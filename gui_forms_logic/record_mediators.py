@@ -10,7 +10,12 @@
 import db_main
 import collections
 
-class cAbstMediator(object):
+
+############
+# Basic
+############
+
+class cSimpleMediator(object):
     def __init__(self, parent_window):
         '''
         Args:
@@ -20,8 +25,15 @@ class cAbstMediator(object):
         self.button_calls: отложенные вызовы (их можно потом вызвать)
         '''
         self.parent_window = parent_window
+        self.label = ""
         self.fields = collections.OrderedDict()
         self.button_calls = collections.OrderedDict()
+
+    def set_label(self, label):
+        self.label = label
+
+    def add_field(self, field_value, field_name, field_repr, field_type=""):
+        self.fields[field_name] = cField(field_value, field_name, field_repr, field_type)
 
     def add_call(self, method_name, label_name, *args, **kwargs):
         '''
@@ -55,8 +67,7 @@ class cAbstMediator(object):
         for g_i in self.button_calls.itervalues():
             yield g_i
 
-
-class cAbstRecordMediator(cAbstMediator):
+class cAbstRecordMediator(cSimpleMediator):
     def __init__(self, parent_window, record=None):
         '''
         Args:
@@ -79,33 +90,33 @@ class cAbstRecordMediator(cAbstMediator):
         if self.record is None:
             raise BaseException("Unable to use _reset_fields() with no active record!")
 
+############
+# Records
+############
 
 class cMedPrice(cAbstRecordMediator):
-    # Maybe we need something more specific for sell and buy price
-    rec_type = "Price"
-
     def _reset_fields(self):
         super(cMedPrice, self)._reset_fields()
-        self.fields['price_value'] = cField(self.record.price_value, 'Price', u'Цена', 'float')
+        self.add_field(self.record.price_value, 'price_value', u'Цена', 'float')
         if self.record.is_for_group:
             item_name = unicode(self.record.material_type)
         else:
             item_name = unicode(self.record.material)
-        self.fields['item_name'] = cField(item_name, 'item_name', u'Товар', 'string')
+        self.add_field(item_name, 'item_name', u'Товар', 'string')
 
 class cMedMatFlow(cAbstRecordMediator):
-    rec_type = "MaterialFlow"
-
     def _reset_fields(self):
         '''
         Заполняет поля по объекту (перетирает, если уже что-то было)
         '''
         super(cMedMatFlow, self)._reset_fields()
-        self.fields['material_type'] = cField(self.record.material_type, 'material_type', u'Товар', 'string')
-        self.fields['stats_mean_volume'] =\
-            cField(self.record.stats_mean_volume, 'stats_mean_volume', u'Объем потребления', 'float')
-        self.fields['stats_mean_timedelta'] =\
-            cField(self.record.stats_mean_timedelta, 'stats_mean_timedelta', u'Частота потребления', 'float')
+        self.add_field(self.record.material_type, 'material_type', u'Товар', 'string')
+        self.add_field(self.record.stats_mean_volume, 'stats_mean_volume', u'Объем потребления', 'float')
+        self.add_field(self.record.stats_mean_timedelta, 'stats_mean_timedelta', u'Частота потребления', 'float')
+
+############
+# Interface
+############
 
 class cField(object):
     def __init__(self, field_value, field_name, field_repr, field_type=""):
@@ -120,7 +131,6 @@ class cField(object):
 
     def __repr__(self):
         return "field: " + self.field_name + " = " + str(self.field_value)
-
 
 class cCall(object):
     '''
@@ -139,6 +149,9 @@ class cCall(object):
     def __call__(self, *args, **kwargs):
         # А зафиг мне тут арги и кварги?
         self.do_call()
+
+    def get_call_label(self):
+        return self.label_name
 
     def do_call(self):
         getattr(self.instance, self.method_name)(*self.args, **self.kwargs)

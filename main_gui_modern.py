@@ -20,7 +20,7 @@ from ui.ui_ModernMainWindow import Ui_MainWindowModern
 
 # Import custom gui logic
 from gui_forms_logic.data_models import cDataModel_CounterpartyList
-from gui_forms_logic.record_mediators import cMedPrice, cMedMatFlow
+from gui_forms_logic.record_mediators import cMedPrice, cMedMatFlow, cSimpleMediator
 
 # from c_planner import c_planner
 
@@ -33,18 +33,18 @@ import gl_shared
 
 # import threading
 
-unicode_codec = QtCore.QTextCodec.codecForName(simple_locale.ultimate_encoding)
-
-cnf = gl_shared.ConfigParser.ConfigParser()
-
-cnf.read('.\__secret\main.ini')
-user_name = unicode(cnf.get("UserConfig","UserName").decode("cp1251"))
-is_user_admin = unicode(cnf.getboolean("UserConfig","IsAdmin"))
-user_email = cnf.get("UserConfig","PersonalEmail").decode("cp1251")
-user_group_email = cnf.get("UserConfig","GroupEmail").decode("cp1251")
-cnf = None
-
-TabNums = {"CPs":0, "KnBase":1}
+# unicode_codec = QtCore.QTextCodec.codecForName(simple_locale.ultimate_encoding)
+#
+# cnf = gl_shared.ConfigParser.ConfigParser()
+#
+# cnf.read('.\__secret\main.ini')
+# user_name = unicode(cnf.get("UserConfig","UserName").decode("cp1251"))
+# is_user_admin = unicode(cnf.getboolean("UserConfig","IsAdmin"))
+# user_email = cnf.get("UserConfig","PersonalEmail").decode("cp1251")
+# user_group_email = cnf.get("UserConfig","GroupEmail").decode("cp1251")
+# cnf = None
+#
+# TabNums = {"CPs":0, "KnBase":1}
 
 class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
 
@@ -75,38 +75,55 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         cp_i = index_to.data(35).toPyObject()
         if cp_i is None:
             return
-        print(cp_i)
-        for pr_widg in self._iter_cp_mediator(cp_i):
-            for f_i in pr_widg.iter_fields():
+        for med_i in self._iter_cp_mediator(cp_i):
+            # Идём по очереди по представителям данных
+            for f_i in med_i.iter_fields():
                 print(f_i)
-            for g_i in pr_widg.iter_button_calls():
+            for g_i in med_i.iter_button_calls():
                 print(g_i)
                 g_i()  # вот так просто вызывать
-
 
     def _iter_cp_mediator(self, cp):
         '''
         Передаем сюда любого контрагента, получаем в ответ список связанных записей (медиаторов).
-        Их можно потом построить при помощи Frame.
+        Их можно потом построить при помощи Frame. Фактически, тут к записи привязываются вызовы
+        и поля, которые можно потом аккуратно вывести и на gui автоматом.
         Args:
             cp: Контрагент
         Returns: лист медиаторов разного рода для записей, связанных с контрагентом
         '''
+
+        # Цены (как покупателю, так и от поставщика)
+        price_header = cSimpleMediator(self)
+        price_header.set_label(u'Цены')
         for pr_i in db_main.get_prices_list(cp):
             new_med = cMedPrice(self, pr_i)
-            new_med.add_call("dlg_edit_price", u"Редактировать", pr_i)
+            new_med.add_call('dlg_edit_price', u'Редактировать', pr_i)
+            new_med.add_call('dlg_delete_price', u'Удалить', pr_i)
             yield new_med
 
-        for mf_i in db_main.get_mat_flows_list(cp):
-            new_med = cMedMatFlow(self, mf_i)
-            new_med.add_call("dlg_edit_matflow", u'Редактировать', mf_i)
-            yield new_med
+        # Список линий покупки
+        if cp.discriminator == 'client':
+            price_header = cSimpleMediator(self)
+            price_header.set_label(u'Снабжение')
+            for mf_i in db_main.get_mat_flows_list(cp):
+                new_med = cMedMatFlow(self, mf_i)
+                new_med.add_call('dlg_edit_matflow', u'Редактировать', mf_i)
+                new_med.add_call('dlg_delete_matflow', u'Удалить', mf_i)
+                yield new_med
+
 
     def dlg_edit_price(self, price_instance):
         print("editing " + str(price_instance))
 
+    def dlg_delete_price(self, price_instance):
+        print("deleting " + str(price_instance))
+
     def dlg_edit_matflow(self, matflow_instance):
         print("editing " + str(matflow_instance))
+
+    def dlg_delete_matflow(self, matflow_instance):
+        print("deleting " + str(matflow_instance))
 
 
 
