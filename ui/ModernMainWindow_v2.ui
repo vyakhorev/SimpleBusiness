@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1352</width>
-    <height>875</height>
+    <width>1262</width>
+    <height>822</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,7 +36,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -73,22 +73,6 @@
            </layout>
           </item>
          </layout>
-        </item>
-        <item>
-         <widget class="QWidget" name="widget_TheClientScroll" native="true">
-          <property name="minimumSize">
-           <size>
-            <width>400</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="baseSize">
-           <size>
-            <width>400</width>
-            <height>0</height>
-           </size>
-          </property>
-         </widget>
         </item>
        </layout>
       </widget>
@@ -152,7 +136,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1352</width>
+     <width>1262</width>
      <height>21</height>
     </rect>
    </property>

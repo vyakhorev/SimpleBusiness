@@ -123,9 +123,9 @@ class cMedMatFlow(cAbstRecordMediator):
         self.add_field(self.record.stats_mean_timedelta, 'stats_mean_timedelta', u'Частота потребления', 'float')
 
     def _build_HTML(self):
-        s = u"Распределение <b>вероятностей</b>:\n"
-        for md_i in self.record:
-            s += md_i.material.material_name + u" : " + unicode(md_i.material.choice_prob)
+        s = u'Распределение <b>вероятностей</b>:<br>'
+        for md_i in self.record.material_dist:
+            s += md_i.material.material_name + u' : ' + unicode(md_i.choice_prob) + '<br>'
         self.html_text = s
 
     def get_HTML(self):

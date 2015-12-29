@@ -6,7 +6,7 @@ from PyQt4 import QtCore, QtGui
 # import convert
 import simple_locale
 
-from ui.ui_ModernMainWindow import Ui_MainWindowModern
+from ui.ui_ModernMainWindow_v2 import Ui_MainWindowModern
 # from ui.ui_Dialog_EditPrice import *
 # from ui.ui_Dialog_EditMatFlow import *
 # from ui.ui_DialogCrm_EditSimpleRecord import *
@@ -21,6 +21,7 @@ from ui.ui_ModernMainWindow import Ui_MainWindowModern
 # Import custom gui logic
 from gui_forms_logic.data_models import cDataModel_CounterpartyList
 from gui_forms_logic.record_mediators import cMedPrice, cMedMatFlow, cSimpleMediator
+from gui_forms_logic.frame_builder import LabelFrame, RecFrame
 
 # from c_planner import c_planner
 
@@ -89,6 +90,7 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         self.listView_ClientList.selectionModel().currentChanged.connect(self.click_on_CP)
 
         # Right-side logic
+        self.mediators_frame_list = []
 
         # Placing QScrollArea
         self.scroll_area = QtGui.QScrollArea()
@@ -99,22 +101,48 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         self.scr_bar = QtGui.QScrollBar()
         self.scroll_area.setVerticalScrollBar(self.scr_bar)
         # put QScrollArea in main window
-        self.widget_TheClientScroll.addWidget(self.scroll_area)
+        self.horizontalLayout_2.addWidget(self.scroll_area)
+
+        # inserting vertical layout at right
+        self.mediators_list_layout = QtGui.QVBoxLayout()
+        self.Base_widget = QtGui.QWidget()
+        self.Base_widget.setLayout(self.mediators_list_layout)
+        # setting Widget for QScrollArea
+        self.scroll_area.setWidget(self.Base_widget)
+
+        # (((o))) connect signals to methods
+        # TODO implement scroll event
+        # self.scr_bar.valueChanged.connect(self.scrolled)
 
 
     def click_on_CP(self, index_to, index_from):
         cp_i = index_to.data(35).toPyObject()
         if cp_i is None:
             return
+
+        #
+        # while True:
+        #     try:
+        #         iterator = self._iter_cp_mediator(cp_i)
+        #         print(iterator.next().label)
+        #     except StopIteration:
+        #         break
+
         for med_i in self._iter_cp_mediator(cp_i):
             # Идём по очереди по представителям данных
-            print(med_i.label)
-            print(med_i.get_HTML())
-            for f_i in med_i.iter_fields():
-                print(f_i.field_repr + " : " + str(f_i.field_value))
-            for g_i in med_i.iter_button_calls():
-                print(g_i.field_repr + " : " + str(g_i.field_value))
-                g_i()  # вот так просто вызывать
+            self.make_frame_from_mediator(med_i)
+            # print unicode(med_i.label) + ' id : ' + str(id(med_i))
+
+
+
+            # print(med_i.label)
+            # print(med_i.get_HTML())
+            # for f_i in med_i.iter_fields():
+            #     print(f_i.field_repr + " : " + str(f_i.field_value))
+            # for g_i in med_i.iter_button_calls():
+            #     print(g_i.field_repr + " : " + str(g_i.field_value))
+            #     g_i()  # вот так просто вызывать
+            #
 
     def _iter_cp_mediator(self, cp):
         '''
@@ -143,14 +171,12 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
             header.set_label(u'Потоки снабжения')
             header.add_call('dlg_add_matflow', u'Добавить линию снабжения')
             yield header
-            price_header = cSimpleMediator(self)
-            price_header.set_label(u'Снабжение')
             for mf_i in db_main.get_mat_flows_list(cp):
+                print(mf_i)
                 new_med = cMedMatFlow(self, mf_i)
                 new_med.add_call('dlg_edit_matflow', u'Редактировать', mf_i)
                 new_med.add_call('dlg_delete_matflow', u'Удалить', mf_i)
                 yield new_med
-
 
     def dlg_add_price(self):
         print("adding new price ")
@@ -170,7 +196,21 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
     def dlg_delete_matflow(self, matflow_instance):
         print("deleting " + str(matflow_instance))
 
+    def make_frame_from_mediator(self, mediator):
+        """
+            Automatically building gui for each mediator
+        :param mediator: incoming mediator class instance
+        :return: None
+        """
 
+        if mediator.label != '':
+            new_frame = LabelFrame(mediator, self)
+            self.mediators_frame_list.append(new_frame)
+            self.mediators_list_layout.addWidget(new_frame)
+
+        new_frame_2 = RecFrame(mediator, self)
+        self.mediators_frame_list.append(new_frame_2)
+        self.mediators_list_layout.addWidget(new_frame_2)
 
 
 
