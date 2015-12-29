@@ -114,35 +114,13 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         # TODO implement scroll event
         # self.scr_bar.valueChanged.connect(self.scrolled)
 
-
     def click_on_CP(self, index_to, index_from):
         cp_i = index_to.data(35).toPyObject()
         if cp_i is None:
             return
-
-        #
-        # while True:
-        #     try:
-        #         iterator = self._iter_cp_mediator(cp_i)
-        #         print(iterator.next().label)
-        #     except StopIteration:
-        #         break
-
         for med_i in self._iter_cp_mediator(cp_i):
             # Идём по очереди по представителям данных
             self.make_frame_from_mediator(med_i)
-            # print unicode(med_i.label) + ' id : ' + str(id(med_i))
-
-
-
-            # print(med_i.label)
-            # print(med_i.get_HTML())
-            # for f_i in med_i.iter_fields():
-            #     print(f_i.field_repr + " : " + str(f_i.field_value))
-            # for g_i in med_i.iter_button_calls():
-            #     print(g_i.field_repr + " : " + str(g_i.field_value))
-            #     g_i()  # вот так просто вызывать
-            #
 
     def _iter_cp_mediator(self, cp):
         '''
