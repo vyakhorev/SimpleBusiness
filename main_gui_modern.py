@@ -46,12 +46,30 @@ import gl_shared
 #
 # TabNums = {"CPs":0, "KnBase":1}
 
+# Constants #
+# ----------#
+# Turning on/off styles
+STYLES = False
+STYLE_URL = None
+# How many lines to load first time
+RECORDS_NUM = 4
+
 class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
 
     def __init__(self, app, parent=None):
         super(gui_MainWindow, self).__init__(parent)
         self.app = app
         self.setupUi(self)
+
+
+        # Loading stylesheets
+        if STYLES:
+                style_sheet_src = QtCore.QFile('C:\Ilua\qt4_rnd\ui\Stylesheets\scheme.qss')
+                style_sheet_src.open(QtCore.QIODevice.ReadOnly)
+                if style_sheet_src.isOpen():
+                    self.setStyleSheet(QtCore.QVariant(style_sheet_src.readAll()).toString())
+                style_sheet_src.close()
+
 
         ############
         # Counterparty tab
@@ -70,6 +88,19 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
 
         self.listView_ClientList.selectionModel().currentChanged.connect(self.click_on_CP)
 
+        # Right-side logic
+
+        # Placing QScrollArea
+        self.scroll_area = QtGui.QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        # adding Scrollbar to QScrollArea
+        self.scr_bar = QtGui.QScrollBar()
+        self.scroll_area.setVerticalScrollBar(self.scr_bar)
+        # put QScrollArea in main window
+        self.widget_TheClientScroll.addWidget(self.scroll_area)
+
 
     def click_on_CP(self, index_to, index_from):
         cp_i = index_to.data(35).toPyObject()
@@ -77,10 +108,12 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
             return
         for med_i in self._iter_cp_mediator(cp_i):
             # Идём по очереди по представителям данных
+            print(med_i.label)
+            print(med_i.get_HTML())
             for f_i in med_i.iter_fields():
-                print(f_i)
+                print(f_i.field_repr + " : " + str(f_i.field_value))
             for g_i in med_i.iter_button_calls():
-                print(g_i)
+                print(g_i.field_repr + " : " + str(g_i.field_value))
                 g_i()  # вот так просто вызывать
 
     def _iter_cp_mediator(self, cp):
@@ -94,8 +127,10 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         '''
 
         # Цены (как покупателю, так и от поставщика)
-        price_header = cSimpleMediator(self)
-        price_header.set_label(u'Цены')
+        header = cSimpleMediator(self)
+        header.set_label(u'Цены')
+        header.add_call('dlg_add_price', u'Добавить цену')
+        yield header
         for pr_i in db_main.get_prices_list(cp):
             new_med = cMedPrice(self, pr_i)
             new_med.add_call('dlg_edit_price', u'Редактировать', pr_i)
@@ -104,6 +139,10 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
 
         # Список линий покупки
         if cp.discriminator == 'client':
+            header = cSimpleMediator(self)
+            header.set_label(u'Потоки снабжения')
+            header.add_call('dlg_add_matflow', u'Добавить линию снабжения')
+            yield header
             price_header = cSimpleMediator(self)
             price_header.set_label(u'Снабжение')
             for mf_i in db_main.get_mat_flows_list(cp):
@@ -113,17 +152,26 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
                 yield new_med
 
 
+    def dlg_add_price(self):
+        print("adding new price ")
+
     def dlg_edit_price(self, price_instance):
         print("editing " + str(price_instance))
 
     def dlg_delete_price(self, price_instance):
         print("deleting " + str(price_instance))
 
+    def dlg_add_matflow(self):
+        print("adding new matflow ")
+
     def dlg_edit_matflow(self, matflow_instance):
         print("editing " + str(matflow_instance))
 
     def dlg_delete_matflow(self, matflow_instance):
         print("deleting " + str(matflow_instance))
+
+
+
 
 
 

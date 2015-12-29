@@ -26,11 +26,15 @@ class cSimpleMediator(object):
         '''
         self.parent_window = parent_window
         self.label = ""
+        self.html_text = ""
         self.fields = collections.OrderedDict()
         self.button_calls = collections.OrderedDict()
 
     def set_label(self, label):
         self.label = label
+
+    def get_HTML(self):
+        return self.html_text
 
     def add_field(self, field_value, field_name, field_repr, field_type=""):
         self.fields[field_name] = cField(field_value, field_name, field_repr, field_type)
@@ -89,6 +93,10 @@ class cAbstRecordMediator(cSimpleMediator):
         '''
         if self.record is None:
             raise BaseException("Unable to use _reset_fields() with no active record!")
+        self._build_HTML()
+
+    def _build_HTML(self):
+        pass
 
 ############
 # Records
@@ -113,6 +121,15 @@ class cMedMatFlow(cAbstRecordMediator):
         self.add_field(self.record.material_type, 'material_type', u'Товар', 'string')
         self.add_field(self.record.stats_mean_volume, 'stats_mean_volume', u'Объем потребления', 'float')
         self.add_field(self.record.stats_mean_timedelta, 'stats_mean_timedelta', u'Частота потребления', 'float')
+
+    def _build_HTML(self):
+        s = u"Распределение <b>вероятностей</b>:\n"
+        for md_i in self.record:
+            s += md_i.material.material_name + u" : " + unicode(md_i.material.choice_prob)
+        self.html_text = s
+
+    def get_HTML(self):
+        return self.html_text
 
 ############
 # Interface
