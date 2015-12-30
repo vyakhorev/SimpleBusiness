@@ -180,15 +180,17 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         :param mediator: incoming mediator class instance
         :return: None
         """
+        self.scroll_area.
 
         if mediator.label != '':
             new_frame = LabelFrame(mediator, self)
             self.mediators_frame_list.append(new_frame)
             self.mediators_list_layout.addWidget(new_frame)
 
-        new_frame_2 = RecFrame(mediator, self)
-        self.mediators_frame_list.append(new_frame_2)
-        self.mediators_list_layout.addWidget(new_frame_2)
+        else:
+            new_frame_2 = RecFrame(mediator, self)
+            self.mediators_frame_list.append(new_frame_2)
+            self.mediators_list_layout.addWidget(new_frame_2)
 
 
 
