@@ -180,7 +180,7 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         :param mediator: incoming mediator class instance
         :return: None
         """
-        self.scroll_area.
+        #self.scroll_area.
 
         if mediator.label != '':
             new_frame = LabelFrame(mediator, self)
