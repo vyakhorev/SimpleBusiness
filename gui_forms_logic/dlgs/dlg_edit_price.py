@@ -37,9 +37,9 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
         self.connect(self.comboBox_material, QtCore.SIGNAL("currentIndexChanged(int)"), self.resort_clients)
         self.connect(self.checkBox_ClPrPerOrderOnly, QtCore.SIGNAL("stateChanged(int)"), self.update_only_per_order_chbox)
         self.connect(self.checkBox_ClPrIsShipmentTo, QtCore.SIGNAL("stateChanged(int)"), self.update_shipment_to_chbox)
-        self.pushButton_LimitToWeek.clicked().connect(self.set_within_week)
-        self.pushButton_LimitToMonth.clicked().connect(self.set_within_month)
-        self.pushButton_LimitToQuater.clicked().connect(self.set_within_quater)
+        self.pushButton_LimitToWeek.clicked.connect(self.set_within_week)
+        self.pushButton_LimitToMonth.clicked.connect(self.set_within_month)
+        self.pushButton_LimitToQuater.clicked.connect(self.set_within_quater)
 
     def set_state_to_add_new(self, agent_model):
         #Вызываю перед открытием

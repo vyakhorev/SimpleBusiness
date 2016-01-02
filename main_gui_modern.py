@@ -8,10 +8,13 @@ from ui.ui_ModernMainWindow_v2 import Ui_MainWindowModern
 # dialogs
 from gui_forms_logic.dlgs.dlg_edit_contact import gui_DialogCrm_EditContact
 from gui_forms_logic.dlgs.dlg_edit_price import gui_Dialog_EditPrice
+from gui_forms_logic.dlgs.dlg_edit_matflow import gui_Dialog_EditMatFlow
+from gui_forms_logic.dlgs.dlg_sales_opportunity import gui_Dialog_EditSalesOpportunity
+
 
 # Import custom gui logic
 from gui_forms_logic.data_models import cDataModel_CounterpartyList
-from gui_forms_logic.record_mediators import cMedPrice, cMedMatFlow, cMedContact, cSimpleMediator
+from gui_forms_logic.record_mediators import cMedPrice, cMedMatFlow, cMedContact, cMedSalesLead, cSimpleMediator
 from gui_forms_logic.frame_builder import LabelFrame, RecFrame
 
 
@@ -109,7 +112,7 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         self._DlgEditContact = None
         self._DlgEditSimpleRecord = None
         self._DlgEditCPdata = None
-        self._DlgEditSalesOppotunity = None
+        self._DlgEditSalesOpportunity = None
         self._DlgEditPrice = None
         self._DlgEditMatFlow = None
 
@@ -138,19 +141,21 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
 
         # Контакты
         header = cSimpleMediator(self)
+        header.set_key('Contacts')
         header.set_label(u'Контакты')
-        header.add_call('add_crm_contact', u'+Добавить')
+        header.add_call('dlg_add_crm_contact', u'+Добавить', cp)
         yield header
         for cnt_i in db_main.get_contacts_list(cp):
             new_med = cMedContact(self, cnt_i)
-            new_med.add_call('edit_crm_contact', u'Изменить', cnt_i)
-            new_med.add_call('delete_crm_contact', u'Удалить', cnt_i)
+            new_med.add_call('dlg_edit_crm_contact', u'Изменить', cnt_i)
+            new_med.add_call('dlg_delete_crm_contact', u'Удалить', cnt_i)
             yield new_med
 
         # Цены (как покупателю, так и от поставщика)
         header = cSimpleMediator(self)
+        header.set_key('Prices')
         header.set_label(u'Цены')
-        header.add_call('dlg_add_price', u'+Добавить')
+        header.add_call('dlg_add_price', u'+Добавить', cp)
         yield header
         for pr_i in db_main.get_prices_list(cp):
             new_med = cMedPrice(self, pr_i)
@@ -158,17 +163,28 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
             new_med.add_call('dlg_delete_price', u'Удалить', pr_i)
             yield new_med
 
-        # Список линий снабжения
+        # Список линий снабжения и лиды
         if cp.discriminator == 'client':
             header = cSimpleMediator(self)
+            header.set_key('MatFlows')
             header.set_label(u'Потоки снабжения')
-            header.add_call('dlg_add_matflow', u'+Добавить')
+            header.add_call('dlg_add_matflow', u'+Добавить', cp)
             yield header
             for mf_i in db_main.get_mat_flows_list(cp):
-                print(mf_i)
                 new_med = cMedMatFlow(self, mf_i)
                 new_med.add_call('dlg_edit_matflow', u'Изменить', mf_i)
                 new_med.add_call('dlg_delete_matflow', u'Удалить', mf_i)
+                yield new_med
+
+            header = cSimpleMediator(self)
+            header.set_key('SalesLeads')
+            header.set_label(u'Лиды')
+            header.add_call('dlg_add_lead', u'+Добавить', cp)
+            yield header
+            for lead_i in cp.sales_oppotunities:
+                new_med = cMedSalesLead(self, lead_i)
+                new_med.add_call('dlg_edit_lead', u'Изменить', lead_i)
+                new_med.add_call('dlg_delete_lead', u'Удалить', lead_i)
                 yield new_med
 
     def make_frame_from_mediator(self, mediator):
@@ -178,6 +194,11 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         :return: None
         """
         #self.scroll_area.
+
+        # У каждого mediator есть метод get_key() - возвращает ключ, уникальный для группы.
+        # (при желании, можно сделать уникальный глобально). Этот же ключ передаётся в
+        # handle_cp_new_record, handle_cp_delete_record, handle_cp_edit_record
+        # В этих 3х методах можно сделать обновление виджета в ScrollArea
 
         if mediator.label != '':
             new_frame = LabelFrame(mediator, self)
@@ -222,76 +243,181 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
     #     if self._DlgEditCPdata is None:
     #         self._DlgEditCPdata = gui_DialogCrm_EditCounterpartyData(self)
     #     return self._DlgEditCPdata
-    #
-    # def get_DlgEditSalesOppotunity(self):
-    #     if self._DlgEditSalesOppotunity is None:
-    #         self._DlgEditSalesOppotunity = gui_Dialog_EditSalesOppotunity(self)
-    #     return self._DlgEditSalesOppotunity
-    #
-    # def get_DlgEditPrice(self):
-    #     if self._DlgEditPrice  is None:
-    #         self._DlgEditPrice = gui_Dialog_EditPrice(self)
-    #     return self._DlgEditPrice
-    #
-    # def get_DlgEditMatFlow(self):
-    #     if self._DlgEditMatFlow  is None:
-    #         self._DlgEditMatFlow = gui_Dialog_EditMatFlow(self)
-    #     return self._DlgEditMatFlow
+
+    def get_DlgEditSalesOpportunity(self):
+        if self._DlgEditSalesOpportunity is None:
+            self._DlgEditSalesOpportunity = gui_Dialog_EditSalesOpportunity(self)
+        return self._DlgEditSalesOpportunity
+
+    def get_DlgEditPrice(self):
+        if self._DlgEditPrice  is None:
+            self._DlgEditPrice = gui_Dialog_EditPrice(self)
+        return self._DlgEditPrice
+
+    def get_DlgEditMatFlow(self):
+        if self._DlgEditMatFlow  is None:
+            self._DlgEditMatFlow = gui_Dialog_EditMatFlow(self)
+        return self._DlgEditMatFlow
 
     # КОНТАКТЫ
 
-    def add_crm_contact(self):
+    def dlg_add_crm_contact(self, agent):
+        if agent is None:
+            raise BaseException("No agent selected!")
         edit_dialog = self.get_DlgEditContact()
-        edit_dialog.set_state_to_add_new()
-        ans = edit_dialog.run_dialog()
-        if ans[0] == 1:
-            db_main.the_session_handler.add_object_to_session(ans[1])
+        edit_dialog.set_state_to_add_new(agent)
+        is_ok, a_contact = edit_dialog.run_dialog()
+        if is_ok == 1:
+            db_main.the_session_handler.add_object_to_session(a_contact)
             db_main.the_session_handler.commit_session()
-            self.sig_cp_record_added.emit(ans[1].string_key())
+            self.sig_cp_record_added.emit(new_contact.string_key())
 
-    def edit_crm_contact(self, selected_contact):
-        edit_dialog = self.get_DlgEditContact()
+    def dlg_edit_crm_contact(self, selected_contact):
         if selected_contact is None:
-            QtGui.QMessageBox.information(self,unicode(u"Не понимаю"),unicode(u"Вы не выбрали контакт для редактирования"))
-            return
-
+            raise BaseException("No contact selected!")
+        edit_dialog = self.get_DlgEditContact()
         edit_dialog.set_state_to_edit(selected_contact)
-        ans = edit_dialog.run_dialog()
-        if ans[0] == 1:
+        is_ok, a_contact = edit_dialog.run_dialog()
+        if is_ok == 1: # a_contact = selected_contact
             db_main.the_session_handler.commit_session()
-            self.sig_cp_record_edited.emit(ans[1].string_key())
+            self.sig_cp_record_edited.emit(a_contact.string_key())
 
-    def delete_crm_contact(self, selected_contact):
+    def dlg_delete_crm_contact(self, selected_contact):
         if selected_contact is None:
-            QtGui.QMessageBox.information(self,unicode(u"Не понимаю"),unicode(u"Вы не выбрали контакт для удаления"))
-            return
-
+            raise BaseException("No contact selected!")
         a_msg = unicode(u"Подтверждаете удаление: ") + unicode(selected_contact.name +
                                     " @ " + selected_contact.company.name) + unicode(u" ?")
         a_reply = QtGui.QMessageBox.question(self, unicode(u'Подтвердите'), a_msg,
                                              QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
         if a_reply == QtGui.QMessageBox.Yes:
+            k = selected_contact.string_key()
             db_main.the_session_handler.delete_concrete_object(selected_contact)
-            self.sig_cp_record_deleted.emit(selected_contact.string_key())
+            self.sig_cp_record_deleted.emit(k)
 
     # ЦЕНЫ
 
-    def dlg_add_price(self):
-        self.sig_cp_record_added.emit("test_key")
+    def dlg_add_price(self, agent):
+        if agent is None:
+            raise BaseException("No agent selected!")
+        edit_dialog = self.get_DlgEditPrice()
+        edit_dialog.set_state_to_add_new(agent)
+        is_ok, a_price = edit_dialog.run_dialog()
+        if is_ok == 1:
+            #Записали в базу данных
+            db_main.the_session_handler.add_object_to_session(a_price)
+            db_main.the_session_handler.commit_session()
+            self.sig_cp_record_added.emit(a_price.string_key())
 
     def dlg_edit_price(self, price_instance):
-        self.sig_cp_record_edited.emit(price_instance.string_key())
+        if price_instance is None:
+            raise BaseException("No price selected!")
+        edit_dialog = self.get_DlgEditPrice()
+        edit_dialog.set_state_to_edit(price_instance)
+        is_ok, a_price = edit_dialog.run_dialog()
+        if is_ok == 1: # a_price = price_instance
+            #Записали в базу данных
+            db_main.the_session_handler.commit_session()
+            #Не забыли обновить табличку
+            self.sig_cp_record_edited.emit(a_price.string_key())
 
     def dlg_delete_price(self, price_instance):
-        self.sig_cp_record_deleted.emit(price_instance.string_key())
+        if price_instance is None:
+            raise BaseException("No price selected!")
+        a_msg = unicode(u"Подтверждаете удаление цены на ")
+        if price_inst.is_for_group:
+            a_msg +=  unicode(price_instance.material_type.material_type_name)
+        else:
+            a_msg +=  unicode(price_instance.material.material_name)
+        a_msg += unicode(u" ?")
+        a_reply = QtGui.QMessageBox.question(self, unicode(u'Подтвердите'), a_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if a_reply == QtGui.QMessageBox.Yes:
+            k = price_instance.string_key()
+            db_main.the_session_handler.delete_concrete_object(price_instance)
+            self.sig_cp_record_deleted.emit(k)
 
-    def dlg_add_matflow(self):
-        self.sig_cp_record_added.emit("test_key")
+    # ПОТОКИ СНАБЖЕНИЯ (MATFLOW)
+
+    def dlg_add_matflow(self, agent):
+        if agent is None:
+            raise BaseException("No agent selected!")
+        if agent.discriminator != "client":
+            raise BaseException("Wrong agent type!")
+        edit_dialog = self.get_DlgEditMatFlow()
+        edit_dialog.set_state_to_add_new(agent)
+        is_ok, a_mf = edit_dialog.run_dialog()
+        if is_ok == 1:
+            #Записали в базу данных
+            db_main.the_session_handler.add_object_to_session(a_mf)
+            db_main.the_session_handler.commit_session()
+            self.sig_cp_record_added.emit(a_mf.string_key())
+            # TODO: заметка! (уже сделано было раньше)
 
     def dlg_edit_matflow(self, matflow_instance):
-        self.sig_cp_record_edited.emit(matflow_instance.string_key())
+        if matflow_instance is None:
+            raise BaseException("No material flow selected!")
+        old_volume = matflow_instance.stats_mean_volume
+        old_freq = matflow_instance.stats_mean_timedelta
+        edit_dialog = self.get_DlgEditMatFlow()
+        edit_dialog.set_state_to_edit(matflow_instance)
+        is_ok, a_mf  = edit_dialog.run_dialog()
+        if is_ok == 1:  # a_mf = matflow_instance
+            #Записали в базу данных
+            db_main.the_session_handler.commit_session()
+            #Не забыли обновить табличку
+            self.sig_cp_record_edited.emit(a_mf.string_key())
+            # TODO: заметка! (уже сделано было раньше)
 
     def dlg_delete_matflow(self, matflow_instance):
-        self.sig_cp_record_deleted.emit(matflow_instance.string_key())
+        if matflow_instance is None:
+            raise BaseException("No material flow selected!")
+        a_msg = unicode(u"Подтверждаете удаление потока снабжения по ")
+        a_msg += unicode(matflow_instance.material_type.material_type_name)
+        a_msg += unicode(u" ?")
+        a_reply = QtGui.QMessageBox.question(self, unicode(u'Подтвердите'), a_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if a_reply == QtGui.QMessageBox.Yes:
+            k = matflow_instance.string_key()
+            db_main.the_session_handler.delete_concrete_object(matflow_instance)
+            self.sig_cp_record_deleted.emit(k)
+            #TODO: заметка!
+
+    # ЛИДЫ (OPPORTUNITY)
+
+    def dlg_add_lead(self, agent):
+        if agent is None:
+            raise BaseException("No agent selected!")
+        if agent.discriminator != "client":
+            raise BaseException("Wrong agent type!")
+        edit_dialog = self.get_DlgEditSalesOpportunity()
+        edit_dialog.set_state_to_add_new(agent) #Тут должно быть сбрасывание полей
+        is_ok, new_lead = edit_dialog.run_dialog()
+        if is_ok == 1:
+            #Записали в базу данных
+            db_main.the_session_handler.add_object_to_session(new_lead)
+            db_main.the_session_handler.commit_session()
+            self.sig_cp_record_added.emit(new_lead.string_key())
+
+    def dlg_edit_lead(self, a_lead):
+        if a_lead is None:
+            raise BaseException("No sales opportunity selected!")
+        old_lead = a_lead.get_dummy_copy()
+        edit_dialog = self.get_DlgEditSalesOpportunity()
+        edit_dialog.set_state_to_edit(a_lead)
+        is_ok, new_lead = edit_dialog.run_dialog() #new_lead = a_lead
+        if is_ok == 1:
+            #Записали в базу данных
+            db_main.the_session_handler.commit_session()
+            #Не забыли обновить табличку
+            self.sig_cp_record_edited.emit(a_lead.string_key())
+
+    def dlg_delete_lead(self, a_lead):
+        if sales_opportunity is None:
+            raise BaseException("No sales opportunity selected!")
+        a_msg = unicode(u"Подтверждаете забвение возможности по товару %s? Или, может, сроки перенесете?") %(unicode(a_lead.material_type.material_type_name))
+        a_reply = QtGui.QMessageBox.question(self, unicode(u'Подтвердите'), a_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if a_reply == QtGui.QMessageBox.Yes:
+            k = a_lead.string_key()
+            db_main.the_session_handler.delete_concrete_object(a_lead)
+            self.sig_cp_record_deleted.emit(k)
+
 
 

@@ -3,6 +3,12 @@
 from PyQt4 import QtCore, QtGui
 
 import db_main
+import utils
+
+import simple_locale
+import convert
+
+unicode_codec = QtCore.QTextCodec.codecForName(simple_locale.ultimate_encoding)
 
 # TODO: make a model based on SQLAlchemy table easy way
 
@@ -120,7 +126,7 @@ class cDataModel_CounterpartySpecialList(QtCore.QAbstractListModel):
 
 class cDataModel_GeneralMaterialList(QtCore.QAbstractListModel):
     #Может быть группой, может быть номенклатурой
-    def __init__(self, type = 0, parent = None, do_load = 1):
+    def __init__(self, type=0, parent=None, do_load=1):
         QtCore.QAbstractListModel.__init__(self, parent)
         self._general_materials = []
         self._list_type = type #0 - material, 1 - material_type
@@ -168,6 +174,157 @@ class cDataModel_GeneralMaterialList(QtCore.QAbstractListModel):
 
     def flags(self, index):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+class cDataModel_FilteredMaterialList(QtCore.QAbstractListModel):
+    def __init__(self,  parent = None, parent_material_type = None, do_update = 1):
+        QtCore.QAbstractListModel.__init__(self, parent)
+        self.__materials = []
+        self.parent_material_type = parent_material_type
+        if do_update:
+            self.update_list()
+
+    def set_parent_material_type(self, parent_material_type):
+        self.parent_material_type = parent_material_type
+
+    def update_list(self):
+        self.beginResetModel()
+        self.__materials = []
+        if self.parent_material_type is None:
+            for mat_i in db_main.get_materials_list():
+                self.__materials += [mat_i]
+        else:
+            self.__materials = self.parent_material_type.materials
+        self.endResetModel()
+
+    def rowCount(self, parent):
+        return len(self.__materials)
+
+    def data(self, index, role):
+        if role == QtCore.Qt.DisplayRole:
+            return unicode(self.__materials[index.row()].material_name)
+        if role == 35: #Наша роль для передачи данных
+            return self.__materials[index.row()]
+        if role == 40: #Роль для поиска элемента в списке (возвращает ключ элемента)
+            return self.__materials[index.row()].string_key()
+
+    def flags(self, index):
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+
+class cDataModel_MatDistTable(QtCore.QAbstractTableModel):
+    def __init__(self,  parent = None):
+        QtCore.QAbstractTableModel.__init__(self, parent)
+        self.__probs = []
+        self.prob_dict = utils.c_random_dict()
+
+    def update_matdist_table(self, prob_dict):
+        self.beginResetModel()
+        self.__probs = []  #TODO ordered dict!
+        self.prob_dict = prob_dict
+        for material, prob in self.prob_dict.randomdict.iteritems():
+            self.__probs += [[material, prob]]
+        self.endResetModel()
+
+    def reset_all(self):  #При создании нового, когда меняем группу - перезагрузка
+        self.beginResetModel()
+        self.__probs = []
+        self.prob_dict.reset_me()
+        self.endResetModel()
+
+    def normalize_probs(self):
+        self.prob_dict.finalize()
+        self.update_matdist_table(self.prob_dict)
+
+    def is_data_correct(self):
+        #Это проверяется только при закрытии формы. Всё, в общем-то, runtime проверяется..
+        return True
+
+    def get_prob_dict(self):
+        return self.prob_dict
+
+    def headerData(self, section, orientation, role):
+        if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                if section == 0:
+                    return unicode(u"Товар")
+                if section == 1:
+                    return unicode(u"Вероятность закупки")
+
+    def rowCount(self, parent):
+        return len(self.__probs)
+
+    def columnCount(self, parent):
+        return 2
+
+    def data(self, index, role):
+        if role == QtCore.Qt.DisplayRole:
+            row = index.row()
+            if index.column() == 0:
+                return unicode(self.__probs[row][0])
+            if index.column() == 1:
+                return unicode(simple_locale.number2string(round(self.__probs[row][1],2)))  #Проценты?
+        if role == 35: #Наша роль для передачи данных из таблицы
+            row = index.row()
+            if index.column() == 0:
+                return self.__probs[row][0]
+            if index.column() == 1:
+                return self.__probs[row][1]
+        if role == 45:  #роль для чтения "всей строки"
+            row = index.row()
+            return self.__probs[row]
+
+    def setData(self, index, value, role = QtCore.Qt.EditRole):
+        if role == QtCore.Qt.EditRole:
+            row = index.row()
+            column = index.column()
+            if column == 0:
+                old_mat, old_prob = self.__probs.pop(row)
+                #self.__probs[row][0] = value
+                #self.__probs.pop(row)
+                self.__probs.insert(row,[value, old_prob])
+                self.prob_dict.delete_elem(old_mat)
+                self.prob_dict.add_elem(value, old_prob)
+                self.dataChanged.emit(index, index)
+                return True
+            if column == 1:  # Вероятность выбора
+                try:
+                    prob = float(convert.convert_formated_str_2_float(value))
+                    self.__probs[row][1] = prob
+                    self.prob_dict.randomdict[self.__probs[row][0]] = prob
+                    self.dataChanged.emit(index, index)
+                    return True
+                except ValueError:
+                    return False #Тактично промолчим
+        return False
+
+    def flags(self, index):
+        if index.column() == 0:
+            return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        if index.column() == 1:
+            return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+    def insertNewMaterial(self, material, parent = QtCore.QModelIndex()):
+        position = parent.row()-1
+        self.beginInsertRows(parent, position, position)
+        self.__probs.insert(position, [material, 0])
+        self.prob_dict.add_elem(material, 0)
+        self.endInsertRows()
+
+    def changeExistingMatDist(self, an_index = QtCore.QModelIndex()):
+        self.dataChanged.emit(an_index, an_index)
+
+    def insertBlankLine(self, parent = QtCore.QModelIndex()):
+        position = parent.row()-1
+        self.beginInsertRows(parent, position, position)
+        self.__probs.insert(position, ["", 0])
+        self.prob_dict.add_elem("", 0)
+        self.endInsertRows()
+
+    def deleteRecord(self, an_index):
+        self.beginRemoveRows(an_index, an_index.row(),an_index.row())
+        material, prob = self.__probs.pop(an_index.row())
+        self.prob_dict.randomdict.pop(material)
+        self.endRemoveRows()
 
 class cDataModel_PaymentTermsList(QtCore.QAbstractListModel):
     def __init__(self,  parent = None):

@@ -28,6 +28,13 @@ class cSimpleMediator(object):
         self.html_text = ""
         self.fields = collections.OrderedDict()
         self.button_calls = collections.OrderedDict()
+        self.gui_key = None
+
+    def get_key(self):
+        return self.gui_key
+
+    def set_key(self, some_key):
+        self.gui_key = some_key
 
     def set_label(self, label):
         self.label = label
@@ -84,6 +91,7 @@ class cAbstRecordMediator(cSimpleMediator):
 
     def set_record(self, record):
         self.record = record
+        self.set_key(self.record.string_key())
         self._reset_fields()
 
     def _reset_fields(self):
@@ -127,6 +135,26 @@ class cMedMatFlow(cAbstRecordMediator):
         for md_i in self.record.material_dist:
             s += md_i.material.material_name + u' : ' + unicode(md_i.choice_prob) + '<br>'
         self.html_text = s
+
+class cMedSalesLead(cAbstRecordMediator):
+    def _reset_fields(self):
+        '''
+        Заполняет поля по объекту (перетирает, если уже что-то было)
+        '''
+        super(cMedSalesLead, self)._reset_fields()
+        self.add_field(self.record.material_type, 'material_type', u'Товар', 'string')
+        self.add_field(self.record.expected_qtty, 'expected_qtty', u'Ожидаемый объём', 'float')
+        self.add_field(self.record.expected_timedelta, 'expected_timedelta', u'Ожидаемая частота', 'float')
+
+    def _build_HTML(self):
+        s = u'Вероятность успеха: <b>' + str(self.record.success_prob) + u'</b><br>'
+        s+= u'Уверенность: <b>' + str(self.record.sure_level) + u'</b><br>'
+        s+= u'Начало продаж: <b>' + str(self.record.expected_start_date_from) + u" - "
+        s+= str(self.record.expected_start_date_till) + u'</b><br>'
+        if self.record.instock_promise:
+            s+= u'Обещаем держать на складе'
+        self.html_text = s
+
 
 class cMedContact(cAbstRecordMediator):
     # Полей нет

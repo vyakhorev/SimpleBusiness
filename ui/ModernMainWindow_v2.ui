@@ -49,15 +49,35 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="QLineEdit" name="lineEdit_ClientFilter"/>
+           <widget class="QLineEdit" name="lineEdit_ClientFilter">
+            <property name="maximumSize">
+             <size>
+              <width>200</width>
+              <height>16777215</height>
+             </size>
+            </property>
+           </widget>
           </item>
           <item>
-           <widget class="QListView" name="listView_ClientList"/>
+           <widget class="QListView" name="listView_ClientList">
+            <property name="maximumSize">
+             <size>
+              <width>200</width>
+              <height>16777215</height>
+             </size>
+            </property>
+           </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
              <widget class="QPushButton" name="pushButton_DeleteClient">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
               <property name="text">
                <string>- Удалить</string>
               </property>
@@ -65,6 +85,12 @@
             </item>
             <item>
              <widget class="QPushButton" name="pushButton_NewClient">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
               <property name="text">
                <string>+ Новый</string>
               </property>

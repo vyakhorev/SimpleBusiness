@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Ilua\SimpleBusiness\SimpleBusiness\ui\ModernMainWindow_v2.ui'
+# Form implementation generated from reading ui file 'E:\Code\SimpleBusiness\ui\ModernMainWindow_v2.ui'
 #
-# Created: Tue Dec 29 15:54:25 2015
+# Created: Sat Jan 02 19:43:07 2016
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -47,17 +47,21 @@ class Ui_MainWindowModern(object):
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.lineEdit_ClientFilter = QtGui.QLineEdit(self.tab_Clients)
+        self.lineEdit_ClientFilter.setMaximumSize(QtCore.QSize(200, 16777215))
         self.lineEdit_ClientFilter.setObjectName(_fromUtf8("lineEdit_ClientFilter"))
         self.verticalLayout.addWidget(self.lineEdit_ClientFilter)
         self.listView_ClientList = QtGui.QListView(self.tab_Clients)
+        self.listView_ClientList.setMaximumSize(QtCore.QSize(200, 16777215))
         self.listView_ClientList.setObjectName(_fromUtf8("listView_ClientList"))
         self.verticalLayout.addWidget(self.listView_ClientList)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.pushButton_DeleteClient = QtGui.QPushButton(self.tab_Clients)
+        self.pushButton_DeleteClient.setMaximumSize(QtCore.QSize(100, 16777215))
         self.pushButton_DeleteClient.setObjectName(_fromUtf8("pushButton_DeleteClient"))
         self.horizontalLayout.addWidget(self.pushButton_DeleteClient)
         self.pushButton_NewClient = QtGui.QPushButton(self.tab_Clients)
+        self.pushButton_NewClient.setMaximumSize(QtCore.QSize(100, 16777215))
         self.pushButton_NewClient.setObjectName(_fromUtf8("pushButton_NewClient"))
         self.horizontalLayout.addWidget(self.pushButton_NewClient)
         self.verticalLayout.addLayout(self.horizontalLayout)
