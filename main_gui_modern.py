@@ -43,6 +43,11 @@ RECORDS_NUM = 4
 
 class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
 
+    sig_cp_record_added = QtCore.pyqtSignal(str)
+    sig_cp_record_deleted = QtCore.pyqtSignal(str)
+    sig_cp_record_edited = QtCore.pyqtSignal(str)
+
+
     def __init__(self, app, parent=None):
         super(gui_MainWindow, self).__init__(parent)
         self.app = app
@@ -108,6 +113,11 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         self._DlgEditPrice = None
         self._DlgEditMatFlow = None
 
+        # Connect signals that would be raised by widget logics
+        self.sig_cp_record_added.connect(self.handle_cp_new_record)
+        self.sig_cp_record_deleted.connect(self.handle_cp_delete_record)
+        self.sig_cp_record_edited.connect(self.handle_cp_edit_record)
+
     def click_on_CP(self, index_to, index_from):
         cp_i = index_to.data(35).toPyObject()
         if cp_i is None:
@@ -161,24 +171,6 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
                 new_med.add_call('dlg_delete_matflow', u'Удалить', mf_i)
                 yield new_med
 
-    def dlg_add_price(self):
-        print("adding new price ")
-
-    def dlg_edit_price(self, price_instance):
-        print("editing " + str(price_instance))
-
-    def dlg_delete_price(self, price_instance):
-        print("deleting " + str(price_instance))
-
-    def dlg_add_matflow(self):
-        print("adding new matflow ")
-
-    def dlg_edit_matflow(self, matflow_instance):
-        print("editing " + str(matflow_instance))
-
-    def dlg_delete_matflow(self, matflow_instance):
-        print("deleting " + str(matflow_instance))
-
     def make_frame_from_mediator(self, mediator):
         """
             Automatically building gui for each mediator
@@ -197,6 +189,18 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
             self.mediators_frame_list.append(new_frame_2)
             self.mediators_list_layout.addWidget(new_frame_2)
 
+    # Signals with counterparty tab
+    @QtCore.pyqtSlot(str)
+    def handle_cp_new_record(self, rec_key):
+        print("new record handler triggered " + str(rec_key))
+
+    @QtCore.pyqtSlot(str)
+    def handle_cp_delete_record(self, rec_key):
+        print("delete record handler triggered " + str(rec_key))
+
+    @QtCore.pyqtSlot(str)
+    def handle_cp_edit_record(self, rec_key):
+        print("edit record handler triggered " + str(rec_key))
 
     ###################
     # Управление диалоговыми окнами
@@ -243,7 +247,7 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         if ans[0] == 1:
             db_main.the_session_handler.add_object_to_session(ans[1])
             db_main.the_session_handler.commit_session()
-            print("emit add record" + str(ans[1]))  #TODO: emit signal
+            self.sig_cp_record_added.emit(ans[1].string_key())
 
     def edit_crm_contact(self, selected_contact):
         edit_dialog = self.get_DlgEditContact()
@@ -255,7 +259,7 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         ans = edit_dialog.run_dialog()
         if ans[0] == 1:
             db_main.the_session_handler.commit_session()
-            print("emit edited record" + str(ans[1]))  #TODO: emit signal
+            self.sig_cp_record_edited.emit(ans[1].string_key())
 
     def delete_crm_contact(self, selected_contact):
         if selected_contact is None:
@@ -268,8 +272,26 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
                                              QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
         if a_reply == QtGui.QMessageBox.Yes:
             db_main.the_session_handler.delete_concrete_object(selected_contact)
-            print("emit deleted record" + str(selected_contact))  #TODO: emit signal
+            self.sig_cp_record_deleted.emit(selected_contact.string_key())
 
+    # ЦЕНЫ
 
+    def dlg_add_price(self):
+        self.sig_cp_record_added.emit("test_key")
+
+    def dlg_edit_price(self, price_instance):
+        self.sig_cp_record_edited.emit(price_instance.string_key())
+
+    def dlg_delete_price(self, price_instance):
+        self.sig_cp_record_deleted.emit(price_instance.string_key())
+
+    def dlg_add_matflow(self):
+        self.sig_cp_record_added.emit("test_key")
+
+    def dlg_edit_matflow(self, matflow_instance):
+        self.sig_cp_record_edited.emit(matflow_instance.string_key())
+
+    def dlg_delete_matflow(self, matflow_instance):
+        self.sig_cp_record_deleted.emit(matflow_instance.string_key())
 
 
