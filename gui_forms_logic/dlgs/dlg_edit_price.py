@@ -37,9 +37,9 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
         self.connect(self.comboBox_material, QtCore.SIGNAL("currentIndexChanged(int)"), self.resort_clients)
         self.connect(self.checkBox_ClPrPerOrderOnly, QtCore.SIGNAL("stateChanged(int)"), self.update_only_per_order_chbox)
         self.connect(self.checkBox_ClPrIsShipmentTo, QtCore.SIGNAL("stateChanged(int)"), self.update_shipment_to_chbox)
-        self.pushButton_LimitToWeek.clicked.connect(self.set_within_week)
-        self.pushButton_LimitToMonth.clicked.connect(self.set_within_month)
-        self.pushButton_LimitToQuater.clicked.connect(self.set_within_quater)
+        self.pushButton_LimitToWeek.clicked().connect(self.set_within_week)
+        self.pushButton_LimitToMonth.clicked().connect(self.set_within_month)
+        self.pushButton_LimitToQuater.clicked().connect(self.set_within_quater)
 
     def set_state_to_add_new(self, agent_model):
         #Вызываю перед открытием
@@ -222,17 +222,17 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
     def set_within_week(self):
         d1 = datetime.date.today()
         d2 = d1 + datetime.timedelta(days = 7)
-        self.set_between_dates(d1,d2)
+        self.set_between_dates(d1, d2)
 
     def set_within_month(self):
         d1 = datetime.date.today()
         d2 = d1 + datetime.timedelta(days = 30)
-        self.set_between_dates(d1,d2)
+        self.set_between_dates(d1, d2)
 
     def set_within_quater(self):
         d1 = datetime.date.today()
         d2 = d1 + datetime.timedelta(days = 90)
-        self.set_between_dates(d1,d2)
+        self.set_between_dates(d1, d2)
 
     def set_between_dates(self, d1, d2):
         self.dateEdit_PriceValidFrom.setDate(qtdate_pack(d1))
@@ -353,7 +353,7 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
             else:
                 a_title = unicode(u"Ошибка ввода")
                 a_message = unicode(u"Условия оплаты не подходят для факторинга")
-                QtGui.QMessageBox.information(self,a_title,a_message)
+                QtGui.QMessageBox.information(self, a_title, a_message)
                 self.var_is_correct = False
                 return None
         else:

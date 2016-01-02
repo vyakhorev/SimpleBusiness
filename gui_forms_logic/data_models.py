@@ -45,7 +45,6 @@ class cDataModel_CounterpartyList(QtCore.QAbstractListModel):
     def flags(self, index):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
-
 class cDataModel_CounterpartySpecialList(QtCore.QAbstractListModel):
     # TODO: join two Counterparty models
     def __init__(self,  parent = None, agent_discriminator='', materialgr_for_sorting=None, do_load=0):
@@ -119,7 +118,6 @@ class cDataModel_CounterpartySpecialList(QtCore.QAbstractListModel):
     def flags(self, index):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
-
 class cDataModel_GeneralMaterialList(QtCore.QAbstractListModel):
     #Может быть группой, может быть номенклатурой
     def __init__(self, type = 0, parent = None, do_load = 1):
@@ -171,7 +169,6 @@ class cDataModel_GeneralMaterialList(QtCore.QAbstractListModel):
     def flags(self, index):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
-
 class cDataModel_PaymentTermsList(QtCore.QAbstractListModel):
     def __init__(self,  parent = None):
         QtCore.QAbstractListModel.__init__(self, parent)
@@ -198,3 +195,92 @@ class cDataModel_PaymentTermsList(QtCore.QAbstractListModel):
 
     def flags(self, index):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+class CDataModel_ContactDetailsTable(QtCore.QAbstractTableModel):
+    def __init__(self,  parent=None):
+        QtCore.QAbstractTableModel.__init__(self, parent)
+        self.__details = []
+
+    def update_data(self, details_list):
+        self.beginResetModel()
+        self.__details = []
+        for d_i in details_list:
+            self.__details += [[unicode(d_i.cont_type), unicode(d_i.cont_value), d_i.is_type_fixed, d_i.rec_id]]
+        self.endResetModel()
+
+    def get_all_data(self):
+        return self.__details
+
+    def headerData(self, section, orientation, role):
+        if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                if section == 0:
+                    return unicode(u"Тип")
+                if section == 1:
+                    return unicode(u"Значение")
+
+    def rowCount(self, parent):
+        return len(self.__details)
+
+    def columnCount(self, parent):
+        return 2
+
+    def data(self, index, role):
+        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
+            row = index.row()
+            if index.column() == 0:
+                return self.__details[row][0]
+            if index.column() == 1:
+                return self.__details[row][1]
+        if role == 35: #Наша роль для передачи данных из таблицы
+            row = index.row()
+            if index.column() == 0:
+                return self.__details[row][0]
+            if index.column() == 1:
+                return self.__details[row][1]
+            if index.column() == 2:
+                return self.__details[row][2]
+            if index.column() == 3:
+                return self.__details[row][3]
+        if role == 45:  #роль для чтения "всей строки"
+            row = index.row()
+            return self.__details[row]
+
+    def setData(self, index, value, role=QtCore.Qt.EditRole):
+        if role == QtCore.Qt.EditRole:
+            row = index.row()
+            column = index.column()
+            if column == 0:
+                if not(self.__details[row][2]):  #Если можно править
+                    self.__details[row][0] = unicode(unicode_codec.fromUnicode(value.toString()))
+                    self.dataChanged.emit(index, index)
+                    return True
+            if column == 1:
+                self.__details[row][1] = unicode(unicode_codec.fromUnicode(value.toString()))
+                self.dataChanged.emit(index, index)
+                return True
+        return False
+
+    def flags(self, index):
+        if index.column() == 0:
+            if not(self.__details[index.row()][2]):  #Если можно править
+                return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+            else:
+                return QtCore.Qt.ItemIsEnabled
+        if index.column() == 1:
+            return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+    def insertNewDetail(self, cont_type, cont_value, is_fixed, parent=QtCore.QModelIndex()):
+        #Вставляет в конец списка новую "пустую" цену
+        position = parent.row()-1
+        self.beginInsertRows(parent, position, position)
+        self.__details += [[unicode(cont_type), unicode(cont_value), is_fixed, None]]
+        self.endInsertRows()
+
+    def changeExistingDetail(self, an_index = QtCore.QModelIndex()):
+        self.dataChanged.emit(an_index, an_index)  #Вызывается вообще?..
+
+    def deleteRow(self, an_index):
+        self.beginRemoveRows(an_index, an_index.row(),an_index.row())
+        self.__details.pop(an_index.row())
+        self.endRemoveRows()

@@ -214,8 +214,16 @@ def rename_hashtag_usages(old_hashtag_name, new_hashtag_name):
             for forg_ht in to_delete:
                 the_session_handler.delete_concrete_object(forg_ht)
 
-def get_contacts_list_iter():
-    return the_session_handler.get_all_objects_list_iter(c_crm_contact)
+# def get_contacts_list_iter():
+#     return the_session_handler.get_all_objects_list_iter(c_crm_contact)
+
+def get_contacts_list(agent = None):
+    if agent is None:
+        for cnt_i in the_session_handler.get_all_objects_list_iter(c_crm_contact):
+            yield cnt_i
+    else:
+        for cnt_i in the_session_handler.get_active_session().query(c_crm_contact).filter_by(company_id=agent.rec_id).all():
+            yield cnt_i
 
 ###########################################################
 

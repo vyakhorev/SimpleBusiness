@@ -7,7 +7,6 @@
     его название и ссылку на главное окно (parent_window) медиатору.
 """
 
-import db_main
 import collections
 
 
@@ -103,6 +102,7 @@ class cAbstRecordMediator(cSimpleMediator):
 ############
 
 class cMedPrice(cAbstRecordMediator):
+    # HTML нет
     def _reset_fields(self):
         super(cMedPrice, self)._reset_fields()
         self.add_field(self.record.price_value, 'price_value', u'Цена', 'float')
@@ -128,8 +128,19 @@ class cMedMatFlow(cAbstRecordMediator):
             s += md_i.material.material_name + u' : ' + unicode(md_i.choice_prob) + '<br>'
         self.html_text = s
 
-    def get_HTML(self):
-        return self.html_text
+class cMedContact(cAbstRecordMediator):
+    # Полей нет
+    def _build_HTML(self):
+        s = u""
+        if self.record.is_person:
+            s += u"<b>" + unicode(self.record.name) + u"</b>" + u", " + unicode(self.record.job) + u"<br>"
+        else:
+            s += u"<b>" + u"общий контакт" + u"</b>" + u"<br>"
+        if self.record.additional_info is not None:
+            s += self.record.additional_info + u"<br>"
+        for d_i in self.record.details:
+            s += unicode(d_i) + u"<br>"
+        self.html_text = s
 
 ############
 # Interface
