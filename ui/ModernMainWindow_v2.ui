@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1262</width>
-    <height>822</height>
+    <width>663</width>
+    <height>799</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,7 +43,7 @@
       </property>
       <widget class="QWidget" name="tab_Clients">
        <attribute name="title">
-        <string>Клиенты и поставщики</string>
+        <string>Контрагенты</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
@@ -106,88 +106,74 @@
        <attribute name="title">
         <string>База знаний</string>
        </attribute>
-       <widget class="QLineEdit" name="lineEdit_KnBase_Search">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>551</width>
-          <height>20</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton">
-        <property name="geometry">
-         <rect>
-          <x>580</x>
-          <y>10</y>
-          <width>75</width>
-          <height>23</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>PushButton</string>
-        </property>
-       </widget>
-       <widget class="QWidget" name="widget" native="true">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>90</y>
-          <width>1311</width>
-          <height>691</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_KnBaseEmptyNote">
-        <property name="geometry">
-         <rect>
-          <x>700</x>
-          <y>10</y>
-          <width>621</width>
-          <height>41</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>+ Новая заметка</string>
-        </property>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QPushButton" name="pushButton_KnBaseEmptyNote">
+            <property name="text">
+             <string>+ Новая заметка</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_KnBase_Search">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_SearchKnBase">
+            <property name="text">
+             <string>Найти</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QListView" name="listView_Hashtags">
+            <property name="maximumSize">
+             <size>
+              <width>200</width>
+              <height>16777215</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QScrollArea" name="scrollArea_KnBaseRecords">
+            <property name="widgetResizable">
+             <bool>true</bool>
+            </property>
+            <widget class="QWidget" name="scrollAreaWidgetContents">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>411</width>
+               <height>682</height>
+              </rect>
+             </property>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1262</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="AdminMenu">
-    <property name="title">
-     <string>Администрирование</string>
-    </property>
-    <addaction name="action_Run_Simulate"/>
-    <addaction name="action_Synhronize_xm_with_db"/>
-    <addaction name="action_upload_budget_csv"/>
-   </widget>
-   <widget class="QMenu" name="FastAddMenu">
-    <property name="acceptDrops">
-     <bool>true</bool>
-    </property>
-    <property name="title">
-     <string>Добавить</string>
-    </property>
-    <addaction name="action_AddFastNote"/>
-    <addaction name="separator"/>
-    <addaction name="action_AddNewContact"/>
-    <addaction name="action_AddNewCP"/>
-   </widget>
-   <addaction name="FastAddMenu"/>
-   <addaction name="AdminMenu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_Run_Simulate">

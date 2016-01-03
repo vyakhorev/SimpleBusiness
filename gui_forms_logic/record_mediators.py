@@ -155,7 +155,6 @@ class cMedSalesLead(cAbstRecordMediator):
             s+= u'Обещаем держать на складе'
         self.html_text = s
 
-
 class cMedContact(cAbstRecordMediator):
     # Полей нет
     def _build_HTML(self):
@@ -168,6 +167,15 @@ class cMedContact(cAbstRecordMediator):
             s += self.record.additional_info + u"<br>"
         for d_i in self.record.details:
             s += unicode(d_i) + u"<br>"
+        self.html_text = s
+
+class cMedKnBaseRecord(cAbstRecordMediator):
+    # Полей нет
+    def _build_HTML(self):
+        s = u""
+        s += self.record.date_added.strftime('%x') + u"  " + self.record.headline + u'<br>'
+        s += u'<b>' + self.record.hashtags_string + u'</b><br>'
+        s += self.record.long_html_text
         self.html_text = s
 
 ############

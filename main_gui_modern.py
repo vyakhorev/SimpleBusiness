@@ -10,11 +10,12 @@ from gui_forms_logic.dlgs.dlg_edit_contact import gui_DialogCrm_EditContact
 from gui_forms_logic.dlgs.dlg_edit_price import gui_Dialog_EditPrice
 from gui_forms_logic.dlgs.dlg_edit_matflow import gui_Dialog_EditMatFlow
 from gui_forms_logic.dlgs.dlg_sales_opportunity import gui_Dialog_EditSalesOpportunity
-
+from gui_forms_logic.dlgs.dlg_edit_kn_base_record import gui_DialogCrm_EditSimpleRecord
 
 # Import custom gui logic
 from gui_forms_logic.data_models import cDataModel_CounterpartyList
-from gui_forms_logic.record_mediators import cMedPrice, cMedMatFlow, cMedContact, cMedSalesLead, cSimpleMediator
+from gui_forms_logic.record_mediators import cMedPrice, cMedMatFlow, cMedContact,\
+        cMedKnBaseRecord, cMedSalesLead, cSimpleMediator
 from gui_forms_logic.frame_builder import LabelFrame, RecFrame
 
 
@@ -50,6 +51,9 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
     sig_cp_record_deleted = QtCore.pyqtSignal(str)
     sig_cp_record_edited = QtCore.pyqtSignal(str)
 
+    sig_knbase_record_added = QtCore.pyqtSignal(str)
+    sig_knbase_record_deleted = QtCore.pyqtSignal(str)
+    sig_knbase_record_edited = QtCore.pyqtSignal(str)
 
     def __init__(self, app, parent=None):
         super(gui_MainWindow, self).__init__(parent)
@@ -80,7 +84,6 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
 
         self.listView_ClientList.setModel(self.data_model_counterparties)
         self.lineEdit_ClientFilter.textChanged.connect(self.data_model_counterparties_proxy.setFilterRegExp)
-
         self.listView_ClientList.selectionModel().currentChanged.connect(self.click_on_CP)
 
         # Right-side logic
@@ -120,6 +123,38 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         self.sig_cp_record_added.connect(self.handle_cp_new_record)
         self.sig_cp_record_deleted.connect(self.handle_cp_delete_record)
         self.sig_cp_record_edited.connect(self.handle_cp_edit_record)
+
+        ############
+        # Knowledge base tab
+        ############
+
+        # Setup knbase scroll
+        self.mediators_frame_list_KnBase = []
+
+        self.scrollArea_KnBaseRecords.setWidgetResizable(True)
+        self.scrollArea_KnBaseRecords.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.scrollArea_KnBaseRecords.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scr_bar_KnBaseRecords = QtGui.QScrollBar()
+        self.scrollArea_KnBaseRecords.setVerticalScrollBar(self.scr_bar_KnBaseRecords)
+
+        self.mediators_list_layout_KnBase = QtGui.QVBoxLayout()
+        self.base_widget_KnBase = QtGui.QWidget()
+        self.base_widget_KnBase.setLayout(self.mediators_list_layout_KnBase)
+        self.scrollArea_KnBaseRecords.setWidget(self.base_widget_KnBase)
+
+        self.scr_bar_KnBaseRecords.valueChanged.connect(self.scrolled_KnBase)
+
+        # Setup signals
+        self.pushButton_KnBaseEmptyNote.clicked.connect(self.dlg_add_knbase_record)
+
+        # Connect signals that would be raised by widget logics
+        self.sig_knbase_record_added.connect(self.handle_knbase_new_record)
+        self.sig_knbase_record_deleted.connect(self.handle_knbase_delete_record)
+        self.sig_knbase_record_edited.connect(self.handle_knbase_edit_record)
+
+    #################
+    # Вкладка с контрагентами
+    #################
 
     def click_on_CP(self, index_to, index_from):
         cp_i = index_to.data(35).toPyObject()
@@ -202,15 +237,12 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
 
         if mediator.label != '':
             new_frame = LabelFrame(mediator, self)
-            self.mediators_frame_list.append(new_frame)
-            self.mediators_list_layout.addWidget(new_frame)
-
         else:
-            new_frame_2 = RecFrame(mediator, self)
-            self.mediators_frame_list.append(new_frame_2)
-            self.mediators_list_layout.addWidget(new_frame_2)
+            new_frame = RecFrame(mediator, self)
 
-    # Signals with counterparty tab
+        self.mediators_frame_list.append(new_frame)
+        self.mediators_list_layout.addWidget(new_frame)
+
     @QtCore.pyqtSlot(str)
     def handle_cp_new_record(self, rec_key):
         print("new record handler triggered " + str(rec_key))
@@ -223,16 +255,50 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
     def handle_cp_edit_record(self, rec_key):
         print("edit record handler triggered " + str(rec_key))
 
+    #################
+    # Вкладка с заметками
+    #################
+
+    @QtCore.pyqtSlot(str)
+    def handle_knbase_new_record(self, rec_key):
+        print("new record handler triggered " + str(rec_key))
+
+    @QtCore.pyqtSlot(str)
+    def handle_knbase_delete_record(self, rec_key):
+        print("delete record handler triggered " + str(rec_key))
+
+    @QtCore.pyqtSlot(str)
+    def handle_knbase_edit_record(self, rec_key):
+        print("edit record handler triggered " + str(rec_key))
+
+
+    def print_to_area(self, records_iterator):
+        """
+        Args:
+            records_iterator: Some iterator over records (should do query with every next() call)
+        """
+        for rec_i in records_iterator:
+            new_mediator = cMedKnBaseRecord(self, rec_i)
+            new_mediator.add_call('dlg_edit_knbase_record', u'Изменить', rec_i)
+            new_mediator.add_call('dlg_delete_knbase_record', u'Удалить', rec_i)
+
+            new_frame = RecFrame(new_mediator, self)
+            self.mediators_frame_list_KnBase.append(new_frame)
+            self.mediators_list_layout_KnBase.append(new_frame)
+
+    def scrolled_KnBase(self):
+        print("scrooled!")
+
     ###################
     # Управление диалоговыми окнами
     ###################
 
     # LAZY открытие
 
-    # def get_DlgEditSimpleRecord(self):
-    #     if self._DlgEditSimpleRecord is None:
-    #         self._DlgEditSimpleRecord = gui_DialogCrm_EditSimpleRecord(self)
-    #     return self._DlgEditSimpleRecord
+    def get_DlgEditSimpleRecord(self):
+        if self._DlgEditSimpleRecord is None:
+            self._DlgEditSimpleRecord = gui_DialogCrm_EditSimpleRecord(self)
+        return self._DlgEditSimpleRecord
 
     def get_DlgEditContact(self):
         if self._DlgEditContact is None:
@@ -270,7 +336,7 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         if is_ok == 1:
             db_main.the_session_handler.add_object_to_session(a_contact)
             db_main.the_session_handler.commit_session()
-            self.sig_cp_record_added.emit(new_contact.string_key())
+            self.sig_cp_record_added.emit(a_contact.string_key())
 
     def dlg_edit_crm_contact(self, selected_contact):
         if selected_contact is None:
@@ -324,7 +390,7 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         if price_instance is None:
             raise BaseException("No price selected!")
         a_msg = unicode(u"Подтверждаете удаление цены на ")
-        if price_inst.is_for_group:
+        if price_instance.is_for_group:
             a_msg +=  unicode(price_instance.material_type.material_type_name)
         else:
             a_msg +=  unicode(price_instance.material.material_name)
@@ -418,6 +484,41 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
             k = a_lead.string_key()
             db_main.the_session_handler.delete_concrete_object(a_lead)
             self.sig_cp_record_deleted.emit(k)
+
+    # ЗАМЕТКИ В БАЗЕ ЗНАНИЙ
+
+    def dlg_add_knbase_record(self):
+        edit_dialog = self.get_DlgEditSimpleRecord()
+        edit_dialog.set_state_to_add_new()
+        is_ok, new_rec = edit_dialog.run_dialog()
+        if is_ok == 1:
+            db_main.the_session_handler.add_object_to_session(new_rec)
+            db_main.the_session_handler.commit_session()
+            # try_send_email_about_new_record(new_rec)
+            self.sig_knbase_record_added.emit(new_rec.string_key())
+
+    def dlg_edit_knbase_record(self, a_rec):
+        if a_rec is None:
+            raise BaseException("No knbase record selected!")
+        edit_dialog = self.get_DlgEditSimpleRecord()
+        edit_dialog.set_state_to_edit(a_rec)
+        is_ok, new_rec = edit_dialog.run_dialog()
+        if is_ok == 1:
+            db_main.the_session_handler.merge_object_to_session(new_rec)  #На всякий случай
+            db_main.the_session_handler.commit_session()
+            self.sig_knbase_record_added.emit(new_rec.string_key())
+
+    def dlg_delete_knbase_record(self, a_rec):
+        if a_rec is None:
+            raise BaseException("No knbase record selected!")
+        a_msg = unicode(u"Подтверждаете удаление: ")
+        a_msg += unicode(a_rec.headline)
+        a_msg += unicode(u" ?")
+        a_reply = QtGui.QMessageBox.question(self, unicode(u'Подтвердите'), a_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if a_reply == QtGui.QMessageBox.Yes:
+            k = a_rec.string_key()
+            db_main.the_session_handler.delete_concrete_object(a_rec)
+            self.sig_knbase_record_added.emit(k)
 
 
 
