@@ -96,7 +96,8 @@ class gui_EditTextRecord(QtGui.QTextEdit):
     def insertFromMimeData(self, source):
         # Чистим HTML перед вставкой
         if source.hasHtml():
-            desired_html = QtCore.QString(html_prettify.safe_html(source.html()))
+            possibly_bad_html = str(source.html()) # Cleans up QString usages
+            desired_html = QtCore.QString(html_prettify.safe_html(possibly_bad_html))
             source = None
             new_source = QtCore.QMimeData()
             new_source.setHtml(desired_html)

@@ -13,7 +13,7 @@ from gui_forms_logic.dlgs.dlg_sales_opportunity import gui_Dialog_EditSalesOppor
 from gui_forms_logic.dlgs.dlg_edit_kn_base_record import gui_DialogCrm_EditSimpleRecord
 
 # Import custom gui logic
-from gui_forms_logic.data_models import cDataModel_CounterpartyList
+from gui_forms_logic.data_models import cDataModel_CounterpartyList, cDataModel_HashtagList
 from gui_forms_logic.record_mediators import cMedPrice, cMedMatFlow, cMedContact,\
         cMedKnBaseRecord, cMedSalesLead, cSimpleMediator
 from gui_forms_logic.frame_builder import LabelFrame, RecFrame
@@ -50,6 +50,8 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
     sig_cp_record_added = QtCore.pyqtSignal(str)
     sig_cp_record_deleted = QtCore.pyqtSignal(str)
     sig_cp_record_edited = QtCore.pyqtSignal(str)
+
+    sig_cp_record_massively_updated = QtCore.pyqtSignal()
 
     sig_knbase_record_added = QtCore.pyqtSignal(str)
     sig_knbase_record_deleted = QtCore.pyqtSignal(str)
@@ -124,10 +126,23 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         self.sig_cp_record_added.connect(self.handle_cp_new_record)
         self.sig_cp_record_deleted.connect(self.handle_cp_delete_record)
         self.sig_cp_record_edited.connect(self.handle_cp_edit_record)
+        self.sig_cp_record_massively_updated.connect(self.handle_cp_massively_updated)
 
         ############
         # Knowledge base tab
         ############
+        # Basic signals and models
+        self.pushButton_KnBaseEmptyNote.clicked.connect(self.dlg_add_knbase_record)
+
+        self.data_model_hashtags = cDataModel_HashtagList()
+        self.data_model_hashtags_proxy = QtGui.QSortFilterProxyModel()
+        self.data_model_hashtags_proxy.setSourceModel(self.data_model_hashtags)
+        self.data_model_hashtags_proxy.setDynamicSortFilter(True)
+        self.data_model_hashtags_proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
+
+        self.listView_Hashtags.setModel(self.data_model_hashtags)
+        self.lineEdit_KnBase_Search.textChanged.connect(self.new_search_text_input)
+        self.listView_Hashtags.selectionModel().currentChanged.connect(self.click_on_hashtag)
 
         # Setup knbase scroll
         self.mediators_frame_list_KnBase = []
@@ -144,9 +159,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         self.scrollArea_KnBaseRecords.setWidget(self.base_widget_KnBase)
 
         self.scr_bar_KnBaseRecords.valueChanged.connect(self.scrolled_KnBase)
-
-        # Setup signals
-        self.pushButton_KnBaseEmptyNote.clicked.connect(self.dlg_add_knbase_record)
 
         # Connect signals that would be raised by widget logics
         self.sig_knbase_record_added.connect(self.handle_knbase_new_record)
@@ -209,6 +221,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             header = cSimpleMediator(self)
             header.set_key('MatFlows')
             header.set_label(u'Потоки снабжения')
+            header.add_call('estimate_group_mat_flows', u'По статистике', cp)
             header.add_call('dlg_add_matflow', u'+Добавить', cp)
             yield header
             for mf_i in db_main.get_mat_flows_list(cp):
@@ -243,15 +256,10 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
         if mediator.label != '':
             new_frame = LabelFrame(mediator, self)
-            # self.mediators_frame_list.append(new_frame)
-            self.mediators_frame_list[mediator.get_key()] = new_frame
-            self.mediators_list_layout.addWidget(new_frame)
-
         else:
-            new_frame_2 = RecFrame(mediator, self)
-            # self.mediators_frame_list.append(new_frame_2)
-            self.mediators_frame_list[mediator.get_key()] = new_frame_2
-            self.mediators_list_layout.addWidget(new_frame_2)
+            new_frame = RecFrame(mediator, self)
+        self.mediators_frame_list[mediator.get_key()] = new_frame
+        self.mediators_list_layout.addWidget(new_frame)
 
     @staticmethod
     def delete_widgets(layout):
@@ -275,23 +283,58 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
     # Signals with counterparty tab
     @QtCore.pyqtSlot(str)
     def handle_cp_new_record(self, rec_key):
-        print("new record handler triggered " + str(rec_key))
-        # Redraw counterparty
         self.redraw_mediators(self.current_cp)
 
     @QtCore.pyqtSlot(str)
     def handle_cp_delete_record(self, rec_key):
-        print("delete record handler triggered " + str(rec_key))
         self.redraw_mediators(self.current_cp)
 
     @QtCore.pyqtSlot(str)
     def handle_cp_edit_record(self, rec_key):
-        print("edit record handler triggered " + str(rec_key))
+        self.redraw_mediators(self.current_cp)
+
+    @QtCore.pyqtSlot()
+    def handle_cp_massively_updated(self):
         self.redraw_mediators(self.current_cp)
 
     #################
     # Вкладка с заметками
     #################
+
+    def new_search_text_input(self, new_text):
+        """
+        Вызывается при вводе нового текста в строку поиска
+        Args:
+            new_text: текст из поля ввода
+        """
+        self.data_model_hashtags_proxy.setFilterRegExp(new_text)
+
+    def click_on_hashtag(self, index_to, index_from):
+        """
+        Вызывается при клике на хештэг
+        """
+        tag_i = index_to.data(35).toPyObject()
+        self.current_tag = tag_i
+        if tag_i is None:
+            return
+        self.print_crm_records_to_area(tag_i.records)
+
+    def print_crm_records_to_area(self, records_iterator):
+        """
+        Args:
+            records_iterator: Some iterator over records (should do query with every next() call)
+        """
+        for rec_i in records_iterator:
+            new_mediator = cMedKnBaseRecord(self, rec_i)
+            new_mediator.add_call('dlg_edit_knbase_record', u'Изменить', rec_i)
+            new_mediator.add_call('dlg_delete_knbase_record', u'Удалить', rec_i)
+
+            new_frame = RecFrame(new_mediator, self)
+            self.mediators_frame_list_KnBase.append(new_frame)
+            self.mediators_list_layout_KnBase.addWidget(new_frame)
+
+    def scrolled_KnBase(self):
+        print("scrooled!")
 
     @QtCore.pyqtSlot(str)
     def handle_knbase_new_record(self, rec_key):
@@ -304,24 +347,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
     @QtCore.pyqtSlot(str)
     def handle_knbase_edit_record(self, rec_key):
         print("edit record handler triggered " + str(rec_key))
-
-
-    def print_to_area(self, records_iterator):
-        """
-        Args:
-            records_iterator: Some iterator over records (should do query with every next() call)
-        """
-        for rec_i in records_iterator:
-            new_mediator = cMedKnBaseRecord(self, rec_i)
-            new_mediator.add_call('dlg_edit_knbase_record', u'Изменить', rec_i)
-            new_mediator.add_call('dlg_delete_knbase_record', u'Удалить', rec_i)
-
-            new_frame = RecFrame(new_mediator, self)
-            self.mediators_frame_list_KnBase.append(new_frame)
-            self.mediators_list_layout_KnBase.append(new_frame)
-
-    def scrolled_KnBase(self):
-        print("scrooled!")
 
     ###################
     # Управление диалоговыми окнами
@@ -406,7 +431,9 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             #Записали в базу данных
             db_main.the_session_handler.add_object_to_session(a_price)
             db_main.the_session_handler.commit_session()
+            # Сигнал!
             self.sig_cp_record_added.emit(a_price.string_key())
+            # TODO: заметка
 
     def dlg_edit_price(self, price_instance):
         if price_instance is None:
@@ -415,10 +442,11 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         edit_dialog.set_state_to_edit(price_instance)
         is_ok, a_price = edit_dialog.run_dialog()
         if is_ok == 1: # a_price = price_instance
-            #Записали в базу данных
+            # Записали в базу данных
             db_main.the_session_handler.commit_session()
-            #Не забыли обновить табличку
+            # Сигнал!
             self.sig_cp_record_edited.emit(a_price.string_key())
+            # TODO: заметка
 
     def dlg_delete_price(self, price_instance):
         if price_instance is None:
@@ -433,7 +461,9 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         if a_reply == QtGui.QMessageBox.Yes:
             k = price_instance.string_key()
             db_main.the_session_handler.delete_concrete_object(price_instance)
+            # Сигнал!
             self.sig_cp_record_deleted.emit(k)
+            # TODO: заметка
 
     # ПОТОКИ СНАБЖЕНИЯ (MATFLOW)
 
@@ -449,8 +479,11 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             #Записали в базу данных
             db_main.the_session_handler.add_object_to_session(a_mf)
             db_main.the_session_handler.commit_session()
+            # Сигнал!
             self.sig_cp_record_added.emit(a_mf.string_key())
-            # TODO: заметка! (уже сделано было раньше)
+            #Создаём заметку
+            htmltext_template = db_main.crm_template_new_budget_for_new_matflow(a_mf)
+            self.dlg_add_knbase_record(htmltext=htmltext_template, header=u"Бюджет продаж - новая линия сбыта")
 
     def dlg_edit_matflow(self, matflow_instance):
         if matflow_instance is None:
@@ -461,11 +494,13 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         edit_dialog.set_state_to_edit(matflow_instance)
         is_ok, a_mf  = edit_dialog.run_dialog()
         if is_ok == 1:  # a_mf = matflow_instance
-            #Записали в базу данных
+            # Записали в базу данных
             db_main.the_session_handler.commit_session()
-            #Не забыли обновить табличку
+            # Не забыли обновить табличку
             self.sig_cp_record_edited.emit(a_mf.string_key())
-            # TODO: заметка! (уже сделано было раньше)
+            # Заметка
+            htmltext_template = db_main.crm_template_change_volume_in_budget(a_mf, old_volume, old_freq)
+            self.dlg_add_knbase_record(htmltext=htmltext_template, header=u"Бюджет продаж - уточнение")
 
     def dlg_delete_matflow(self, matflow_instance):
         if matflow_instance is None:
@@ -479,6 +514,26 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             db_main.the_session_handler.delete_concrete_object(matflow_instance)
             self.sig_cp_record_deleted.emit(k)
             #TODO: заметка!
+
+    def estimate_group_mat_flows(self, agent):
+        if agent is None:
+            raise BaseException("No agent selected!")
+        if agent.discriminator != "client":
+            raise BaseException("Wrong agent type!")
+        a_msg = u"Будет произведена переоценка потребления всех материалов по клиенту " + unicode(agent.name) +\
+                u", действие нельзя отменить - подтверждаете операцию?"
+        a_reply = QtGui.QMessageBox.question(self, unicode(u'Подтвердите'), a_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if a_reply == QtGui.QMessageBox.Yes:
+            agent.update_stats_on_material_flows(db_main.estimate_shipment_stats(agent))
+            for mf_i in agent.material_flows:
+                db_main.the_session_handler.merge_object_to_session(mf_i)
+            db_main.the_session_handler.commit_session()
+            # Сигнал!
+            self.sig_cp_record_massively_updated.emit()
+            #Создаём заметку в базе (предлагаем создать)
+            htmltext_template = db_main.crm_template_new_budget(agent)
+            htmltext_template += u" статистика потребления"
+            self.dlg_add_knbase_record(htmltext=htmltext_template, header=u"Бюджет продаж - статистика")
 
     # ЛИДЫ (OPPORTUNITY)
 
@@ -494,7 +549,11 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             #Записали в базу данных
             db_main.the_session_handler.add_object_to_session(new_lead)
             db_main.the_session_handler.commit_session()
+            # Сигнал
             self.sig_cp_record_added.emit(new_lead.string_key())
+            # Заметка
+            htmltext_template, text_header = db_main.crm_template_new_sales_lead(new_lead)
+            self.dlg_add_knbase_record(htmltext=htmltext_template, header=text_header)
 
     def dlg_edit_lead(self, a_lead):
         if a_lead is None:
@@ -504,26 +563,32 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         edit_dialog.set_state_to_edit(a_lead)
         is_ok, new_lead = edit_dialog.run_dialog() #new_lead = a_lead
         if is_ok == 1:
-            #Записали в базу данных
+            # Записали в базу данных (нужен ли мердж?..)
             db_main.the_session_handler.commit_session()
-            #Не забыли обновить табличку
+            # Сигнал
             self.sig_cp_record_edited.emit(a_lead.string_key())
+            # Заметка
+            htmltext_template, text_header = db_main.crm_template_change_sales_lead(old_lead, new_lead)
+            self.dlg_add_knbase_record(htmltext=htmltext_template, header=text_header)
+
 
     def dlg_delete_lead(self, a_lead):
-        if sales_opportunity is None:
+        if a_lead is None:
             raise BaseException("No sales opportunity selected!")
         a_msg = unicode(u"Подтверждаете забвение возможности по товару %s? Или, может, сроки перенесете?") %(unicode(a_lead.material_type.material_type_name))
         a_reply = QtGui.QMessageBox.question(self, unicode(u'Подтвердите'), a_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
         if a_reply == QtGui.QMessageBox.Yes:
             k = a_lead.string_key()
             db_main.the_session_handler.delete_concrete_object(a_lead)
+            # Сигнал
             self.sig_cp_record_deleted.emit(k)
+            # TODO: заметка
 
-    # ЗАМЕТКИ В БАЗЕ ЗНАНИЙ
+    # ЗАМЕТКИ
 
-    def dlg_add_knbase_record(self):
+    def dlg_add_knbase_record(self, hashtags_list=None, htmltext='', header=''):
         edit_dialog = self.get_DlgEditSimpleRecord()
-        edit_dialog.set_state_to_add_new()
+        edit_dialog.set_state_to_add_new(hashtags_list, htmltext, header)
         is_ok, new_rec = edit_dialog.run_dialog()
         if is_ok == 1:
             db_main.the_session_handler.add_object_to_session(new_rec)
@@ -553,6 +618,4 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             k = a_rec.string_key()
             db_main.the_session_handler.delete_concrete_object(a_rec)
             self.sig_knbase_record_added.emit(k)
-
-
 

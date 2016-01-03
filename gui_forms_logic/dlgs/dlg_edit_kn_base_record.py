@@ -82,7 +82,7 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
         preview.paintRequested.connect(lambda p: self.textEdit_longtext.print_(p))
         preview.exec_()
 
-    def context(self,pos):
+    def context(self, pos):
         cursor = self.textEdit_longtext.textCursor()
         # Grab the current table, if there is one
         table = cursor.currentTable()

@@ -441,3 +441,48 @@ class CDataModel_ContactDetailsTable(QtCore.QAbstractTableModel):
         self.beginRemoveRows(an_index, an_index.row(),an_index.row())
         self.__details.pop(an_index.row())
         self.endRemoveRows()
+
+class cDataModel_HashtagList(QtCore.QAbstractListModel):
+    def __init__(self,  parent = None):
+        QtCore.QAbstractListModel.__init__(self, parent)
+        self.__hashtags = []
+        self.update_list()
+
+    def update_list(self):
+        self.beginResetModel()
+        self.__hashtags = []
+        for ht_i in db_main.get_hashtags_list_iter():
+            self.__hashtags += [ht_i]
+        self.endResetModel()
+
+    def rowCount(self, parent):
+        return len(self.__hashtags)
+
+    def data(self, index, role):
+        if role == QtCore.Qt.DisplayRole:
+            ht_i = self.__hashtags[index.row()]
+            return unicode(u"#" + ht_i.text)
+        # elif role == QtCore.Qt.DecorationRole:
+        #     ht_i = self.__hashtags[index.row()]
+        #     how_freq = len(ht_i.records)
+        #     if how_freq >= 200:
+        #         return QtGui.QColor(0,255,255)
+        #     elif how_freq >= 100:
+        #         return QtGui.QColor(0,230,230)
+        #     elif how_freq >= 80:
+        #         return QtGui.QColor(0,210,210)
+        #     elif how_freq >= 50:
+        #         return QtGui.QColor(0,190,190)
+        #     elif how_freq >= 30:
+        #         return QtGui.QColor(0,170,170)
+        #     elif how_freq >= 10:
+        #         return QtGui.QColor(0,150,150)
+        #     elif how_freq >= 5:
+        #         return QtGui.QColor(0,120,120)
+        #     else:
+        #         return QtGui.QColor(255,255,255)
+        elif role == 35: #Наша роль для передачи данных
+            return self.__hashtags[index.row()]
+
+    def flags(self, index):
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
