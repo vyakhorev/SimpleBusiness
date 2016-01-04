@@ -44,7 +44,7 @@ STYLE_URL = None
 # How many lines to load first time
 RECORDS_NUM = 4
 
-class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
+class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
     sig_cp_record_added = QtCore.pyqtSignal(str)
     sig_cp_record_deleted = QtCore.pyqtSignal(str)
@@ -59,7 +59,7 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
 
         # Loading stylesheets
         if STYLES:
-                style_sheet_src = QtCore.QFile('C:\Ilua\qt4_rnd\ui\Stylesheets\scheme.qss')
+                style_sheet_src = QtCore.QFile('scheme.qss')
                 style_sheet_src.open(QtCore.QIODevice.ReadOnly)
                 if style_sheet_src.isOpen():
                     self.setStyleSheet(QtCore.QVariant(style_sheet_src.readAll()).toString())
@@ -84,7 +84,8 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         self.listView_ClientList.selectionModel().currentChanged.connect(self.click_on_CP)
 
         # Right-side logic
-        self.mediators_frame_list = []
+        # self.mediators_frame_list = []
+        self.mediators_frame_list = {}
 
         # Placing QScrollArea
         self.scroll_area = QtGui.QScrollArea()
@@ -122,7 +123,12 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
         self.sig_cp_record_edited.connect(self.handle_cp_edit_record)
 
     def click_on_CP(self, index_to, index_from):
+        # Check if old mediators exist and delete
+        if len(self.mediators_frame_list) != 0:
+            self.delete_widgets(self.mediators_list_layout)
+
         cp_i = index_to.data(35).toPyObject()
+        self.current_cp = cp_i
         if cp_i is None:
             return
         for med_i in self._iter_cp_mediator(cp_i):
@@ -202,26 +208,51 @@ class gui_MainWindow(QtGui.QMainWindow,Ui_MainWindowModern):
 
         if mediator.label != '':
             new_frame = LabelFrame(mediator, self)
-            self.mediators_frame_list.append(new_frame)
+            # self.mediators_frame_list.append(new_frame)
+            self.mediators_frame_list[mediator.get_key()] = new_frame
             self.mediators_list_layout.addWidget(new_frame)
 
         else:
             new_frame_2 = RecFrame(mediator, self)
-            self.mediators_frame_list.append(new_frame_2)
+            # self.mediators_frame_list.append(new_frame_2)
+            self.mediators_frame_list[mediator.get_key()] = new_frame_2
             self.mediators_list_layout.addWidget(new_frame_2)
+
+    @staticmethod
+    def delete_widgets(layout):
+        """
+            Deleting all widgets from any layout
+        """
+        for wg_i in reversed(xrange(layout.count())):
+            item = layout.takeAt(wg_i)
+            # print('going to remove {}'.format(item))
+            layout.removeItem(item)
+            item.widget().deleteLater()
+
+    def redraw_mediators(self, cp):
+        """
+            Clear and redraw mediators for current counterparty
+        """
+        self.delete_widgets(self.mediators_list_layout)
+        for med_i in self._iter_cp_mediator(cp):
+            self.make_frame_from_mediator(med_i)
 
     # Signals with counterparty tab
     @QtCore.pyqtSlot(str)
     def handle_cp_new_record(self, rec_key):
         print("new record handler triggered " + str(rec_key))
+        # Redraw counterparty
+        self.redraw_mediators(self.current_cp)
 
     @QtCore.pyqtSlot(str)
     def handle_cp_delete_record(self, rec_key):
         print("delete record handler triggered " + str(rec_key))
+        self.redraw_mediators(self.current_cp)
 
     @QtCore.pyqtSlot(str)
     def handle_cp_edit_record(self, rec_key):
         print("edit record handler triggered " + str(rec_key))
+        self.redraw_mediators(self.current_cp)
 
     ###################
     # Управление диалоговыми окнами
