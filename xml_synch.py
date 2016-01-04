@@ -16,16 +16,6 @@ from db_main import *
 from db_handlers import SynchFindingListError, SynchUnknownError
 from utils import c_task, c_msg
 
-# cnf = gl_shared.ConfigParser.ConfigParser()
-# cnf.read('.\__secret\main.ini')
-# InputDir = unicode(cnf.get("SynchData","DirWith1Cdata").decode("cp1251"))
-# FileWithLists = InputDir + unicode(cnf.get("SynchData","FileWithLists").decode("cp1251"))
-# FileWithLogs = InputDir + unicode(cnf.get("SynchData","FileWithLogs").decode("cp1251"))
-# FileWithDynamicData = InputDir + unicode(cnf.get("SynchData","FileWithDynamicData").decode("cp1251"))
-# OutputDir = unicode(cnf.get("SynchData","DirWithOutputData").decode("cp1251"))
-# FileForSalesBudgetExport = OutputDir + unicode(cnf.get("SynchData","FileForSalesBudgetExport").decode("cp1251"))
-# cnf = None
-
 from cnf import InputDir, FileWithLists, FileWithLogs, FileWithDynamicData, OutputDir, FileForSalesBudgetExport
 
 #################################
@@ -613,7 +603,7 @@ class c_build_excessive_links(c_task):
         the_firm.define_bank_account(the_session_handler.get_singleton_object(c_bank_account))
         the_firm.define_projects_list(the_session_handler.get_all_objects_list(c_project))
         the_firm.define_sell_prices_list(the_session_handler.get_all_objects_list(c_sell_price))
-        roubles = the_session_handler.get_account_system_object(c_currency,unicode("643"))
+        roubles = the_session_handler.get_account_system_object(c_currency, unicode("643"))
         the_firm.define_main_currency(roubles)
         the_session_handler.commit_session()
         yield c_msg(u"%s - дело сделано"%(self.name))
