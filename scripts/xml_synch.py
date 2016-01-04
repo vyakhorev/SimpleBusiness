@@ -16,15 +16,17 @@ from db_main import *
 from db_handlers import SynchFindingListError, SynchUnknownError
 from utils import c_task, c_msg
 
-cnf = gl_shared.ConfigParser.ConfigParser()
-cnf.read('.\__secret\main.ini')
-InputDir = unicode(cnf.get("SynchData","DirWith1Cdata").decode("cp1251"))
-FileWithLists = InputDir + unicode(cnf.get("SynchData","FileWithLists").decode("cp1251"))
-FileWithLogs = InputDir + unicode(cnf.get("SynchData","FileWithLogs").decode("cp1251"))
-FileWithDynamicData = InputDir + unicode(cnf.get("SynchData","FileWithDynamicData").decode("cp1251"))
-OutputDir = unicode(cnf.get("SynchData","DirWithOutputData").decode("cp1251"))
-FileForSalesBudgetExport = OutputDir + unicode(cnf.get("SynchData","FileForSalesBudgetExport").decode("cp1251"))
-cnf = None
+# cnf = gl_shared.ConfigParser.ConfigParser()
+# cnf.read('.\__secret\main.ini')
+# InputDir = unicode(cnf.get("SynchData","DirWith1Cdata").decode("cp1251"))
+# FileWithLists = InputDir + unicode(cnf.get("SynchData","FileWithLists").decode("cp1251"))
+# FileWithLogs = InputDir + unicode(cnf.get("SynchData","FileWithLogs").decode("cp1251"))
+# FileWithDynamicData = InputDir + unicode(cnf.get("SynchData","FileWithDynamicData").decode("cp1251"))
+# OutputDir = unicode(cnf.get("SynchData","DirWithOutputData").decode("cp1251"))
+# FileForSalesBudgetExport = OutputDir + unicode(cnf.get("SynchData","FileForSalesBudgetExport").decode("cp1251"))
+# cnf = None
+
+from cnf import InputDir, FileWithLists, FileWithLogs, FileWithDynamicData, OutputDir, FileForSalesBudgetExport
 
 #################################
 def synch_error_handler(fn):

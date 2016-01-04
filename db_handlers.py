@@ -19,6 +19,7 @@ from sqlalchemy.orm import with_polymorphic
 import traceback
 import gl_shared
 
+
 #################################
 #   Внутренняя кухня
 ################################# 
@@ -250,18 +251,17 @@ class c_session_handler():
 
 #-----------------
 #Общие штуки для общения и подключения к базе данных
-cnf = gl_shared.ConfigParser.ConfigParser()
-cnf.read('.\__secret\main.ini')
-db_type, db_conn_str, do_echo = cnf.get("DBConnection","Type"), cnf.get("DBConnection","ConnString"), cnf.getboolean("DBConnection", "DoEcho")
+
+from cnf import db_type, db_conn_str, db_do_echo, db_is_prod
 
 if db_type == "SQLite":
-    engine = create_engine(db_conn_str, echo=do_echo, encoding=ultimate_encoding)
+    engine = create_engine(db_conn_str, echo=db_do_echo, encoding=ultimate_encoding)
 elif db_type == "MySQL":
-    engine = create_engine(db_conn_str, echo=do_echo, encoding=ultimate_encoding)
+    engine = create_engine(db_conn_str, echo=db_do_echo, encoding=ultimate_encoding)
 else:
     raise BaseException("Unknown database type in main.ini")
 
-if cnf.getboolean("DBConnection", "IsProd"):
+if db_is_prod:
     print("THIS IS A PRODUCTION DATABASE !!!")
 else:
     print("running a testing database")

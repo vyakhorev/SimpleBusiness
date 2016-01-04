@@ -11,21 +11,8 @@ from ui.ui_DialogCrm_EditSimpleRecord import Ui_DialogCrm_EditSimpleRecord
 from ui.manually.popup_text_editor import gui_EditTextRecord
 from ui.manually.table import ui_EditorHtmlTableSettings
 from ui.manually.tag_lighter import ui_TagHighlighter
-#from ui.manually.parser_browser import
 
-# TODO: keep ini file in one location..
-import simple_locale
-import gl_shared
-
-unicode_codec = QtCore.QTextCodec.codecForName(simple_locale.ultimate_encoding)
-
-cnf = gl_shared.ConfigParser.ConfigParser()
-cnf.read('.\__secret\main.ini')
-user_name = unicode(cnf.get("UserConfig", "UserName").decode("cp1251"))
-is_user_admin = unicode(cnf.getboolean("UserConfig", "IsAdmin"))
-user_email = cnf.get("UserConfig", "PersonalEmail").decode("cp1251")
-user_group_email = cnf.get("UserConfig", "GroupEmail").decode("cp1251")
-cnf = None
+from cnf import user_name
 
 class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecord):
     def __init__(self, parent=None):
@@ -188,7 +175,7 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
         self.textEdit_longtext.selectAll()
         self.textEdit_longtext.setCurrentFont(readable_font)
 
-    def set_state_to_add_new(self, suggested_tags = None, text_template = "", header = ""):
+    def set_state_to_add_new(self, suggested_tags=[], text_template="", header=""):
         # self.record_entity создается перед закрытием с кнопкой "ОК"
         self.setWindowTitle(unicode(u"Создание заметки"))
         existing_hashtags = db_main.get_hashtags_text_list()
@@ -200,8 +187,6 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
         self.label_date_added.setText(datetime.date.today().strftime("%Y %B %d (%A)")) # перед "ОК" всё равно меняется
         self.lineEdit_headline.setText(header)
         s = ""
-        if suggested_tags is None:
-            suggested_tags = []
         suggested_tags.append(user_name)
         for h_i in suggested_tags:
             s += "#" + h_i + ", "

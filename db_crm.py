@@ -5,18 +5,14 @@
 
 from db_exec import BASE
 from db_utils import abst_key
-import gl_shared
 from db_shared import *
 import c_HTML_reports
+from cnf import user_name
+
 
 records_to_hastags = Table('crm_records_to_hastags', BASE.metadata,
                            Column('rec_id', Integer, ForeignKey('crm_record.rec_id')),
                            Column('hash_id', Integer, ForeignKey('crm_hastag.rec_id')))
-
-cnf = gl_shared.ConfigParser.ConfigParser()
-cnf.read('.\__secret\main.ini')
-user_name =  cnf.get("UserConfig","UserName").decode("cp1251")
-cnf = None
 
 class c_hastag(BASE, abst_key):
     __tablename__ = "crm_hastag"

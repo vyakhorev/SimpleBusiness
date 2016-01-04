@@ -586,9 +586,9 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
     # ЗАМЕТКИ
 
-    def dlg_add_knbase_record(self, hashtags_list=None, htmltext='', header=''):
+    def dlg_add_knbase_record(self, hashtags_list=[], htmltext='', header=''):
         edit_dialog = self.get_DlgEditSimpleRecord()
-        edit_dialog.set_state_to_add_new(hashtags_list, htmltext, header)
+        edit_dialog.set_state_to_add_new([], htmltext, header)
         is_ok, new_rec = edit_dialog.run_dialog()
         if is_ok == 1:
             db_main.the_session_handler.add_object_to_session(new_rec)
