@@ -24,17 +24,6 @@ import gl_shared
 
 # import threading
 
-# unicode_codec = QtCore.QTextCodec.codecForName(simple_locale.ultimate_encoding)
-#
-# cnf = gl_shared.ConfigParser.ConfigParser()
-#
-# cnf.read('.\__secret\main.ini')
-# user_name = unicode(cnf.get("UserConfig","UserName").decode("cp1251"))
-# is_user_admin = unicode(cnf.getboolean("UserConfig","IsAdmin"))
-# user_email = cnf.get("UserConfig","PersonalEmail").decode("cp1251")
-# user_group_email = cnf.get("UserConfig","GroupEmail").decode("cp1251")
-# cnf = None
-#
 # TabNums = {"CPs":0, "KnBase":1}
 
 # Constants #

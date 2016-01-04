@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'E:\Code\SimpleBusiness\ui\ModernMainWindow_v2.ui'
 #
-# Created: Sun Jan 03 19:25:37 2016
+# Created: Mon Jan 04 17:31:01 2016
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -141,7 +141,7 @@ class Ui_MainWindowModern(object):
         self.action_AddNewCP.setObjectName(_fromUtf8("action_AddNewCP"))
 
         self.retranslateUi(MainWindowModern)
-        self.Global_tabs.setCurrentIndex(0)
+        self.Global_tabs.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindowModern)
 
     def retranslateUi(self, MainWindowModern):

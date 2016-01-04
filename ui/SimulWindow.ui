@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainSimulWindow</class>
+ <widget class="QMainWindow" name="MainSimulWindow">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>924</width>
+    <height>643</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Simple Business </string>
+  </property>
+  <property name="documentMode">
+   <bool>false</bool>
+  </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout_16">
+    <item>
+     <widget class="QTabWidget" name="Global_tabs">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="tabPosition">
+       <enum>QTabWidget::North</enum>
+      </property>
+      <property name="tabShape">
+       <enum>QTabWidget::Rounded</enum>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <property name="documentMode">
+       <bool>false</bool>
+      </property>
+      <widget class="QWidget" name="tab_Simulation">
+       <attribute name="title">
+        <string>Прогноз</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_13">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+             <widget class="QLineEdit" name="lineEdit_find_var_mainsim"/>
+            </item>
+            <item>
+             <widget class="QListView" name="listView_main_sim">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_11">
+            <item>
+             <widget class="QTabWidget" name="SIM_info_tabs">
+              <property name="tabPosition">
+               <enum>QTabWidget::West</enum>
+              </property>
+              <property name="tabShape">
+               <enum>QTabWidget::Rounded</enum>
+              </property>
+              <property name="currentIndex">
+               <number>0</number>
+              </property>
+              <widget class="QWidget" name="SIM_INF_plot">
+               <attribute name="title">
+                <string>Plot</string>
+               </attribute>
+               <layout class="QVBoxLayout" name="verticalLayout">
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_14">
+                  <item>
+                   <widget class="QPushButton" name="button_home">
+                    <property name="text">
+                     <string>Home</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="button_zoom">
+                    <property name="text">
+                     <string>Zoom</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="button_pan">
+                    <property name="text">
+                     <string>Pan</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="button_saveplot">
+                    <property name="text">
+                     <string>Save plot</string>
+                    </property>
+                    <property name="icon">
+                     <iconset>
+                      <normaloff>../../Users/vyakhorev/.designer/backup/icons/save_icon.png</normaloff>
+                      <normalon>../../Users/vyakhorev/.designer/backup/icons/save_icon.png</normalon>
+                      <activeoff>../../Users/vyakhorev/.designer/backup/icons/save_icon.png</activeoff>
+                      <activeon>../../Users/vyakhorev/.designer/backup/icons/save_icon.png</activeon>../../Users/vyakhorev/.designer/backup/icons/save_icon.png</iconset>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="MatplotlibWidget" name="SIM_INF_mpl_plot"/>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="SIM_INF_report">
+               <attribute name="title">
+                <string>Report</string>
+               </attribute>
+               <layout class="QHBoxLayout" name="horizontalLayout_19">
+                <item>
+                 <widget class="QTextBrowser" name="textBrowser_Simulation"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_SimulLog">
+       <attribute name="title">
+        <string>Тест - симуляция</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_10">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_15">
+          <item>
+           <widget class="QPushButton" name="pushButton_log_run_simul_random">
+            <property name="text">
+             <string>Случайная эпоха</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_13">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="button_log_run_simul">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>41</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Запуск выбранной эпохи:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="seed_cmbx">
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTabWidget" name="tabWidget_testsim">
+          <property name="tabPosition">
+           <enum>QTabWidget::West</enum>
+          </property>
+          <property name="tabShape">
+           <enum>QTabWidget::Rounded</enum>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tab_log">
+           <attribute name="title">
+            <string>Лог</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_9">
+            <item>
+             <widget class="QLineEdit" name="lineEdit_SearchInLog"/>
+            </item>
+            <item>
+             <widget class="QTableView" name="log_table_browser"/>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_variables">
+           <attribute name="title">
+            <string>Переменные</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_12">
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_14">
+              <item>
+               <widget class="QLineEdit" name="lineEdit_testsim_findvar"/>
+              </item>
+              <item>
+               <widget class="QListView" name="listView_log_var_list"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="MatplotlibWidget" name="mplwidget_testsim"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_Run_Simulate">
+   <property name="text">
+    <string>Запуск симуляции</string>
+   </property>
+  </action>
+  <action name="action_Synhronize_xm_with_db">
+   <property name="text">
+    <string>Загрузить из 1С</string>
+   </property>
+  </action>
+  <action name="action_upload_budget_csv">
+   <property name="text">
+    <string>Выгрузить в 1С</string>
+   </property>
+  </action>
+  <action name="action_2">
+   <property name="text">
+    <string>#ЗапросТовара</string>
+   </property>
+  </action>
+  <action name="action_3">
+   <property name="text">
+    <string>#Бюджет</string>
+   </property>
+  </action>
+  <action name="action_4">
+   <property name="text">
+    <string>#Офер</string>
+   </property>
+  </action>
+  <action name="action_5">
+   <property name="text">
+    <string>#Прайс</string>
+   </property>
+  </action>
+  <action name="action_6">
+   <property name="text">
+    <string>#Беседа</string>
+   </property>
+  </action>
+  <action name="action_fast_NewContact">
+   <property name="text">
+    <string>Новый контакт</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>Заметка</string>
+   </property>
+  </action>
+  <action name="action_AddFastNote">
+   <property name="text">
+    <string>+ Быстрая заметка</string>
+   </property>
+  </action>
+  <action name="action_AddNewContact">
+   <property name="text">
+    <string>+ Контакт</string>
+   </property>
+  </action>
+  <action name="action_7">
+   <property name="text">
+    <string>+ Клиент</string>
+   </property>
+  </action>
+  <action name="action_8">
+   <property name="text">
+    <string>+ Поставщик</string>
+   </property>
+  </action>
+  <action name="action_AddNewCP">
+   <property name="text">
+    <string>+ Контрагент</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MatplotlibWidget</class>
+   <extends>QWidget</extends>
+   <header>matplotlibwidget</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

@@ -403,7 +403,7 @@ def check_payproc():
 """ TEST """
 if __name__ == "__main__":
 
-    do_synch = 1  #change this if you must
+    do_synch = 0  #change this if you must
     if do_synch:
         print "*" * 20
         print "READ XML -> DATABASE"
