@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from xml_synch import c_read_lists_from_1C_task, c_read_logs_from_1C_task, c_read_dynamic_data_from_1C_task,\
-    c_read_generalinfo_from_1C_task, c_update_ccy_stats, c_build_excessive_links
+    c_read_generalinfo_from_1C_task, c_update_ccy_stats, c_build_excessive_links, c_print_budget_to_csv
 
 from utils import c_msg, c_task
 

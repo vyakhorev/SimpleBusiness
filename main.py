@@ -17,7 +17,8 @@ python main.py -gui nogui -action simul
 - Perform simulations
 python main.py -gui nogui -action load
 - Load everything from 1C (from xml file)
-
+python main.py -gui nogui -action upload
+- Upload to 1C (at the moment, only expected sales, no sim results)
 
 """
 
@@ -70,6 +71,14 @@ def load_from_1C():
     mng.add_task(admin_scripts.c_build_excessive_links())
     mng.run_tasks()
 
+def upload_to_1C():
+    # TODO: test it and fix price <-> matflow relations
+    import admin_scripts
+    mng = admin_scripts.c_admin_tasks_manager()
+    mng.add_task(admin_scripts.c_print_budget_to_csv())
+    mng.run_tasks()
+
+
 if __name__ == "__main__":
     import simple_locale
     reload(sys)
@@ -77,7 +86,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Run one of the processes for SimpleBusiness')
     parser.add_argument('-gui', dest='gui', choices=['crm', 'simul', 'data', 'nogui'])
-    parser.add_argument('-action', dest='action', choices=['simul', 'load'])
+    parser.add_argument('-action', dest='action', choices=['simul', 'load', 'upload'])
     cmd_options = parser.parse_args()
 
     if cmd_options.gui is None:
@@ -94,4 +103,6 @@ if __name__ == "__main__":
             run_simulations()
         elif cmd_options.action == 'load':
             load_from_1C()
+        elif cmd_options.action == 'upload':
+            upload_to_1C()
 

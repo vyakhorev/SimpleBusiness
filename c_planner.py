@@ -46,7 +46,7 @@ class c_planner():
             t0 = datetime.datetime.now()
             seed_i = random.randint(0, sys.maxint)  #Обрати внимание, когда на разных 32/64 запускаешь!
             #self.run_epoch(sim_until, seed_i, sim_results)
-            self.run_epoch(sim_until, seed_i, sim_results, print_console = False)  #investigations
+            self.run_epoch(sim_until, seed_i, sim_results, print_console=False)  #investigations
             t1 = datetime.datetime.now()
             print("%s writing results of %d epoch to database ..."% (str(t1), k+1))
             db_main.add_epoch_data(k,seed_i,sim_results)
@@ -61,9 +61,8 @@ class c_planner():
         av_write = sum(write_db_times)/len(write_db_times)
         print("Average epoch results write to database time is %d microseconds, total writing is %d microseconds"% (av_write, sum(write_db_times)))
         finalize_epoch_data()
-        print("Recalc budget..")
-        self.publish_stats()  #Запись в базу статистики - в явном виде. Пока только бюджет продаж.
-        print("Published!")
+        print("Simulation DONE!")
+
 
     def run_epoch(self, sim_until, seed = 0, sim_results = None, print_console = False, print_to_list = None):
         # Создаем рабочую среду для системы
@@ -81,17 +80,12 @@ class c_planner():
 
     def add_observers(self,sim_results):
         observers = []
-        observers += [c_ccyrate_observer(u"КУРСЫ",self.system, sim_results, 5)]
+        observers += [c_ccyrate_observer(u"КУРСЫ", self.system, sim_results, 5)]
         observers += [c_warehouse_observer(u"СКЛАД", self.system, sim_results, 5)]
         observers += [c_money_observer(u"БАНК", self.system, sim_results, 5)]
         observers += [c_client_demand_observer(u"СПРОС", self.system, sim_results, 5)]
         for obs_i in observers:
             obs_i.activate_in_env()
-
-    def publish_stats(self):
-        # Записываем в базу бюджет продаж - график ожидаемых значений.
-        # Это не зависит от симуляции, мы выгружаем только ожидаемые значения.
-        db_main.fix_sales_budget()
 
 """Observers"""
 

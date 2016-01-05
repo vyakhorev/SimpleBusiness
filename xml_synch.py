@@ -111,15 +111,26 @@ def get_and_report_obj(obj_class, account_system_code, msgs, obj_logname = ""):
 #   Выгрузка бюджета в csv
 #################################
 
-def print_budget_to_csv():
-    budget_file = open(FileForSalesBudgetExport, mode = 'wb')
-    #csv_budget = unicodecsv.writer(budget_file, encoding = "UTF-8")
-    csv_budget = unicodecsv.writer(budget_file, encoding = "cp1251")
-    for k, bgt in enumerate(the_session_handler.get_all_objects_list_iter(c_sales_budget)):
-        if k == 0:
-            csv_budget.writerow(bgt.csv_header())
-        csv_budget.writerow(bgt.csv_line())
-    budget_file.close()
+class c_print_budget_to_csv(c_task):
+    # Выгрузка бюджета продаж в csv (пока не результаты симуляций)
+    def __init__(self):
+        super(c_print_budget_to_csv, self).__init__(name=u"Выгрузка бюджета продаж")
+
+    def run_task(self):
+        # Вызывается в admin_scripts.c_admin_tasks_manager
+        yield c_msg(u"%s - старт"%(self.name))
+        yield c_msg(u"фиксирую таблицу бюджета продаж..."%(self.name))
+        fix_sales_budget() # Процедура из db_main.
+        yield c_msg(u"выгружаю файл..."%(self.name))
+        budget_file = open(FileForSalesBudgetExport, mode='wb')
+        csv_budget = unicodecsv.writer(budget_file, encoding="cp1251")
+        for k, bgt in enumerate(the_session_handler.get_all_objects_list_iter(c_sales_budget)):
+            if k == 0:
+                csv_budget.writerow(bgt.csv_header())
+            csv_budget.writerow(bgt.csv_line())
+        budget_file.close()
+        yield c_msg(u"Выгрузил %d строк"%(k))
+        yield c_msg(u"%s - успешно завершено"%(self.name))
 
 #********************************************************************
 #**********Загрузка из xml списоков *********************************

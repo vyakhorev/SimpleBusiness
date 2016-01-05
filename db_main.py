@@ -244,21 +244,21 @@ def fix_sales_budget(client = None, mat_flow = None):
     prices_dict = dict()  #Заполняем промежуточный словарик, чтобы проще было цены искать для mf_i
     for pr_i in the_session_handler.get_all_objects_list_iter(c_sell_price):
         if pr_i.is_for_group:
-            k_i = (pr_i.client_model,pr_i.material_type)
+            k_i = (pr_i.client_model, pr_i.material_type)
         else:
-            k_i = (pr_i.client_model,pr_i.material)
+            k_i = (pr_i.client_model, pr_i.material)
         prices_dict[k_i] = pr_i
     for mf_i in mat_flow_list: #для каждого мат. потока пишем ожидания прям в бюджет. Без симуляций пока..
         for sh_date, material, qtty in mf_i.get_expected_budget_iter():
             if prices_dict.has_key((mf_i.client_model,material.material_type)):
                 pr_ent = prices_dict[(mf_i.client_model,material.material_type)]
-                bgt_i = c_sales_budget(material = material, client = mf_i.client_model, quantity = qtty, price = pr_ent.price_value,
-                                       payment_terms = pr_ent.payterm, expected_date_of_shipment = sh_date, wh_vault = wh_vault)
+                bgt_i = c_sales_budget(material=material, client=mf_i.client_model, quantity=qtty, price=pr_ent.price_value,
+                                       payment_terms=pr_ent.payterm, expected_date_of_shipment=sh_date, wh_vault=wh_vault)
                 the_session_handler.add_object_to_session(bgt_i)
             elif prices_dict.has_key((mf_i.client_model,material)):
                 pr_ent = prices_dict[(mf_i.client_model,material)]
-                bgt_i = c_sales_budget(material = material, client = mf_i.client_model, quantity = qtty, price = pr_ent.price_value,
-                                       payment_terms = pr_ent.payterm, expected_date_of_shipment = sh_date, wh_vault = wh_vault)
+                bgt_i = c_sales_budget(material=material, client=mf_i.client_model, quantity=qtty, price=pr_ent.price_value,
+                                       payment_terms=pr_ent.payterm, expected_date_of_shipment=sh_date, wh_vault=wh_vault)
                 the_session_handler.add_object_to_session(bgt_i)
             else:
                 print("[fix_sales_budget]: no price available of %s for %s " % (str(material), str(mf_i.client_model)))
