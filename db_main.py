@@ -118,13 +118,13 @@ def get_initial_data_report_tree():
     my_report_list = []
     wh = the_session_handler.get_singleton_object(c_warehouse)
     bnk = the_session_handler.get_singleton_object(c_bank_account)
-    #Пока упростим..
+    # Заполняем отчетами
     wh_report = the_report_filler.get_report_for_object(wh)
     my_report_list.append(wh_report)
     bnk_report = the_report_filler.get_report_for_object(bnk)
     my_report_list.append(bnk_report)
-    #for proj_i in the_session_handler.get_all_objects_list_iter(c_project):
-    #	my_report_list.append(the_report_filler.get_report_for_object(proj_i))
+    for proj_i in the_session_handler.get_all_objects_list_iter(c_project):
+        my_report_list.append(the_report_filler.get_report_for_object(proj_i))
     return my_report_list
 
 def get_records_list():

@@ -383,6 +383,12 @@ class c_proj_abst_wrapper(c_abst_wrapper):
 class c_proj_cl_ord_wrapper(c_proj_abst_wrapper):
     obj_class_name = "c_project_client_order"
 
+    def get_name(self):
+        return (self.data_object.client_model.name + self.data_object.AgreementName)
+
+    def get_status(self):
+        return "empty status"
+
     def get_html(self):
         html_text = unicode(u"Заказ от " + self.data_object.client_model.name) + "<br>"
         html_text += unicode(u"Спецификация : " + self.data_object.AgreementName + u" от " + self.data_object.DocDate.strftime("%d %b %y")) + "<br>"

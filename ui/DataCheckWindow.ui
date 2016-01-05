@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>MainDataWindow</class>
+ <widget class="QMainWindow" name="MainDataWindow">
   <property name="windowModality">
    <enum>Qt::NonModal</enum>
   </property>
@@ -23,14 +23,44 @@
    <enum>QTabWidget::Rounded</enum>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_16">
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_17">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QPushButton" name="pushButton_LoadFrom1C">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Загрузить из 1С</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_Refresh">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Обновить</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
       <item>
        <widget class="QTreeWidget" name="treeWidget_InitialData">
         <property name="maximumSize">
          <size>
-          <width>303</width>
+          <width>300</width>
           <height>16777215</height>
          </size>
         </property>
@@ -39,17 +69,12 @@
           <string>Item</string>
          </property>
         </column>
-        <column>
-         <property name="text">
-          <string>Status</string>
-         </property>
-        </column>
        </widget>
       </item>
-      <item>
-       <widget class="QTextBrowser" name="textBrowser_InitialData"/>
-      </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QTextBrowser" name="textBrowser_InitialData"/>
     </item>
    </layout>
   </widget>
