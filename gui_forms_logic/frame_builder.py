@@ -29,7 +29,7 @@ class LabelFrame(QtGui.QFrame):
             widget = QtGui.QWidget()
             widget.setLayout(self.button_hor_layout)
 
-             # adding buttons to QHBoxLayout
+            # adding buttons to QHBoxLayout
             self.layout().addWidget(widget)
 
 
@@ -57,30 +57,13 @@ class RecFrame(QtGui.QFrame):
         # |label value |    Html     |
         # ----------------------------
         if mediator.get_HTML() != "":
-            # To make this field nicely resiseble, we can use either
-            # QLabel
-            # Or something like this:
-            # font = textEdit.document().defaultFont()    # or another font if you change it
-            # fontMetrics = QtGui.QFontMetrics(font)      # a QFontMetrics based on our font
-            # textSize = fontMetrics.size(0, text)
-            #
-            # textWidth = textSize.width() + 30       # constant may need to be tweaked
-            # textHeight = textSize.height() + 30     # constant may need to be tweaked
-            #
-            # textEdit.setMinimumSize(textWidth, textHeight)  # good if you want to insert this into a layout
-            # textEdit.resize(textWidth, textHeight)          # good if you want this to be standalone
-
-
-            #self.html_field = QtGui.QTextBrowser()
-
-            self.html_field = QtGui.QLabel()
-            #self.html_field.setReadOnly(1)
-            self.html_field.setWordWrap(True)
+            self.html_field = QtGui.QTextBrowser()
+            self.html_field.setReadOnly(1)
             # TODO detect minimum html text height
-            # self.html_field.setMinimumHeight(100)
-            # self.html_field.setMaximumHeight(150)
-            #self.html_field.setHtml(mediator.get_HTML())
-            self.html_field.setText(mediator.get_HTML())
+            self.html_field.setMinimumHeight(100)
+            self.html_field.setWordWrapMode(0)
+            self.html_field.setMaximumHeight(150)
+            self.html_field.setHtml(mediator.get_HTML())
             # self.html_field.setHtml('Blah Blah')
             self.field_and_html_layout.addWidget(self.html_field)
             self.html_field.setAlignment(QtCore.Qt.AlignTop)

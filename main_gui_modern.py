@@ -32,7 +32,7 @@ import gl_shared
 STYLES = False
 STYLE_URL = None
 # How many lines to load first time
-RECORDS_NUM = 4
+RECORDS_NUM = 2
 
 class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
@@ -82,22 +82,22 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         self.mediators_frame_list = {}
 
         # Placing QScrollArea
-        self.scroll_area = QtGui.QScrollArea()
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll_area_cp_frames = QtGui.QScrollArea()
+        self.scroll_area_cp_frames.setWidgetResizable(True)
+        self.scroll_area_cp_frames.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.scroll_area_cp_frames.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         # adding Scrollbar to QScrollArea
         self.scr_bar = QtGui.QScrollBar()
-        self.scroll_area.setVerticalScrollBar(self.scr_bar)
+        self.scroll_area_cp_frames.setVerticalScrollBar(self.scr_bar)
         # put QScrollArea in main window
-        self.horizontalLayout_2.addWidget(self.scroll_area)
+        self.horizontalLayout_2.addWidget(self.scroll_area_cp_frames)
 
         # inserting vertical layout at right
         self.mediators_list_layout = QtGui.QVBoxLayout()
         self.Base_widget = QtGui.QWidget()
         self.Base_widget.setLayout(self.mediators_list_layout)
         # setting Widget for QScrollArea
-        self.scroll_area.setWidget(self.Base_widget)
+        self.scroll_area_cp_frames.setWidget(self.Base_widget)
 
         # (((o))) connect signals to methods
         # TODO implement scroll event
@@ -322,35 +322,39 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
         if self.current_tag is None: self.current_tag = tag_i
 
-        if tag_i == self.current_tag:
-            # Если тег тот же, то не обновляем вызов
-            return
-
         self.current_tag = tag_i
-        self.start_printing_crm_records(db_main.get_records_list_iter_from_hashtag(tag_i))
 
-    def start_printing_crm_records(self, records_iterator):
         # Стираем старые виджеты
         self.delete_widgets(self.mediators_list_layout_KnBase)
         # Делаем диспенсер для новых записей (будут дальше в медиаторы и фреймы трансформироваться)
-        self.crm_records_dispenser = cIteratorDispenser(records_iterator)
+        self.crm_records_dispenser = cIteratorDispenser(db_main.get_records_list_iter_from_hashtag(tag_i))
         # Добавляем пять первых записей
-        self.add_crm_records_to_area(self.crm_records_dispenser.give_next(5))
+        self.add_crm_records_to_area()
 
     def scrolled_KnBase(self):
+        """
+            Slot, activated by scrolling records  Qscrollarea
+        """
         # Допечатываем ещё виджетов (Один штук)
         # TODO: вызывается и туды, и сюды.. как понять, что до конца провертели?
         if self.crm_records_dispenser is None:
             return
-        next_ones = self.crm_records_dispenser.give_next(1) #Вернет пустой лист, если все выбрали
-        self.add_crm_records_to_area(next_ones)
 
-    def add_crm_records_to_area(self, records_iterator):
-        '''
-        Допечатывает виджетов в скрул арею, создавая медиаторы из records_iterator.
-        Фактически сюда предсгенерированный лист передаётся.
-        '''
-        for rec_i in records_iterator:
+        if self.scr_bar_KnBaseRecords.value() >= self.scr_bar_KnBaseRecords.maximum():
+            self.add_crm_records_to_area(autoload=True)
+
+
+    def add_crm_records_to_area(self, autoload = False):
+        """
+            Допечатывает виджетов в скрул арею, создавая медиаторы из records_iterator.
+            Фактически сюда предсгенерированный лист передаётся.
+        """
+        if autoload:
+            self.got_records = self.crm_records_dispenser.give_next(RECORDS_NUM)
+        else:
+            self.got_records = self.crm_records_dispenser.give_next(1)
+
+        for rec_i in self.got_records:
             # Создаем медиатор из записи (тут только заметки пока..)
             new_mediator = cMedKnBaseRecord(self, rec_i)
             new_mediator.add_call('dlg_edit_knbase_record', u'Изменить', rec_i)
