@@ -54,11 +54,11 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
         # Loading stylesheets
         if STYLES:
-                style_sheet_src = QtCore.QFile('scheme.qss')
-                style_sheet_src.open(QtCore.QIODevice.ReadOnly)
-                if style_sheet_src.isOpen():
-                    self.setStyleSheet(QtCore.QVariant(style_sheet_src.readAll()).toString())
-                style_sheet_src.close()
+            style_sheet_src = QtCore.QFile('scheme.qss')
+            style_sheet_src.open(QtCore.QIODevice.ReadOnly)
+            if style_sheet_src.isOpen():
+                self.setStyleSheet(QtCore.QVariant(style_sheet_src.readAll()).toString())
+            style_sheet_src.close()
 
 
         ############
@@ -120,8 +120,12 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         ############
         # Knowledge base tab
         ############
+        self.crm_records_dispenser = None #Holds state of the iterator over the records
+        self.current_tag = None
+
         # Basic signals and models
         self.pushButton_KnBaseEmptyNote.clicked.connect(self.dlg_add_knbase_record)
+        self.pushButton_LastRecords.clicked.connect(self.reset_news_filters)
 
         self.data_model_hashtags = cDataModel_HashtagList()
         self.data_model_hashtags_proxy = QtGui.QSortFilterProxyModel()
@@ -290,12 +294,22 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
     # Вкладка с заметками
     #################
 
+    def reset_news_filters(self):
+        """
+        По кнопке убираем фильтр поиска и отображаем только свежие
+        """
+        self.lineEdit_KnBase_Search.clear()
+        # TODO: сделать медленный запрос, подгружаемый по итератору
+        rec_iter = db_main.get_records_list_iter() #records <-> crm news records
+        self.start_printing_crm_records(rec_iter)
+
     def new_search_text_input(self, new_text):
         """
         Вызывается при вводе нового текста в строку поиска
         Args:
             new_text: текст из поля ввода
         """
+        # Вот это нужно чтобы список тегов слева пофильтровать
         self.data_model_hashtags_proxy.setFilterRegExp(new_text)
 
     def click_on_hashtag(self, index_to, index_from):
@@ -303,27 +317,49 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         Вызывается при клике на хештэг
         """
         tag_i = index_to.data(35).toPyObject()
-        self.current_tag = tag_i
         if tag_i is None:
             return
-        self.print_crm_records_to_area(tag_i.records)
 
-    def print_crm_records_to_area(self, records_iterator):
-        """
-        Args:
-            records_iterator: Some iterator over records (should do query with every next() call)
-        """
+        if self.current_tag is None: self.current_tag = tag_i
+
+        if tag_i == self.current_tag:
+            # Если тег тот же, то не обновляем вызов
+            return
+
+        self.current_tag = tag_i
+        self.start_printing_crm_records(db_main.get_records_list_iter_from_hashtag(tag_i))
+
+    def start_printing_crm_records(self, records_iterator):
+        # Стираем старые виджеты
+        self.delete_widgets(self.mediators_list_layout_KnBase)
+        # Делаем диспенсер для новых записей (будут дальше в медиаторы и фреймы трансформироваться)
+        self.crm_records_dispenser = cIteratorDispenser(records_iterator)
+        # Добавляем пять первых записей
+        self.add_crm_records_to_area(self.crm_records_dispenser.give_next(5))
+
+    def scrolled_KnBase(self):
+        # Допечатываем ещё виджетов (Один штук)
+        # TODO: вызывается и туды, и сюды.. как понять, что до конца провертели?
+        if self.crm_records_dispenser is None:
+            return
+        next_ones = self.crm_records_dispenser.give_next(1) #Вернет пустой лист, если все выбрали
+        self.add_crm_records_to_area(next_ones)
+
+    def add_crm_records_to_area(self, records_iterator):
+        '''
+        Допечатывает виджетов в скрул арею, создавая медиаторы из records_iterator.
+        Фактически сюда предсгенерированный лист передаётся.
+        '''
         for rec_i in records_iterator:
+            # Создаем медиатор из записи (тут только заметки пока..)
             new_mediator = cMedKnBaseRecord(self, rec_i)
             new_mediator.add_call('dlg_edit_knbase_record', u'Изменить', rec_i)
             new_mediator.add_call('dlg_delete_knbase_record', u'Удалить', rec_i)
 
+            # Создаем фрейм
             new_frame = RecFrame(new_mediator, self)
-            self.mediators_frame_list_KnBase.append(new_frame)
-            self.mediators_list_layout_KnBase.addWidget(new_frame)
-
-    def scrolled_KnBase(self):
-        print("scrooled!")
+            self.mediators_frame_list_KnBase.append(new_frame) # Это излишний вызов - может, пригодится..
+            self.mediators_list_layout_KnBase.addWidget(new_frame) # Шмагия
 
     @QtCore.pyqtSlot(str)
     def handle_knbase_new_record(self, rec_key):
@@ -607,4 +643,29 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             k = a_rec.string_key()
             db_main.the_session_handler.delete_concrete_object(a_rec)
             self.sig_knbase_record_added.emit(k)
+
+class cIteratorDispenser():
+    '''
+    Выдает содержимое итератора порциями. Можно потом усложнить до формирования нормальных запросов..
+    '''
+    def __init__(self, some_iterator):
+        self.my_iterator = some_iterator
+        self.finished = False
+
+    def give_next(self, how_much=1):
+        '''
+        Args:
+            how_much: сколько элементов хочется взять
+        Returns: лист с элементами
+        '''
+        ans = []
+        if self.finished: return ans
+        for k in xrange(0,how_much):
+            # FIXME: how to load exactly one record per time?
+            try:
+                ans+=[next(self.my_iterator)]
+            except StopIteration:
+                self.finished = True
+                return ans
+        return ans
 

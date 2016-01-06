@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'E:\Code\SimpleBusiness\ui\ModernMainWindow_v2.ui'
 #
-# Created: Mon Jan 04 17:31:01 2016
+# Created: Wed Jan 06 07:09:36 2016
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -87,6 +87,9 @@ class Ui_MainWindowModern(object):
         self.pushButton_SearchKnBase = QtGui.QPushButton(self.tab_KnBase)
         self.pushButton_SearchKnBase.setObjectName(_fromUtf8("pushButton_SearchKnBase"))
         self.horizontalLayout_3.addWidget(self.pushButton_SearchKnBase)
+        self.pushButton_LastRecords = QtGui.QPushButton(self.tab_KnBase)
+        self.pushButton_LastRecords.setObjectName(_fromUtf8("pushButton_LastRecords"))
+        self.horizontalLayout_3.addWidget(self.pushButton_LastRecords)
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
         self.horizontalLayout_4 = QtGui.QHBoxLayout()
         self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
@@ -151,6 +154,7 @@ class Ui_MainWindowModern(object):
         self.Global_tabs.setTabText(self.Global_tabs.indexOf(self.tab_Clients), _translate("MainWindowModern", "Контрагенты", None))
         self.pushButton_KnBaseEmptyNote.setText(_translate("MainWindowModern", "+ Новая заметка", None))
         self.pushButton_SearchKnBase.setText(_translate("MainWindowModern", "Найти", None))
+        self.pushButton_LastRecords.setText(_translate("MainWindowModern", "Свежие", None))
         self.Global_tabs.setTabText(self.Global_tabs.indexOf(self.tab_KnBase), _translate("MainWindowModern", "База знаний", None))
         self.action_Run_Simulate.setText(_translate("MainWindowModern", "Запуск симуляции", None))
         self.action_Synhronize_xm_with_db.setText(_translate("MainWindowModern", "Загрузить из 1С", None))

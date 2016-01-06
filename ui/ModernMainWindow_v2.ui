@@ -136,6 +136,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_LastRecords">
+            <property name="text">
+             <string>Свежие</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>

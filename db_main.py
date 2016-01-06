@@ -130,6 +130,13 @@ def get_initial_data_report_tree():
 def get_records_list():
     return the_session_handler.get_all_objects_list(c_crm_record)
 
+def get_records_list_iter():
+    return the_session_handler.get_all_objects_list_iter(c_crm_record)
+
+def get_records_list_iter_from_hashtag(tag_i):
+    for rec_i in tag_i.records:
+        yield rec_i
+
 def get_records_list_andfilt_by_hashtags(hashtags):
     #вход - список объектов-хештегов. Выход - общие записи. Пришлось циклом. Благо оно ленивое и не всё грузится.
     all_records = []

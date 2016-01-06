@@ -264,8 +264,8 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
                 self.record_entity.date_added = datetime.date.today()
             self.record_entity.match_with_tags(record_tags)
             self.record_entity.fix_hashtag_text() #подобранные тэги записываются в строку для быстрого доступа
-            self.record_entity.long_html_text = unicode(self.textEdit_longtext.toHtml(),encoding='utf-8')
-            self.record_entity.headline = unicode(self.lineEdit_headline.text(),encoding='utf-8')
+            self.record_entity.long_html_text = unicode(self.textEdit_longtext.toHtml(), encoding='utf-8')
+            self.record_entity.headline = unicode(self.lineEdit_headline.text(), encoding='utf-8')
             super(gui_DialogCrm_EditSimpleRecord, self).accept()
 
     def reject(self):
