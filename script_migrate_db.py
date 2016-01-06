@@ -14,13 +14,12 @@ import utils
 import sys
 import datetime
 from PyQt4 import QtGui, QtCore
-conn = sqlite3.connect('__secret\\PyIn_prod.db')
+conn = sqlite3.connect('__secret\\PyIn_160106.db')
 
 # Грузим заметки CRM (и создаем по ходу хештеги)
 
 cur = conn.cursor()
 cur.execute('SELECT * FROM crm_record')
-#old_records = c.fetchall()
 
 app = QtGui.QApplication(sys.argv)
 HtmlParser = QtGui.QTextEdit()
@@ -35,20 +34,21 @@ for r in cur:
     HtmlParser.setHtml(long_html_text)
     # Вытаскиваем текст тэгов
     tag_list = utils.parse_hashtags(unicode(HtmlParser.toPlainText()))
+    print(tag_list)
+
     HtmlParser.clear()
 
     record_tags = db_main.get_hashtags_from_names(tag_list)
-    #print record_tags  #TODO: проверить что тут none нету (откуда им взяться?)
     found_names = [rec_i.text for rec_i in record_tags]
     not_found = [] # Это те, которых в базе нет
     for ht_i in tag_list:
         if not(ht_i in found_names):
             not_found += [ht_i]
-        for ht_i in not_found:
-            #Создаем новый тэг
-            new_h = db_main.c_hastag(text=ht_i)
-            db_main.the_session_handler.add_object_to_session(new_h)
-            record_tags += [new_h]
+    for ht_i in not_found:
+        #Создаем новый тэг
+        new_h = db_main.c_hastag(text=ht_i)
+        db_main.the_session_handler.add_object_to_session(new_h)
+        record_tags += [new_h]
 
     # Новая заметка:
     new_record = db_main.c_crm_record()

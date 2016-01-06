@@ -29,6 +29,10 @@ class cSimpleMediator(object):
         self.fields = collections.OrderedDict()
         self.button_calls = collections.OrderedDict()
         self.gui_key = None
+        self.color_warning = '' # '' - OK, 'warn' - yellow, 'alert' - red
+
+    def get_warning_mark(self):
+        return self.color_warning
 
     def get_key(self):
         return self.gui_key
