@@ -198,6 +198,16 @@ def get_dynamic_crm_records_iterator_v3():
     for id_i in ids:
         yield s.query(c_crm_record).get(id_i.rec_id)
 
+def get_dynamic_crm_records_iterator_v4():
+    '''
+    Итератор, подгружающий базу заметок экономно и динамически
+    '''
+    s = the_session_handler.get_active_session()
+    ids = s.execute('SELECT crm_record.rec_id FROM crm_record ORDER BY crm_record.date_added DESC')
+    # q = the_session_handler.get_active_session().query(c_crm_record).order_by(c_crm_record.rec_id.desc())
+    #q = the_session_handler.get_active_session().query(c_crm_record)
+    for id_i in ids:
+        yield s.query(c_crm_record).get(id_i.rec_id)
 
 def get_hashtags_list_iter():
     return the_session_handler.get_all_objects_list_iter(c_hastag)

@@ -300,7 +300,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         """
         self.lineEdit_KnBase_Search.clear()
         # TODO: сделать медленный запрос, подгружаемый по итератору
-        rec_iter = db_main.get_records_list_iter() #records <-> crm news records
+        rec_iter = db_main.get_dynamic_crm_records_iterator_v4() #records <-> crm news records
         self.start_printing_crm_records(rec_iter)
 
     def new_search_text_input(self, new_text):

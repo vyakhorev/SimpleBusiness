@@ -61,8 +61,7 @@ HowManyPreLoad = 5
 HowManyPostLoad = 1
 
 for x in range(0, TestRuns-1):
-    #the_dispenser = cIteratorDispenser(db_main.get_dynamic_crm_records_iterator_v1())
-    the_dispenser = cIteratorDispenser(db_main.get_dynamic_crm_records_iterator_v3())
+    the_dispenser = cIteratorDispenser(db_main.get_dynamic_crm_records_iterator_v4())
     scroll_test(the_dispenser, HowManyPreLoad, HowManyPostLoad)
 
 
@@ -132,3 +131,26 @@ for x in range(0, TestRuns-1):
 # Preload 4000 ms., postload 703 ms (loaded 1452 records)
 # Preload 4000 ms., postload 711 ms (loaded 1452 records)
 # Preload 3000 ms., postload 731 ms (loaded 1452 records)
+
+# db_main.get_dynamic_crm_records_iterator_v4()
+# С сортировкой по дате
+
+# Preload 12000 ms., postload 600 ms (loaded 1452 records)
+# Preload 7000 ms., postload 578 ms (loaded 1452 records)
+# Preload 8000 ms., postload 591 ms (loaded 1452 records)
+# Preload 8000 ms., postload 592 ms (loaded 1452 records)
+# Preload 7000 ms., postload 587 ms (loaded 1452 records)
+# Preload 7000 ms., postload 607 ms (loaded 1452 records)
+# Preload 7000 ms., postload 608 ms (loaded 1452 records)
+# Preload 7000 ms., postload 575 ms (loaded 1452 records)
+# Preload 8000 ms., postload 578 ms (loaded 1452 records)
+# Preload 8000 ms., postload 586 ms (loaded 1452 records)
+# Preload 8000 ms., postload 574 ms (loaded 1452 records)
+# Preload 7000 ms., postload 582 ms (loaded 1452 records)
+# Preload 7000 ms., postload 575 ms (loaded 1452 records)
+# Preload 8000 ms., postload 575 ms (loaded 1452 records)
+# Preload 8000 ms., postload 582 ms (loaded 1452 records)
+# Preload 8000 ms., postload 584 ms (loaded 1452 records)
+# Preload 7000 ms., postload 577 ms (loaded 1452 records)
+# Preload 7000 ms., postload 589 ms (loaded 1452 records)
+# Preload 7000 ms., postload 575 ms (loaded 1452 records)
