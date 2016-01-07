@@ -284,8 +284,8 @@ def __crm_template_materials_distribution_table(mat_dist_list):
     for md_i in mat_dist_list:
         c1 = unicode(md_i.material.material_name)
         c2 = "%d %%"%(round(md_i.choice_prob,2))
-        a_table.rows.append([c1,c2])
-    return a_table
+        a_table.rows.append([c1, c2])
+    return [a_table]
 
 def crm_template_new_sales_lead(a_lead):
     s = u"С клиентом " + a_lead.client_model.hashtag_name() + u" начались переговоры о поставках "

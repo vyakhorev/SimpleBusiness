@@ -298,8 +298,8 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         """
         По кнопке убираем фильтр поиска и отображаем только свежие
         """
+        # TODO: we need this one working..
         self.lineEdit_KnBase_Search.clear()
-        # TODO: сделать медленный запрос, подгружаемый по итератору
         rec_iter = db_main.get_dynamic_crm_records_iterator_v4() #records <-> crm news records
         self.start_printing_crm_records(rec_iter)
 
@@ -342,7 +342,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
         if self.scr_bar_KnBaseRecords.value() >= self.scr_bar_KnBaseRecords.maximum():
             self.add_crm_records_to_area(autoload=True)
-
 
     def add_crm_records_to_area(self, autoload = False):
         """
@@ -497,6 +496,8 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
     # ПОТОКИ СНАБЖЕНИЯ (MATFLOW)
 
     def dlg_add_matflow(self, agent):
+        # FIXME: сыро работает: не добавляет вообще табличку из диалога.
+        # Походу, старый вариант диалога.. Надо поискать новый или пофиксить.
         if agent is None:
             raise BaseException("No agent selected!")
         if agent.discriminator != "client":

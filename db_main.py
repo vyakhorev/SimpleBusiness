@@ -193,8 +193,6 @@ def get_dynamic_crm_records_iterator_v3():
     '''
     s = the_session_handler.get_active_session()
     ids = s.execute('SELECT crm_record.rec_id FROM crm_record')
-    # q = the_session_handler.get_active_session().query(c_crm_record).order_by(c_crm_record.rec_id.desc())
-    #q = the_session_handler.get_active_session().query(c_crm_record)
     for id_i in ids:
         yield s.query(c_crm_record).get(id_i.rec_id)
 
@@ -204,8 +202,6 @@ def get_dynamic_crm_records_iterator_v4():
     '''
     s = the_session_handler.get_active_session()
     ids = s.execute('SELECT crm_record.rec_id FROM crm_record ORDER BY crm_record.date_added DESC')
-    # q = the_session_handler.get_active_session().query(c_crm_record).order_by(c_crm_record.rec_id.desc())
-    #q = the_session_handler.get_active_session().query(c_crm_record)
     for id_i in ids:
         yield s.query(c_crm_record).get(id_i.rec_id)
 
@@ -227,7 +223,7 @@ def create_hashtag(dirty_text_for_hashtag):
     if len(existing) >= 1:
         return existing[0]
     else:
-        a_ht = c_hastag(text = clean_text)
+        a_ht = c_hastag(text=clean_text)
         the_session_handler.add_object_to_session(a_ht)
         return a_ht
 
