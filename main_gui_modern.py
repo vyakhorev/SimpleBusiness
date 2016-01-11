@@ -162,6 +162,16 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         self.sig_knbase_record_deleted.connect(self.handle_knbase_delete_record)
         self.sig_knbase_record_edited.connect(self.handle_knbase_edit_record)
 
+    ###############################
+    # handle red X button closing
+    ###############################
+    def closeEvent(self, event):
+        """
+            Here will be automation right before application close
+        """
+        event.accept()
+
+
     #################
     # Вкладка с контрагентами
     #################

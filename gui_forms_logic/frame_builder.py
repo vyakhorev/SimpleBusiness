@@ -3,13 +3,14 @@ __author__ = 'User'
 from PyQt4 import QtCore, QtGui
 
 COLOR_DEBUG = False
+inside_widgets = []
 
 class GrowingTextBrowser(QtGui.QTextBrowser):
     """
         Very neat approach to make autoresizible QtextBrowser
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent=None, *args, **kwargs):
         super(GrowingTextBrowser, self).__init__(*args, **kwargs)
         self.document().contentsChanged.connect(self.sizeChange)
         self.document().documentLayout().documentSizeChanged.connect(self.sizeChange)
@@ -66,14 +67,13 @@ class RecFrame(QtGui.QFrame):
         QtGui.QFrame.__init__(self)
         self.record = None
 
+        self.inside_widgets = []
+
         # Adjusting Frame bounding sizes
         self.setFrameStyle(QtGui.QFrame.Raised)
         self.setLayout(QtGui.QVBoxLayout())
         self.layout().setContentsMargins(2, 2, 2, 2)
         self.layout().setSpacing(0)
-
-        # (((o))) Signal
-        # self.focusInEvent = self.show_buttons
 
         if COLOR_DEBUG:
             self.setStyleSheet("background-color:lightgreen;")
@@ -89,14 +89,21 @@ class RecFrame(QtGui.QFrame):
         # |label value |    Html     |
         # ----------------------------
         if mediator.get_HTML() != "":
-            self.html_field = GrowingTextBrowser()
+            self.html_field = GrowingTextBrowser(self)
             self.html_field.setReadOnly(1)
-            self.html_field.mouseDoubleClickEvent = self.show_buttons
+
+            self.html_field.setParent(self)
+            # (((o))) Signal
+            # self.html_field.mouseDoubleClickEvent = self.show_buttons
 
             self.html_field.setHtml(mediator.get_HTML())
             # self.html_field.setHtml('Blah Blah')
             self.field_and_html_layout.addWidget(self.html_field)
             self.html_field.setAlignment(QtCore.Qt.AlignTop)
+
+            # print self.html_field.parent()
+            # a = self.html_field.parent()
+            # print a.parent()
 
         self.fields_and_html_frame.setLayout(self.field_and_html_layout)
         self.layout().addWidget(self.fields_and_html_frame)
@@ -122,6 +129,9 @@ class RecFrame(QtGui.QFrame):
             one_field_value = QtGui.QLineEdit(unicode(field_i.field_value))
             one_field_layout.addWidget(one_field_label)
             one_field_layout.addWidget(one_field_value)
+
+            one_field_label.setMaximumWidth(150)
+            one_field_value.setMaximumWidth(150)
 
             one_field.setLayout(one_field_layout)
             if COLOR_DEBUG:
@@ -161,6 +171,19 @@ class RecFrame(QtGui.QFrame):
             self.buttons_field_widget.setMaximumHeight(0)
             self.layout().addWidget(self.buttons_field_widget)
 
+        # Grabbing all widgets together
+        # Its need for setting signals on each child element of Frame
+        self.inside_widgets = []
+        for ch_i in self.findChildren(QtGui.QWidget):
+            self.inside_widgets.append(ch_i)
+
+        for ch_i in self.inside_widgets:
+            # colorize frame !
+            # ch_i.enterEvent = self.frame_highlight
+            # engage buttons!
+            ch_i.mouseDoubleClickEvent = self.show_buttons
+
+
     @classmethod
     def clear_active_buttons(cls):
         cls.active_buttons_field = []
@@ -176,3 +199,10 @@ class RecFrame(QtGui.QFrame):
 
         self.buttons_field_widget.setMaximumHeight(50)
         self.active_buttons_field.append(self.buttons_field_widget)
+
+    # TODO Make this by Qss hover pseudo states
+    def enterEvent(self, *args, **kwargs):
+        self.setStyleSheet("background-color:white;")
+
+    def leaveEvent(self, *args, **kwargs):
+        self.setStyleSheet("background-color:None;")
