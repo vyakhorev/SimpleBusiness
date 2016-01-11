@@ -33,6 +33,10 @@ STYLES = False
 STYLE_URL = None
 # How many lines to load first time
 RECORDS_NUM = 2
+# TODO move this to ini and settings..
+HD = [1280, 720]
+UHD = [1920, 1080]
+
 
 class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
@@ -50,7 +54,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         super(gui_MainWindow, self).__init__(parent)
         self.app = app
         self.setupUi(self)
-
+        self.resize(*HD)
 
         # Loading stylesheets
         if STYLES:
@@ -261,6 +265,12 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         """
         for wg_i in reversed(xrange(layout.count())):
             item = layout.takeAt(wg_i)
+
+            try:
+                item.widget().clear_active_buttons()
+
+            except AttributeError:
+                print('Frame hasnt active buttons')
             # print('going to remove {}'.format(item))
             layout.removeItem(item)
             item.widget().deleteLater()
@@ -336,7 +346,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             Slot, activated by scrolling records  Qscrollarea
         """
         # Допечатываем ещё виджетов (Один штук)
-        # TODO: вызывается и туды, и сюды.. как понять, что до конца провертели?
         if self.crm_records_dispenser is None:
             return
 
