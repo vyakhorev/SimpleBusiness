@@ -262,7 +262,7 @@ class cDataModel_MatDistTable(QtCore.QAbstractTableModel):
             if index.column() == 0:
                 return unicode(self.__probs[row][0])
             if index.column() == 1:
-                return unicode(simple_locale.number2string(round(self.__probs[row][1],2)))  #Проценты?
+                return unicode(simple_locale.number2string(round(self.__probs[row][1], 2)))  #Проценты?
         if role == 35: #Наша роль для передачи данных из таблицы
             row = index.row()
             if index.column() == 0:
@@ -281,7 +281,7 @@ class cDataModel_MatDistTable(QtCore.QAbstractTableModel):
                 old_mat, old_prob = self.__probs.pop(row)
                 #self.__probs[row][0] = value
                 #self.__probs.pop(row)
-                self.__probs.insert(row,[value, old_prob])
+                self.__probs.insert(row, [value, old_prob])
                 self.prob_dict.delete_elem(old_mat)
                 self.prob_dict.add_elem(value, old_prob)
                 self.dataChanged.emit(index, index)
