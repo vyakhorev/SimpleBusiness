@@ -5,7 +5,6 @@
 '''
 
 import os
-import pyzmail
 import re
 import db_main # helps to autotag e-mails
 
@@ -17,9 +16,31 @@ def mime_file_to_html(file_qurl):
         file_full_path = unicode(file_qurl.toLocalFile())
         filename, file_extension = os.path.splitext(file_full_path)
         if file_extension == '.eml':
-            return eml_file_to_html(file_full_path)
+            return _do_file(eml_file_to_html, file_full_path)
+        elif file_extension == '.pdf':
+            return _do_file(pdf_file_to_html, file_full_path)
+        elif file_extension == '.doc' or file_extension == '.docx':
+            return _do_file(doc_file_to_html, file_full_path)
+        elif file_extension == '.odt':
+            return _do_file(odt_file_to_html, file_full_path)
+        elif file_extension == '.txt' or file_extension == '.html':
+            return _do_file(txt_file_to_html, file_full_path)
+
+
+def _do_file(func, file_full_path):
+    # TODO: traceback
+    try:
+        text = func(file_full_path)
+    except:
+        text = u"ОШИБКА ОБРАБОТКИ ФАЙЛА"
+    return text
+
+##################
+# .EML
+##################
 
 def eml_file_to_html(file_path):
+    import pyzmail
     #f = codecs.open(file_path, 'r', 'utf-8')
     f = open(file_path)
     msg = pyzmail.message_from_file(f)
@@ -87,3 +108,40 @@ def _tags_from_addresses(email_addresses):
     for cp_i in companies:
         tags += [cp_i.hashtag_name()]
     return tags
+
+##################
+# .PDF
+##################
+
+def pdf_file_to_html(file_path):
+    # Nice idea for images:
+    # http://www.danvk.org/2015/01/09/extracting-text-from-an-image-using-ocropus.html
+    import pdfminer
+    return "I do not yet know how to import PDF"
+
+##################
+# .DOC .DOCX
+##################
+
+def doc_file_to_html(file_path):
+    # Would it work with .doc ?
+    from pydocx import PyDocX
+    text = PyDocX.to_html(file_path)
+    return text
+
+##################
+# .ODT
+##################
+
+def odt_file_to_html(file_path):
+
+    return "I do not yet know how to import ODT"
+
+##################
+# .TXT .HTML
+##################
+
+def txt_file_to_html(file_path):
+    f = open(file_path, 'r')
+    text = f.read()
+    return text
