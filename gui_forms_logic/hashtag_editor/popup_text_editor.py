@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtGui, QtCore
-import re
-import html_prettify
+
+from gui_forms_logic.hashtag_editor import html_prettify
+from gui_forms_logic.hashtag_editor.file_parsers import mime_file_to_html
+
 
 class gui_HashtagCompleter(QtGui.QCompleter):
     def __init__(self, list_of_hashtags, parent=None):
@@ -91,19 +93,39 @@ class gui_EditTextRecord(QtGui.QTextEdit):
         return a_wrd
 
     def canInsertFromMimeData(self, source):
-        return super(gui_EditTextRecord, self).canInsertFromMimeData(source)
+        if source.hasHtml() or source.hasUrls:
+            return True
+        else:
+            return super(gui_EditTextRecord, self).canInsertFromMimeData(source)
 
     def insertFromMimeData(self, source):
-        # Чистим HTML перед вставкой
         if source.hasHtml():
+            # Чистим HTML перед вставкой
             possibly_bad_html = str(source.html()) # Cleans up QString usages
             desired_html = QtCore.QString(html_prettify.safe_html(possibly_bad_html))
             source = None
             new_source = QtCore.QMimeData()
             new_source.setHtml(desired_html)
             super(gui_EditTextRecord, self).insertFromMimeData(new_source)
+        elif source.hasUrls():
+            # Вставка файла(файлов)
+            for file_qurl in source.urls():
+                if file_qurl.isLocalFile() and not file_qurl.isEmpty():
+                    html_from_file = mime_file_to_html(file_qurl)
+                    if not(html_from_file is None):
+                        desired_html = QtCore.QString(html_prettify.safe_html(html_from_file))
+                        new_source = QtCore.QMimeData()
+                        new_source.setHtml(html_from_file)
+                        super(gui_EditTextRecord, self).insertFromMimeData(new_source)
         else:
+            # TODO: не уверен, что оно нужно..
             super(gui_EditTextRecord, self).insertFromMimeData(source)
+        # И правим во всем editor шрифт
+        readable_font = QtGui.QFont()
+        readable_font.setPointSize(10)
+        readable_font.setStyleHint(QtGui.QFont.Courier)
+        self.selectAll()
+        self.setCurrentFont(readable_font)
 
 
     def focusInEvent(self, event):

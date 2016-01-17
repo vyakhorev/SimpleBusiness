@@ -266,6 +266,16 @@ def get_contacts_list(agent = None):
         for cnt_i in the_session_handler.get_active_session().query(c_crm_contact).filter_by(company_id=agent.rec_id).all():
             yield cnt_i
 
+def get_contacts_by_email(email_address):
+    # Returns found contacts by email_address
+    cont_dets = the_session_handler.get_active_session().query(c_crm_contact_details).filter(c_crm_contact_details.cont_value.like(email_address)).all()
+    contacts = []
+    for det_i in cont_dets:
+        c_i = det_i.contact
+        if not(c_i in contacts):
+            contacts += [c_i]
+    return contacts
+
 ###########################################################
 
 def fix_sales_budget(client = None, mat_flow = None):

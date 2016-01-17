@@ -25,7 +25,7 @@ import db_main
 #         f.close()
 #         #rec_i.long_html_text = unicode(utils.prettify_html_with_soup(rec_i.long_html_text))
 
-from ui.manually import html_prettify
+from gui_forms_logic.hashtag_editor import html_prettify
 
 for rec_i in db_main.the_session_handler.get_all_objects_list_iter(db_main.c_crm_record):
     bad_html = rec_i.long_html_text

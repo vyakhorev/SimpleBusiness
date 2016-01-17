@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+
 from PyQt4 import QtCore, QtGui
 
 import db_main
-import datetime
 import utils
-
-from ui.ui_DialogCrm_EditSimpleRecord import Ui_DialogCrm_EditSimpleRecord
-
-from ui.manually.popup_text_editor import gui_EditTextRecord
-from ui.manually.table import ui_EditorHtmlTableSettings
-from ui.manually.tag_lighter import ui_TagHighlighter
-
 from cnf import user_name
+from gui_forms_logic.hashtag_editor.popup_text_editor import gui_EditTextRecord
+from gui_forms_logic.hashtag_editor.table import ui_EditorHtmlTableSettings
+from gui_forms_logic.hashtag_editor.tag_lighter import ui_TagHighlighter
+from ui.ui_DialogCrm_EditSimpleRecord import Ui_DialogCrm_EditSimpleRecord
 
 class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecord):
     def __init__(self, parent=None):
@@ -20,7 +18,10 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
         self.setupUi(self) #Метод от QtDesigner
         self.textEdit_longtext = gui_EditTextRecord(self)
         self.textEdit_longtext.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.textEdit_longtext.setAcceptDrops(True)
+        self.setAcceptDrops(True)
         self.horizontalLayout_for_textedit.addWidget(self.textEdit_longtext)
+
 
         # self.textEdit_longtext = QtGui.QTextEdit(DialogCrm_EditSimpleRecord)
         # self.textEdit_longtext.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -42,6 +43,9 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
         self.textEdit_longtext.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.textEdit_longtext.customContextMenuRequested.connect(self.context)
 
+    #def dropEvent(self, *args, **kwargs):
+
+
     def editor_bold(self):
         if self.textEdit_longtext.fontWeight() == QtGui.QFont.Bold:
             self.textEdit_longtext.setFontWeight(QtGui.QFont.Normal)
@@ -57,10 +61,12 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
         self.textEdit_longtext.setFontUnderline(not state)
 
     def editor_bulletList(self):
+        # TODO: check before inserting if some text is selected
         cursor = self.textEdit_longtext.textCursor()
         cursor.insertList(QtGui.QTextListFormat.ListDisc)
 
     def editor_numberList(self):
+        # TODO: check before inserting if some text is selected
         cursor = self.textEdit_longtext.textCursor()
         cursor.insertList(QtGui.QTextListFormat.ListDecimal)
 
@@ -70,6 +76,7 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
         preview.exec_()
 
     def context(self, pos):
+        # Редактирование таблички по правому клику
         cursor = self.textEdit_longtext.textCursor()
         # Grab the current table, if there is one
         table = cursor.currentTable()

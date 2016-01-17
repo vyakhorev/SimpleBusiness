@@ -56,7 +56,7 @@ def safe_html(html):
             tag.attrs = []
 
     # scripts can be executed from comments in some cases
-    comments = soup.findAll(text=lambda text:isinstance(text, Comment))
+    comments = soup.findAll(text=lambda text: isinstance(text, Comment))
     for comment in comments:
         comment.extract()
 

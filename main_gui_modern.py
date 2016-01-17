@@ -162,6 +162,11 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         self.sig_knbase_record_deleted.connect(self.handle_knbase_delete_record)
         self.sig_knbase_record_edited.connect(self.handle_knbase_edit_record)
 
+        # Some additional logic for handling drops in the main window
+        # (mostly for citing the e-mails)
+        self.setAcceptDrops(True)
+
+
     ###############################
     # handle red X button closing
     ###############################
