@@ -3,11 +3,11 @@ __author__ = 'User'
 from PyQt4 import QtCore, QtGui
 import sys
 from db_mock import db_fake, db_filling_up
+from utils import c_random_dict
 
 ######################
 # Model
 ######################
-
 
 class ListModel(QtCore.QAbstractListModel):
     """
@@ -34,7 +34,6 @@ class ListModel(QtCore.QAbstractListModel):
         return len(self.listdata)
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
-
         if index.isValid() and role == QtCore.Qt.DisplayRole:
             # print 'DisplayRole for {}'.format(self)
             return self.listdata[index.row()].__repr__()
@@ -45,9 +44,46 @@ class ListModel(QtCore.QAbstractListModel):
             return QtCore.QVariant()
 
 
+class ProbListModel(ListModel):
+
+    def __init__(self, datain, parent=None, *args):
+        ListModel.__init__(self, datain, parent, *args)
+        # self.listdata = datain
+        self.prob_dict = c_random_dict()
+        self._prob = []
+        self.set_dict(self.listdata)
+
+    @ListModel.listdata.setter
+    def listdata(self, value):
+        if not isinstance(value, dict):
+            raise ValueError('wrong input data {}, ,must be dict'.format(value))
+        else:
+            self._listdata = value
+
+    def set_dict(self, dict):
+        self.prob_dict = dict
+        for key, value in self.prob_dict.iteritems():
+            self._prob += [[key, value]]
+
+    def finalize(self):
+        self.prob_dict.finalize()
+        self.set_dict(self.prob_dict)
+
+    def data(self, index, role=QtCore.Qt.DisplayRole):
+        if role == QtCore.Qt.DisplayRole:
+            return self._prob[index.row()][1]
+
+        elif role == QtCore.Qt.UserRole:
+            return self._prob[index.row()][1]
+
+
+        else:
+            return QtCore.QVariant()
+
+
 class TableModel(QtCore.QAbstractTableModel):
     """
-        :param data: dictionary with structure {key1 : [val_1, ...  val_i], key2 : [val_1, ... val_i]}, ... key_i : [...]}
+        :param data: dict| with structure {key1 : [val_1, ...  val_i], key2 : [val_1, ... val_i]}, ... key_i : [...]}
     """
 
     def __init__(self, data, headers=None, parent=None, *args):
@@ -101,20 +137,27 @@ class TableModel(QtCore.QAbstractTableModel):
             if col_i == 2:
                 return self.mapped_list_fr_dict[row_i][col_i-1][1]
 
-    def setData(self, index, value, role=QtCore.Qt.DisplayRole):
+    def setData(self, index, value, role=QtCore.Qt.EditRole):
         row_i = index.row()
         col_i = index.column()
 
-        if role == QtCore.Qt.DisplayRole:
+        if role == QtCore.Qt.EditRole:
             if col_i == 0:
                 self.mapped_list_fr_dict[row_i][col_i] = value.toPyObject()
                 self.dataChanged.emit(index, index)
+
             elif col_i == 1:
-                print value.toPyObject()
-                self.mapped_list_fr_dict[row_i][col_i][0] = value.toPyObject()
+                try:
+                    self.mapped_list_fr_dict[row_i][col_i][0] = value.toPyObject()
+                except:
+                    self.mapped_list_fr_dict[row_i][col_i][0] = value
                 self.dataChanged.emit(index, index)
+
             elif col_i == 2:
-                self.mapped_list_fr_dict[row_i][col_i-1][1] = value.toPyObject()
+                try:
+                    self.mapped_list_fr_dict[row_i][col_i-1][1] = value.toPyObject()
+                except:
+                    self.mapped_list_fr_dict[row_i][col_i-1][1] = value
                 self.dataChanged.emit(index, index)
             else:
                 return QtCore.QVariant()
@@ -142,12 +185,21 @@ class ComboDelegate(QtGui.QItemDelegate):
             Making inline widget for delegate
             checking for each column
         """
+        print(self.data_col_list)
         if isinstance(self.data_col_list[0], list):
             for pair in self.data_col_list:
                 print self.data_col_list
                 if index.column() == pair[1]:
-                    editor = QtGui.QComboBox(parent)
-                    editor.setModel(pair[0])
+                    if isinstance(pair[0], ProbListModel):
+                        editor = QtGui.QSpinBox(parent)
+                        editor.setMinimum(0)
+                        editor.setMaximum(100)
+                        editor.installEventFilter(self)
+                        value = index.model().data(index, QtCore.Qt.DisplayRole)
+                        editor.setValue(value)
+                    else:
+                        editor = QtGui.QComboBox(parent)
+                        editor.setModel(pair[0])
                     return editor
 
         else:
@@ -156,41 +208,49 @@ class ComboDelegate(QtGui.QItemDelegate):
                 editor.setModel(self.data_col_list[0])
                 return editor
 
-        '''
-        if self.acolumn is None:
-            editor = QtGui.QComboBox(parent)
-            editor.setModel(self.datamodel)
-            return editor
-
-        if index.column() == self.acolumn:
-            editor = QtGui.QComboBox(parent)
-            editor.setModel(self.datamodel)
-            return editor
-
-        if index.column() == 2:
-            editor = QtGui.QSpinBox(parent)
-            return editor
-        # return
-        '''
+            else:
+                editor = QtGui.QLineEdit(parent)
+                return editor
 
     def setEditorData(self, editor, index):
         """
             Called when double-clicking field
         """
-        choice = index.model().data(index, QtCore.Qt.DisplayRole)
-        pos = editor.findText(str(choice), QtCore.Qt.MatchFixedString)
-        editor.setCurrentIndex(pos)
+        if isinstance(editor, QtGui.QComboBox):
+            choice = index.model().data(index, QtCore.Qt.DisplayRole)
+            pos = editor.findText(unicode(choice), QtCore.Qt.MatchFixedString)
+            print('Searching selected Value : \n pos {} val {}'.format(pos, editor.setCurrentIndex(pos)))
+            editor.setCurrentIndex(pos)
+
+        elif isinstance(editor, QtGui.QLineEdit):
+            choice = index.model().data(index, QtCore.Qt.DisplayRole)
+            editor.setText(str(choice))
+
+        elif isinstance(editor, QtGui.QSpinBox):
+            value = index.model().data(index, QtCore.Qt.DisplayRole)
+            editor.setValue(value)
 
     def setModelData(self, editor, model, index):
         """
             Called when quit from Combobox
         """
         # grab data from selected position
-        pos = editor.findText(editor.currentText(), QtCore.Qt.MatchFixedString)
-        print editor.currentText()
-        curData = editor.itemData(pos)
-        print curData.toPyObject()
-        model.setData(index, curData)
+        if isinstance(editor, QtGui.QComboBox):
+            pos = editor.findText(editor.currentText(), QtCore.Qt.MatchFixedString)
+            print editor.currentText()
+            curData = editor.itemData(pos)
+            print curData.toPyObject()
+            model.setData(index, curData)
+
+        elif isinstance(editor, QtGui.QLineEdit):
+            # editor.value()
+            model.setData(index, editor.text())
+
+        elif isinstance(editor, QtGui.QSpinBox):
+            editor.interpretText()
+            print('HEllo')
+            value = editor.value()
+            model.setData(index, QtCore.QVariant(value))
 
 
 ######################
@@ -198,17 +258,24 @@ class ComboDelegate(QtGui.QItemDelegate):
 ######################
 
 
-def add_tableview_to(window, model, delegates=None, layout=None):
+def add_tableview_to(window, model, delegates=None, layout=None, tableview=None):
     """
         Adding tableView on any QWidget window
         :param window: QWidget cls instance, wich we'll decorate
         :param model: QAbstractTableModel cls instance
         :param delegates: QItemDelegate cls instance, if exist make delegates for column
         :param layout: if exist, adding table to it
+        :param tableview: if exist, adding model to it
 
         :return: window, decorated window
     """
-    table = QtGui.QTableView()
+    if tableview:
+        table = tableview
+    else:
+        table = QtGui.QTableView()
+
+    # print delegates
+
     table.setModel(model)
     if layout:
         layout.addWidget(table)
@@ -347,6 +414,19 @@ def main():
     listdelegate = [some_cable_list, 0]
     newW = add_tableview_to(w3, some_table, listdelegate, new_layout)
     w3.show()
+
+    # Test case #5
+    # implementing probability model
+    w5 = MyWindow2()
+    listdelegate = [some_cable_list, 0]
+    additional_list = ListModel(['bukvoed', 'supoed', 'hinkali'])
+    listdelegate2 = [additional_list, 1]
+    temp_prob_dict = {k: v[1] for k, v in fake_database.table_fin.iteritems()}
+    additional_list2 = ProbListModel(temp_prob_dict)
+    listdelegate3 = [additional_list2, 2]
+    add_tableview_to(w5, some_table, [listdelegate, listdelegate2, listdelegate3])
+    w5.show()
+
 
     sys.exit(app.exec_())
 

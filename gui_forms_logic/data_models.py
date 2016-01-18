@@ -8,6 +8,8 @@ import utils
 import simple_locale
 import convert
 
+from gui_forms_logic.data_model import DynamicTableWidget
+
 unicode_codec = QtCore.QTextCodec.codecForName(simple_locale.ultimate_encoding)
 
 # TODO: make a model based on SQLAlchemy table easy way
@@ -325,6 +327,39 @@ class cDataModel_MatDistTable(QtCore.QAbstractTableModel):
         material, prob = self.__probs.pop(an_index.row())
         self.prob_dict.randomdict.pop(material)
         self.endRemoveRows()
+
+class cDataModel_MatDistTable2(DynamicTableWidget.TableModel):
+
+    def __init__(self, data, headers=None, parent=None, *args):
+        DynamicTableWidget.TableModel.__init__(self, data, headers, parent, *args)
+        self.__probs = []
+        self.prob_dict = utils.c_random_dict()
+
+    def update_matdist_table(self, prob_dict):
+        self.beginResetModel()
+        self.__probs = []  #TODO ordered dict!
+        self.prob_dict = prob_dict
+        for material, prob in self.prob_dict.randomdict.iteritems():
+            self.__probs += [[material, prob]]
+        self.endResetModel()
+
+    def reset_all(self):  #При создании нового, когда меняем группу - перезагрузка
+        self.beginResetModel()
+        self.__probs = []
+        self.prob_dict.reset_me()
+        self.endResetModel()
+
+    def normalize_probs(self):
+        self.prob_dict.finalize()
+        self.update_matdist_table(self.prob_dict)
+
+    def is_data_correct(self):
+        #Это проверяется только при закрытии формы. Всё, в общем-то, runtime проверяется..
+        return True
+
+    def get_prob_dict(self):
+        return self.prob_dict
+
 
 class cDataModel_PaymentTermsList(QtCore.QAbstractListModel):
     def __init__(self,  parent = None):
