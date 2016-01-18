@@ -18,9 +18,10 @@ from gui_forms_logic.record_mediators import cMedPrice, cMedMatFlow, cMedContact
         cMedKnBaseRecord, cMedSalesLead, cSimpleMediator
 from gui_forms_logic.frame_builder import LabelFrame, RecFrame
 
-
 import db_main
 import gl_shared
+
+import file_reports
 
 # import threading
 
@@ -162,10 +163,13 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         self.sig_knbase_record_deleted.connect(self.handle_knbase_delete_record)
         self.sig_knbase_record_edited.connect(self.handle_knbase_edit_record)
 
-        # Some additional logic for handling drops in the main window
-        # (mostly for citing the e-mails)
-        self.setAcceptDrops(True)
+        # routines
+        self.run_setup_routines()
 
+
+    def run_setup_routines(self):
+        # Clean old temp_files
+        file_reports.clean_old_temp_files()
 
     ###############################
     # handle red X button closing
@@ -175,6 +179,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             Here will be automation right before application close
         """
         event.accept()
+
 
 
     #################
@@ -220,6 +225,8 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         header = cSimpleMediator(self)
         header.set_key('Prices')
         header.set_label(u'Цены')
+        header.add_call('report_prices_cp', u'Excel', cp)
+        header.add_call('report_print_offer', u'Offer (doc)', cp)
         header.add_call('dlg_add_price', u'+Добавить', cp)
         yield header
         for pr_i in db_main.get_prices_list(cp):
@@ -671,6 +678,14 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             k = a_rec.string_key()
             db_main.the_session_handler.delete_concrete_object(a_rec)
             self.sig_knbase_record_added.emit(k)
+
+    # ОТЧЕТЫ
+
+    def report_prices_cp(self, cp):
+        file_reports.report_on_prices(cp)
+
+    def report_print_offer(self, cp):
+        file_reports.print_offer(cp)
 
 class cIteratorDispenser():
     '''

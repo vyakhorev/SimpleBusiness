@@ -23,4 +23,5 @@ db_conn_str = cnf.get("DBConnection","ConnString")
 db_do_echo = cnf.getboolean("DBConnection", "DoEcho")
 db_is_prod = cnf.getboolean("DBConnection", "IsProd")
 
-cnf = None
+def get_cnf_text(part_name, setting_name):
+    return unicode(cnf.get(part_name, setting_name).decode("cp1251"))
