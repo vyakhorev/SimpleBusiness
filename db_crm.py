@@ -92,7 +92,7 @@ class c_crm_contact(BASE, abst_key):
         return s
 
     def add_new_contact_detail(self, t, v, is_fixed):
-        self.details += [c_crm_contact_details(contact = self, cont_type = t, cont_value = v, is_type_fixed = is_fixed)]
+        self.details += [c_crm_contact_details(contact=self, cont_type=t, cont_value=v, is_type_fixed=is_fixed)]
 
     def change_existing_contact_detail(self, rec_id, t, v, is_fixed):
         tmp_dict = dict()

@@ -625,7 +625,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             htmltext_template, text_header = db_main.crm_template_change_sales_lead(old_lead, new_lead)
             self.dlg_add_knbase_record(htmltext=htmltext_template, header=text_header)
 
-
     def dlg_delete_lead(self, a_lead):
         if a_lead is None:
             raise BaseException("No sales opportunity selected!")

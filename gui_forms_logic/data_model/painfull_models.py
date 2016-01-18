@@ -211,7 +211,7 @@ def add_tableview_to(window, model, delegates=None, layout=None):
     table = QtGui.QTableView()
     table.setModel(model)
     if layout:
-       layout.addWidget(table)
+        layout.addWidget(table)
     else:
         window.layout().addWidget(table)
 

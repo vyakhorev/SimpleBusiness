@@ -29,6 +29,7 @@ import argparse
 
 def run_crm_gui():
     from main_gui_modern import QtGui, gui_MainWindow
+    global app
     app = QtGui.QApplication(sys.argv)
     #Start interacting with user
     form = gui_MainWindow(app)
@@ -37,6 +38,7 @@ def run_crm_gui():
 
 def run_simul_gui():
     from main_gui_simul import QtGui, gui_MainSimulWindow
+    global app
     app = QtGui.QApplication(sys.argv)
     #Start interacting with user
     form = gui_MainSimulWindow(app)
@@ -45,6 +47,7 @@ def run_simul_gui():
 
 def run_data_gui():
     from main_gui_datacheck import QtGui, gui_MainDataWindow
+    global app
     app = QtGui.QApplication(sys.argv)
     #Start interacting with user
     form = gui_MainDataWindow(app)

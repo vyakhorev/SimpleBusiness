@@ -43,7 +43,7 @@ class gui_DialogCrm_EditContact(QtGui.QDialog, Ui_DialogCrm_EditContact):
             for b_i in migrating_widgets:
                 b_i.setEnabled(False)
 
-    def set_state_to_add_new(self, predef_agent = None):
+    def set_state_to_add_new(self, predef_agent=None):
         self.setWindowTitle(unicode(u"Создание контакта"))
         self.my_mode = 0
         if predef_agent is not None:
@@ -53,7 +53,7 @@ class gui_DialogCrm_EditContact(QtGui.QDialog, Ui_DialogCrm_EditContact):
         self.checkBox_is_person.setCheckState(QtCore.Qt.Checked)
         self.lineEdit_name.setText("")
         self.lineEdit_job.setText("")
-        self.plainTextEdit_additional_info.setPlainText = ""
+        self.plainTextEdit_additional_info.setPlainText("")
         self.checkBox_SubsPrices.setCheckState(QtCore.Qt.Unchecked)
         self.checkBox_SubsLogistics.setCheckState(QtCore.Qt.Unchecked)
         self.checkBox_SubsPayments.setCheckState(QtCore.Qt.Unchecked)
@@ -127,7 +127,7 @@ class gui_DialogCrm_EditContact(QtGui.QDialog, Ui_DialogCrm_EditContact):
         self.cont_details_model.deleteRow(self.tableView_contact_info.selectionModel().selectedIndexes()[0])
 
     def accept(self):
-        #Логика здесь
+        # Логика здесь
         is_var_ok = True
         if is_var_ok:
             if self.checkBox_is_person.checkState() == QtCore.Qt.Checked:

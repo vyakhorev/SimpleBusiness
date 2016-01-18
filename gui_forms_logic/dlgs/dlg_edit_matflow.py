@@ -32,6 +32,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.connect(self.pushButton_delete_material, QtCore.SIGNAL("clicked()"), self.remove_material)
         self.connect(self.pushButton_down_025, QtCore.SIGNAL("clicked()"), self.put_volume_down_025)
         self.connect(self.pushButton_up_025, QtCore.SIGNAL("clicked()"), self.put_volume_up_025)
+        #TODO: add table with delegates to layout
 
     def set_state_to_add_new(self, client_model):
         self.my_mode = 0
@@ -55,6 +56,19 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.matdist_model.deleteRecord(ind)
 
     def __when_open(self):
+
+        print('rows')
+        if not(self.my_mf_entity is None):
+            # Here is the list to fill the rows (data for table)
+            for md_i in self.my_mf_entity.material_dist:
+                print(str(md_i.material) + " " + str(md_i.choice_prob))
+            # Here is the list to fill the combobox
+            # material_group is selected in comboBox_material_type
+            material_group = self.my_mf_entity.material_type
+            # So here is the list for combobox in the table:
+            for mat_i in material_group.materials:
+                print(str(mat_i))
+
         # Я не очень понимаю, зачем я всё в отдельный метод вынес..
         if self.my_mode == 1: #edit
             #Находим индекс элемента (чтобы в комбобоксе то что надо выбрать).
@@ -250,6 +264,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         if self.var_is_correct:
             periodicy_std = self.inp_erh(self.get_periodicy_stdev_value(),unicode(u"задержки заказа"))
         if self.var_is_correct:
+            # TODO: here I need probs in a nice way
             self.save_materials()
             if self.var_is_correct:
                 if self.my_mode == 0: #Новый добавляем
