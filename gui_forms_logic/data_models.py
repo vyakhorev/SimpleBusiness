@@ -335,31 +335,6 @@ class cDataModel_MatDistTable2(DynamicTableWidget.TableModel):
         self.__probs = []
         self.prob_dict = utils.c_random_dict()
 
-    def update_matdist_table(self, prob_dict):
-        self.beginResetModel()
-        self.__probs = []  #TODO ordered dict!
-        self.prob_dict = prob_dict
-        for material, prob in self.prob_dict.randomdict.iteritems():
-            self.__probs += [[material, prob]]
-        self.endResetModel()
-
-    def reset_all(self):  #При создании нового, когда меняем группу - перезагрузка
-        self.beginResetModel()
-        self.__probs = []
-        self.prob_dict.reset_me()
-        self.endResetModel()
-
-    def normalize_probs(self):
-        self.prob_dict.finalize()
-        self.update_matdist_table(self.prob_dict)
-
-    def is_data_correct(self):
-        #Это проверяется только при закрытии формы. Всё, в общем-то, runtime проверяется..
-        return True
-
-    def get_prob_dict(self):
-        return self.prob_dict
-
 
 class cDataModel_PaymentTermsList(QtCore.QAbstractListModel):
     def __init__(self,  parent = None):

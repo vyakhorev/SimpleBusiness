@@ -59,7 +59,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
         # Loading stylesheets
         if STYLES:
-            style_sheet_src = QtCore.QFile('scheme.qss')
+            style_sheet_src = QtCore.QFile('C:\Ilua\SimpleBusiness\SimpleBusiness\ui\Stylesheets\scheme.qss')
             style_sheet_src.open(QtCore.QIODevice.ReadOnly)
             if style_sheet_src.isOpen():
                 self.setStyleSheet(QtCore.QVariant(style_sheet_src.readAll()).toString())

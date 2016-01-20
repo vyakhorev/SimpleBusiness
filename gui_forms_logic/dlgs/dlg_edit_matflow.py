@@ -28,7 +28,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.cmbx_in_table_model = cDataModel_FilteredMaterialList(parent=self, do_update=0)
         # self.tableView_materials_and_probs.setItemDelegateForColumn(0, gui_DelegateSelectMaterial(self, self.cmbx_in_table_model))
         self.connect(self.pushButton_EstimateStatistics, QtCore.SIGNAL("clicked()"), self.reestimate_from_statistics)
-        self.connect(self.pushButton_normalize_probs, QtCore.SIGNAL("clicked()"), self.matdist_model.normalize_probs)
+        # self.connect(self.pushButton_normalize_probs, QtCore.SIGNAL("clicked()"), self.matdist_model.normalize_probs)
+
         self.connect(self.comboBox_material_type, QtCore.SIGNAL("currentIndexChanged(int)"), self.material_type_selected)
         self.connect(self.pushButton_add_material, QtCore.SIGNAL("clicked()"), self.add_material)
         self.connect(self.pushButton_delete_material, QtCore.SIGNAL("clicked()"), self.remove_material)
@@ -59,11 +60,9 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
 
     def __when_open(self):
 
-        print('rows')
         self.material_column = {}
         self.material_list = []
-
-        if not(self.my_mf_entity is None):
+        if self.my_mf_entity:
             # Here is the list to fill the rows (data for table)
             for md_i in self.my_mf_entity.material_dist:
                 self.material_column[md_i.material] = [md_i.choice_prob]
@@ -76,12 +75,11 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
                 self.material_list.append(mat_i)
                 # print(unicode(mat_i))
 
-            print self.material_column
-            print self.material_list
-
             headers = [unicode('Товар'), unicode('Вероятность закупки')]
             # self.matflow_tablemodel = DynamicTableWidget.TableModel(self.material_column, headers)
             self.matflow_tablemodel = cDataModel_MatDistTable2(self.material_column, headers)
+            self.pushButton_normalize_probs.clicked.connect(lambda: self.matflow_tablemodel.normalize(column=1))
+
             self.probs_column = DynamicTableWidget.ListModel(self.material_list)
             self.probs_column_delegate = [self.probs_column, 0]
 

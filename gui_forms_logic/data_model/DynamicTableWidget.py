@@ -4,6 +4,7 @@ from PyQt4 import QtCore, QtGui
 import sys
 from db_mock import db_fake, db_filling_up
 from utils import c_random_dict
+NormalizeRole = 44
 
 ######################
 # Model
@@ -16,6 +17,9 @@ class ListModel(QtCore.QAbstractListModel):
     def __init__(self, datain, parent=None, *args):
         super(ListModel, self).__init__()
         self.listdata = datain
+
+    def printSomestring(self):
+        print('not rights one')
 
     @property
     def listdata(self):
@@ -40,43 +44,6 @@ class ListModel(QtCore.QAbstractListModel):
 
         elif role == QtCore.Qt.UserRole:
             return self.listdata[index.row()]
-        else:
-            return QtCore.QVariant()
-
-
-class ProbListModel(ListModel):
-
-    def __init__(self, datain, parent=None, *args):
-        ListModel.__init__(self, datain, parent, *args)
-        # self.listdata = datain
-        self.prob_dict = c_random_dict()
-        self._prob = []
-        self.set_dict(self.listdata)
-
-    @ListModel.listdata.setter
-    def listdata(self, value):
-        if not isinstance(value, dict):
-            raise ValueError('wrong input data {}, ,must be dict'.format(value))
-        else:
-            self._listdata = value
-
-    def set_dict(self, dict):
-        self.prob_dict = dict
-        for key, value in self.prob_dict.iteritems():
-            self._prob += [[key, value]]
-
-    def finalize(self):
-        self.prob_dict.finalize()
-        self.set_dict(self.prob_dict)
-
-    def data(self, index, role=QtCore.Qt.DisplayRole):
-        if role == QtCore.Qt.DisplayRole:
-            return self._prob[index.row()][1]
-
-        elif role == QtCore.Qt.UserRole:
-            return self._prob[index.row()][1]
-
-
         else:
             return QtCore.QVariant()
 
@@ -162,6 +129,25 @@ class TableModel(QtCore.QAbstractTableModel):
             else:
                 return QtCore.QVariant()
 
+    def normalize(self, column):
+        """
+           Normalizing here
+        :param column: number of column to normalize
+        """
+        self.beginResetModel()
+        oldlist = []
+        for item in self.mapped_list_fr_dict:
+            try:
+                oldlist.append(item[1][column-1].toInt()[0])
+            except:
+                oldlist.append(item[1][column-1])
+
+        normlist = [float(i)/sum(oldlist) for i in oldlist]
+
+        for i, item in enumerate(self.mapped_list_fr_dict):
+            item[1][column-1] = normlist[i]
+        self.endResetModel()
+
     def flags(self, index):
         return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
@@ -174,7 +160,7 @@ class ComboDelegate(QtGui.QItemDelegate):
     """
     # TODO check if columns more than table model columns
     def __init__(self, datamodel_with_col_list, parent=None):
-        super(ComboDelegate, self).__init__()
+        super(ComboDelegate, self).__init__(parent)
         self.data_col_list = datamodel_with_col_list
 
         if not isinstance(self.data_col_list[0], list):
@@ -190,22 +176,27 @@ class ComboDelegate(QtGui.QItemDelegate):
             for pair in self.data_col_list:
                 print self.data_col_list
                 if index.column() == pair[1]:
-                    if isinstance(pair[0], ProbListModel):
-                        editor = QtGui.QSpinBox(parent)
-                        editor.setMinimum(0)
-                        editor.setMaximum(100)
-                        editor.installEventFilter(self)
-                        value = index.model().data(index, QtCore.Qt.DisplayRole)
-                        editor.setValue(value)
-                    else:
-                        editor = QtGui.QComboBox(parent)
-                        editor.setModel(pair[0])
+                    # if isinstance(pair[0], ProbListModel):
+                    #     editor = QtGui.QSpinBox(parent)
+                    #     editor.setMinimum(0)
+                    #     editor.setMaximum(100)
+                    #     editor.installEventFilter(self)
+                    #     value = index.model().data(index, QtCore.Qt.DisplayRole)
+                    #     editor.setValue(value)
+
+                    # else:
+                    editor = QtGui.QComboBox(parent)
+                    editor.setModel(pair[0])
+                    return editor
+                else:
+                    editor = QtGui.QLineEdit(parent)
                     return editor
 
         else:
             if index.column() == self.data_col_list[1]:
                 editor = QtGui.QComboBox(parent)
                 editor.setModel(self.data_col_list[0])
+
                 return editor
 
             else:
@@ -228,6 +219,7 @@ class ComboDelegate(QtGui.QItemDelegate):
 
         elif isinstance(editor, QtGui.QSpinBox):
             value = index.model().data(index, QtCore.Qt.DisplayRole)
+            print(index.model())
             editor.setValue(value)
 
     def setModelData(self, editor, model, index):
@@ -248,7 +240,6 @@ class ComboDelegate(QtGui.QItemDelegate):
 
         elif isinstance(editor, QtGui.QSpinBox):
             editor.interpretText()
-            print('HEllo')
             value = editor.value()
             model.setData(index, QtCore.QVariant(value))
 
@@ -261,6 +252,7 @@ class ComboDelegate(QtGui.QItemDelegate):
 def add_tableview_to(window, model, delegates=None, layout=None, tableview=None):
     """
         Adding tableView on any QWidget window
+
         :param window: QWidget cls instance, wich we'll decorate
         :param model: QAbstractTableModel cls instance
         :param delegates: QItemDelegate cls instance, if exist make delegates for column
@@ -293,10 +285,10 @@ def add_tableview_to(window, model, delegates=None, layout=None, tableview=None)
             table.setItemDelegate(combodelegate)
 
     # resizing columns
-
     table.setVisible(False)
     table.resizeColumnsToContents()
     table.setVisible(True)
+
     return window
 
 ######################
@@ -358,6 +350,7 @@ class MyWindow3(QtGui.QWidget):
         self.setLayout(QtGui.QHBoxLayout())
 
 
+
 def main():
     # setting up data
     fake_database = db_fake()
@@ -410,7 +403,6 @@ def main():
     some_widget = QtGui.QWidget()
     some_widget.setLayout(new_layout)
     w3.layout().addWidget(some_widget)
-
     listdelegate = [some_cable_list, 0]
     newW = add_tableview_to(w3, some_table, listdelegate, new_layout)
     w3.show()
@@ -418,15 +410,21 @@ def main():
     # Test case #5
     # implementing probability model
     w5 = MyWindow2()
+    button5 = QtGui.QPushButton('Hello world')
+    w5.layout().addWidget(button5)
+    new_layout5 = QtGui.QHBoxLayout()
+    some_widget5 = QtGui.QWidget()
+    some_widget5.setLayout(new_layout5)
+    w5.layout().addWidget(some_widget5)
+
     listdelegate = [some_cable_list, 0]
     additional_list = ListModel(['bukvoed', 'supoed', 'hinkali'])
     listdelegate2 = [additional_list, 1]
-    temp_prob_dict = {k: v[1] for k, v in fake_database.table_fin.iteritems()}
-    additional_list2 = ProbListModel(temp_prob_dict)
-    listdelegate3 = [additional_list2, 2]
-    add_tableview_to(w5, some_table, [listdelegate, listdelegate2, listdelegate3])
+    # setup Normalizable column in model
+    button5.clicked.connect(some_table.convert_to_norm_col)
+    temp_prob_dict = [v[1] for k, v in fake_database.table_fin.iteritems()]
+    add_tableview_to(w5, some_table, [listdelegate, listdelegate2], new_layout5)
     w5.show()
-
 
     sys.exit(app.exec_())
 
