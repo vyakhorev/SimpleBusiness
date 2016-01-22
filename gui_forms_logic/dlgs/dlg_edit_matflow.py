@@ -62,6 +62,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
 
         self.material_column = {}
         self.material_list = []
+
         if self.my_mf_entity:
             # Here is the list to fill the rows (data for table)
             for md_i in self.my_mf_entity.material_dist:

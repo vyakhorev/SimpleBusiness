@@ -1,26 +1,10 @@
 # -*- coding: utf-8 -*-
 __author__ = 'User'
 from PyQt4 import QtCore, QtGui
+from custom_qt_objects import GrowingTextBrowser, FlowLayout
 
 COLOR_DEBUG = False
 inside_widgets = []
-
-class GrowingTextBrowser(QtGui.QTextBrowser):
-    """
-        Very neat approach to make autoresizible QtextBrowser
-    """
-
-    def __init__(self, parent=None, *args, **kwargs):
-        super(GrowingTextBrowser, self).__init__(*args, **kwargs)
-        self.document().contentsChanged.connect(self.sizeChange)
-        self.document().documentLayout().documentSizeChanged.connect(self.sizeChange)
-        self.heightMin, self.heightMax = 0, 65000
-
-    def sizeChange(self):
-        docHeight = self.document().size().height()
-        if self.heightMin <= docHeight <= self.heightMax:
-            self.setMinimumHeight(docHeight+2)
-
 
 class LabelFrame(QtGui.QFrame):
     """
@@ -109,6 +93,7 @@ class RecFrame(QtGui.QFrame):
 
             self.sheet_text = mediator.get_HTML()
             self.html_field.setHtml(self.sheet_text)
+            self.html_field.setMaximumWidth(400)
 
             self.field_and_html_layout.addWidget(self.html_field)
             self.html_field.setAlignment(QtCore.Qt.AlignTop)
@@ -119,6 +104,9 @@ class RecFrame(QtGui.QFrame):
 
         self.fields_frame = QtGui.QFrame()
         self.fields_frame_layout = QtGui.QVBoxLayout()
+        # self.fields_frame_layout = FlowLayout()
+
+
         if COLOR_DEBUG:
             self.fields_frame.setStyleSheet("background-color:pink;")
 
@@ -156,7 +144,8 @@ class RecFrame(QtGui.QFrame):
                 one_field.setStyleSheet("background-color:lightblue;")
 
             temp_widget = QtGui.QWidget()
-            temp_layout = QtGui.QVBoxLayout()
+            # temp_layout = QtGui.QVBoxLayout()
+            temp_layout = QtGui.QGridLayout()
             temp_widget.setLayout(temp_layout)
             temp_layout.addWidget(one_field)
             #   Margins
@@ -168,9 +157,9 @@ class RecFrame(QtGui.QFrame):
             if COLOR_DEBUG:
                 temp_widget.setStyleSheet("background-color:red;")
             one_field_layout.setAlignment(QtCore.Qt.AlignTop)
-            self.fields_frame_layout.addWidget(temp_widget)
+            self.fields_frame_layout.addWidget(one_field)
 
-        self.field_and_html_layout.insertWidget(0, self.fields_frame)
+            self.field_and_html_layout.insertWidget(0, self.fields_frame)
 
         # buttons layout
         #                                      -

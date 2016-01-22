@@ -265,14 +265,18 @@ def add_tableview_to(window, model, delegates=None, layout=None, tableview=None)
         table = tableview
     else:
         table = QtGui.QTableView()
-
+        if layout:
+            layout.addWidget(table)
+        else:
+            window.layout().addWidget(table)
     # print delegates
 
     table.setModel(model)
-    if layout:
-        layout.addWidget(table)
-    else:
-        window.layout().addWidget(table)
+
+    # if layout:
+    #     layout.addWidget(table)
+    # else:
+    #     window.layout().addWidget(table)
 
     if delegates is not None:
         if isinstance(delegates[0], list):
@@ -283,6 +287,7 @@ def add_tableview_to(window, model, delegates=None, layout=None, tableview=None)
             list_of_props, column = delegates
             combodelegate = ComboDelegate(delegates, window)
             table.setItemDelegate(combodelegate)
+
 
     # resizing columns
     table.setVisible(False)
@@ -421,7 +426,7 @@ def main():
     additional_list = ListModel(['bukvoed', 'supoed', 'hinkali'])
     listdelegate2 = [additional_list, 1]
     # setup Normalizable column in model
-    button5.clicked.connect(some_table.convert_to_norm_col)
+    button5.clicked.connect(some_table.normalize)
     temp_prob_dict = [v[1] for k, v in fake_database.table_fin.iteritems()]
     add_tableview_to(w5, some_table, [listdelegate, listdelegate2], new_layout5)
     w5.show()
