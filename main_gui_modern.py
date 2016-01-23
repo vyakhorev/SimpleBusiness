@@ -33,7 +33,7 @@ import file_reports
 STYLES = False
 STYLE_URL = None
 # How many lines to load first time
-RECORDS_NUM = 2
+RECORDS_NUM = 5
 # TODO move this to ini and settings..
 HD = [1280, 720]
 UHD = [1920, 1080]
@@ -78,7 +78,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         self.data_model_counterparties_proxy.setDynamicSortFilter(True)
         self.data_model_counterparties_proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
 
-        self.listView_ClientList.setModel(self.data_model_counterparties)
+        self.listView_ClientList.setModel(self.data_model_counterparties_proxy)
         self.lineEdit_ClientFilter.textChanged.connect(self.data_model_counterparties_proxy.setFilterRegExp)
         self.listView_ClientList.selectionModel().currentChanged.connect(self.click_on_CP)
 
@@ -131,6 +131,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         # Basic signals and models
         self.pushButton_KnBaseEmptyNote.clicked.connect(self.dlg_add_knbase_record)
         self.pushButton_LastRecords.clicked.connect(self.reset_news_filters)
+        self.pushButton_SearchKnBase.clicked.connect(self.do_deep_search)
 
         self.data_model_hashtags = cDataModel_HashtagList()
         self.data_model_hashtags_proxy = QtGui.QSortFilterProxyModel()
@@ -138,8 +139,8 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         self.data_model_hashtags_proxy.setDynamicSortFilter(True)
         self.data_model_hashtags_proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
 
-        self.listView_Hashtags.setModel(self.data_model_hashtags)
-        self.lineEdit_KnBase_Search.textChanged.connect(self.new_search_text_input)
+        self.listView_Hashtags.setModel(self.data_model_hashtags_proxy)
+        self.lineEdit_KnBase_Search.textChanged.connect(self.new_crm_search_text_input)
         self.listView_Hashtags.selectionModel().currentChanged.connect(self.click_on_hashtag)
 
         # Setup knbase scroll
@@ -179,8 +180,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             Here will be automation right before application close
         """
         event.accept()
-
-
 
     #################
     # Вкладка с контрагентами
@@ -330,19 +329,27 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         """
         По кнопке убираем фильтр поиска и отображаем только свежие
         """
-        # TODO: we need this one working..
+        self.current_tag = None
         self.lineEdit_KnBase_Search.clear()
-        rec_iter = db_main.get_dynamic_crm_records_iterator_v4() #records <-> crm news records
-        self.start_printing_crm_records(rec_iter)
+        rec_iter = db_main.get_dynamic_crm_records_iterator() #records <-> crm news records
 
-    def new_search_text_input(self, new_text):
+        self.rebuild_crm_scrl_area_from_iterator(rec_iter)
+
+    @QtCore.pyqtSlot(str)
+    def new_crm_search_text_input(self, new_text):
         """
         Вызывается при вводе нового текста в строку поиска
         Args:
             new_text: текст из поля ввода
         """
         # Вот это нужно чтобы список тегов слева пофильтровать
-        self.data_model_hashtags_proxy.setFilterRegExp(new_text)
+        self.data_model_hashtags_proxy.setFilterRegExp(QtCore.QString(new_text))
+
+    @QtCore.pyqtSlot()
+    def do_deep_search(self):
+        self.current_tag = None
+        search_string = unicode(self.lineEdit_KnBase_Search.text())
+        self.rebuild_crm_scrl_area_from_iterator(db_main.get_dynamic_crm_records_iterator_search(search_string))
 
     def click_on_hashtag(self, index_to, index_from):
         """
@@ -356,12 +363,15 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
         self.current_tag = tag_i
 
+        self.rebuild_crm_scrl_area_from_iterator(db_main.get_dynamic_crm_records_iterator_by_hashtag(tag_i))
+
+    def rebuild_crm_scrl_area_from_iterator(self, new_iterator):
         # Стираем старые виджеты
         self.delete_widgets(self.mediators_list_layout_KnBase)
         # Делаем диспенсер для новых записей (будут дальше в медиаторы и фреймы трансформироваться)
-        self.crm_records_dispenser = cIteratorDispenser(db_main.get_records_list_iter_from_hashtag(tag_i))
-        # Добавляем пять первых записей
-        self.add_crm_records_to_area()
+        self.crm_records_dispenser = cIteratorDispenser(new_iterator)
+        # Добавляем RECORDS_NUM первых записей
+        self.add_crm_records_to_area(autoload=True)
 
     def scrolled_KnBase(self):
         """
@@ -376,8 +386,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
     def add_crm_records_to_area(self, autoload = False):
         """
-            Допечатывает виджетов в скрул арею, создавая медиаторы из records_iterator.
-            Фактически сюда предсгенерированный лист передаётся.
+            Допечатывает виджетов в скрул арею, создавая медиаторы из self.crm_records_dispenser.
         """
         if autoload:
             self.got_records = self.crm_records_dispenser.give_next(RECORDS_NUM)

@@ -159,7 +159,7 @@ def get_records_iter_deep_search(search_string):
     # condition = or_(c_crm_record.headline.ilike(s), c_crm_record.long_html_text.ilike(s))
     # base_query = the_session_handler.get_active_session().query(c_crm_record).filter(condition)
     # return base_query.all()
-    #TODO: наверное, можно ускорить
+    # НЕ ИСПОЛЬЗУЕТСЯ
     found_records = []
     search_string_l = search_string.lower()
     for r_i in the_session_handler.get_all_objects_list_iter(c_crm_record):
@@ -171,39 +171,44 @@ def get_records_iter_deep_search(search_string):
             found_records += [r_i]
     return found_records
 
-def get_dynamic_crm_records_iterator_v1():
+def get_dynamic_crm_records_iterator():
     '''
-    Итератор, подгружающий базу заметок экономно и динамически
-    '''
-    q = the_session_handler.get_active_session().query(c_crm_record)
-    for rec_i in q.all():
-        yield rec_i
-
-def get_dynamic_crm_records_iterator_v2():
-    '''
-    Итератор, подгружающий базу заметок экономно и динамически
-    '''
-    q = the_session_handler.get_active_session().query(c_crm_record).order_by('date_added')
-    for rec_i in q.all():
-        yield rec_i
-
-def get_dynamic_crm_records_iterator_v3():
-    '''
-    Итератор, подгружающий базу заметок экономно и динамически
-    '''
-    s = the_session_handler.get_active_session()
-    ids = s.execute('SELECT crm_record.rec_id FROM crm_record')
-    for id_i in ids:
-        yield s.query(c_crm_record).get(id_i.rec_id)
-
-def get_dynamic_crm_records_iterator_v4():
-    '''
-    Итератор, подгружающий базу заметок экономно и динамически
+    Итератор, подгружающий базу заметок худо-бедно экономно и динамически
     '''
     s = the_session_handler.get_active_session()
     ids = s.execute('SELECT crm_record.rec_id FROM crm_record ORDER BY crm_record.date_added DESC')
     for id_i in ids:
         yield s.query(c_crm_record).get(id_i.rec_id)
+
+def get_dynamic_crm_records_iterator_by_hashtag(hashtag):
+    '''
+    Итератор, подгружающий базу заметок по хештегу худо-бедно экономно и динамически
+    '''
+    # s = the_session_handler.get_active_session()
+    # q = 'SELECT crm_record.rec_id FROM crm_record WHERE hashtags_string LIKE '%бюджет%' ORDER BY crm_record.date_added DESC'
+    # ids = s.execute(q)
+    # for id_i in ids:
+    #     yield s.query(c_crm_record).get(id_i.rec_id)
+    for rec_i in hashtag.records:
+        yield rec_i
+
+def get_dynamic_crm_records_iterator_search(search_string):
+    s = the_session_handler.get_active_session()
+    ids = s.execute('SELECT crm_record.rec_id FROM crm_record ORDER BY crm_record.date_added DESC')
+    for id_i in ids:
+        rec_i = s.query(c_crm_record).options(lazyload('*')).get(id_i.rec_id)
+        if _match_crm_record_to_search_string(rec_i, search_string):
+            yield rec_i
+
+def _match_crm_record_to_search_string(rec_i, search_string):
+    # TODO: вот это можно сделать поинтересней..
+    search_string_l = search_string.lower()
+    if search_string_l in rec_i.headline.lower():
+        return True
+    elif search_string_l in rec_i.hashtags_string.lower():
+        return True
+    elif search_string_l in rec_i.long_html_text.lower():
+        return True
 
 def get_hashtags_list_iter():
     return the_session_handler.get_all_objects_list_iter(c_hastag)

@@ -9,4 +9,5 @@ from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy import or_
+from sqlalchemy.orm import lazyload
 from sqlalchemy.orm import with_polymorphic

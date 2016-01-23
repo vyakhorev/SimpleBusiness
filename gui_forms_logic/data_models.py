@@ -39,7 +39,7 @@ class cDataModel_CounterpartyList(QtCore.QAbstractListModel):
         if role == QtCore.Qt.ForegroundRole:
             if this_item.discriminator == 'supplier':
                 brush = QtGui.QBrush()
-                brush.setColor(QtGui.QColor("red"))
+                brush.setColor(QtGui.QColor("orange"))
                 return brush
             elif this_item.discriminator == 'client':
                 brush = QtGui.QBrush()

@@ -61,7 +61,7 @@ HowManyPreLoad = 5
 HowManyPostLoad = 1
 
 for x in range(0, TestRuns-1):
-    the_dispenser = cIteratorDispenser(db_main.get_dynamic_crm_records_iterator_v4())
+    the_dispenser = cIteratorDispenser(db_main.get_dynamic_crm_records_iterator())
     scroll_test(the_dispenser, HowManyPreLoad, HowManyPostLoad)
 
 
