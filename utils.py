@@ -23,6 +23,15 @@ class c_random_dict(object):
         self.cdf = {}
         self.finalized = 0
 
+    def return_table(self):
+        ans_table = []
+        for key_i, prob_i in self.randomdict.iteritems():
+            ans_table += [[key_i, prob_i]]
+        return ans_table
+
+    def return_dict(self):
+        return self.randomdict.copy()
+
     def write_dict_with_results(self):
         #Словарь с ключем элемента и значением вероятности (не cdf)
         if not(self.finalized):

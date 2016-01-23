@@ -2064,6 +2064,9 @@ class c_material(BASE, abst_key, connected_to_DEVS):
     def __repr__(self):
         return unicode(self.material_name)
 
+    def hashtag_name(self):
+        return u"#" + sanitize_to_hashtext(unicode(self.material_name))
+
 class c_material_type(BASE, abst_key, connected_to_DEVS):
     #Номенклатурная группа (папка-родитель) - её потребление и моделируем
     __tablename__ = 'material_types'

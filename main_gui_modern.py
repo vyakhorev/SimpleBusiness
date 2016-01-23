@@ -111,7 +111,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         # Dialog names (use methods to get them!
         self._DlgEditContact = None
         self._DlgEditSimpleRecord = None
-        self._DlgEditCPdata = None
         self._DlgEditSalesOpportunity = None
         self._DlgEditPrice = None
         self._DlgEditMatFlow = None
@@ -132,6 +131,8 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         self.pushButton_KnBaseEmptyNote.clicked.connect(self.dlg_add_knbase_record)
         self.pushButton_LastRecords.clicked.connect(self.reset_news_filters)
         self.pushButton_SearchKnBase.clicked.connect(self.do_deep_search)
+        self.pushButton_RenameHashtag.clicked.connect(self.rename_hashtag)
+        self.pushButton_DeleteHashtag.clicked.connect(self.delete_hastag)
 
         self.data_model_hashtags = cDataModel_HashtagList()
         self.data_model_hashtags_proxy = QtGui.QSortFilterProxyModel()
@@ -359,11 +360,8 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         tag_i = index_to.data(35).toPyObject()
         if tag_i is None:
             return
-
         if self.current_tag is None: self.current_tag = tag_i
-
         self.current_tag = tag_i
-
         self.rebuild_crm_scrl_area_from_iterator(db_main.get_dynamic_crm_records_iterator_by_hashtag(tag_i))
 
     def rebuild_crm_scrl_area_from_iterator(self, new_iterator):
@@ -417,6 +415,53 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
     def handle_knbase_edit_record(self, rec_key):
         print("edit record handler triggered " + str(rec_key))
 
+    def rename_hashtag(self):
+        ht_i = self._get_selected_hashtag()
+        if ht_i is None:
+            return
+        new_name, is_ok = QtGui.QInputDialog.getText(self, u"Новое имя для #"+ht_i.text,
+                                                     u'Заменить  #' + ht_i.text + u'  на:',
+                                                     QtGui.QLineEdit.Normal, ht_i.text)
+        if not is_ok:
+            return
+
+        does_exist = db_main.check_if_hashtag_name_exists(ht_i.text)
+        if does_exist:
+            a_reply = QtGui.QMessageBox.question(self, u'Подтвердите',
+                                                 u'Хештег ' + new_name + u' уже есть, объединяю?',
+                                             QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if a_reply != QtGui.QMessageBox.Yes:
+            return
+
+        print(u'look like renaming .. ' + unicode(new_name))
+
+    def delete_hastag(self):
+        ht_i = self._get_selected_hashtag()
+        if ht_i is None:
+            return
+        a_reply = QtGui.QMessageBox.question(self, u'Подтвердите',
+                                             u"Удалить хештег #" + unicode(ht_i.text) + u' ?',
+                                             QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if a_reply != QtGui.QMessageBox.Yes:
+            return
+
+        is_reserved = db_main.check_if_hashtag_from_system(ht_i.text)
+        if is_reserved:
+            QtGui.QMessageBox.information(self, u'Внимание',
+                                          u'Имя зарезервировано, не могу удалить',
+                                          QtGui.QMessageBox.Ok)
+            return
+
+        print(u'look like deleting .. ' + unicode(ht_i.text))
+
+    def _get_selected_hashtag(self):
+        indeces = self.listView_Hashtags.selectedIndexes()
+        if len(indeces) == 0:
+            return None
+        # 35 - это роль модели данных
+        selected_item = indeces[0].data(35).toPyObject()
+        return selected_item
+
     ###################
     # Управление диалоговыми окнами
     ###################
@@ -432,11 +477,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         if self._DlgEditContact is None:
             self._DlgEditContact = gui_DialogCrm_EditContact(self)
         return self._DlgEditContact
-
-    # def get_DlgEditCPdata(self):
-    #     if self._DlgEditCPdata is None:
-    #         self._DlgEditCPdata = gui_DialogCrm_EditCounterpartyData(self)
-    #     return self._DlgEditCPdata
 
     def get_DlgEditSalesOpportunity(self):
         if self._DlgEditSalesOpportunity is None:
@@ -545,7 +585,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             raise BaseException("Wrong agent type!")
         edit_dialog = self.get_DlgEditMatFlow()
         edit_dialog.set_state_to_add_new(agent)
-        is_ok, a_mf = edit_dialog.run_dialog()
+        is_ok, a_mf, delete_list = edit_dialog.run_dialog() #delete list всегда пуст
         if is_ok == 1:
             #Записали в базу данных
             db_main.the_session_handler.add_object_to_session(a_mf)
@@ -563,9 +603,12 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         old_freq = matflow_instance.stats_mean_timedelta
         edit_dialog = self.get_DlgEditMatFlow()
         edit_dialog.set_state_to_edit(matflow_instance)
-        is_ok, a_mf  = edit_dialog.run_dialog()
+        is_ok, a_mf, delete_list  = edit_dialog.run_dialog()
         if is_ok == 1:  # a_mf = matflow_instance
-            # Записали в базу данных
+            # Пометим объекты на удаление
+            for obj_i in delete_list:
+                db_main.the_session_handler.active_session.delete(obj_i)
+            # Записали в базу данных удаления и изменения
             db_main.the_session_handler.commit_session()
             # Не забыли обновить табличку
             self.sig_cp_record_edited.emit(a_mf.string_key())

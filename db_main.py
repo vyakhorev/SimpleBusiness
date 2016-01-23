@@ -232,6 +232,34 @@ def create_hashtag(dirty_text_for_hashtag):
         the_session_handler.add_object_to_session(a_ht)
         return a_ht
 
+def check_if_hashtag_from_system(hashtag_text):
+    # Проверяем, не является ли текст зарезервированным системой
+    # Используется для удаления/добавления хештега
+
+    # Не контрагент ли?
+    for ag_i in the_session_handler.get_all_objects_list_iter(c_agent):
+        if hashtag_text == ag_i.hashtag_name()[1:]:  # убираем "#"
+            return True
+
+    # Не материал ли?
+    for mat_i in the_session_handler.get_all_objects_list_iter(c_material):
+        if hashtag_text == mat_i.hashtag_name()[1:]:
+            return True
+
+    # Не группа ли материалов?
+    for mat_i in the_session_handler.get_all_objects_list_iter(c_material_type):
+        if hashtag_text == mat_i.hashtag_name()[1:]:
+            return True
+
+    # Ну, значит, всё ок.
+    return False
+
+def check_if_hashtag_name_exists(hashtag_text):
+    # Используется при переименовании хештега
+    all_hashtags = get_hashtags_text_list()
+    if u'#'+hashtag_text in all_hashtags: return True
+    return False
+
 def rename_hashtag_usages(old_hashtag_name, new_hashtag_name):
     #В правильном случае, len(found_tags_old) = 1, len(found_tags_new) = 0
     old_hashtag_name = old_hashtag_name.lower()
@@ -260,8 +288,13 @@ def rename_hashtag_usages(old_hashtag_name, new_hashtag_name):
             for forg_ht in to_delete:
                 the_session_handler.delete_concrete_object(forg_ht)
 
-# def get_contacts_list_iter():
-#     return the_session_handler.get_all_objects_list_iter(c_crm_contact)
+def delete_hashtag_usage(hashtag_obj):
+    for rec_i in hashtag_obj.records:
+        # Удаляем из текста rec_i все упоминания (убираем '#')
+        pass
+
+
+
 
 def get_contacts_list(agent = None):
     if agent is None:
