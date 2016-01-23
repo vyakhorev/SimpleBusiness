@@ -8,7 +8,7 @@ from ui.ui_ModernMainWindow_v2 import Ui_MainWindowModern
 # dialogs
 from gui_forms_logic.dlgs.dlg_edit_contact import gui_DialogCrm_EditContact
 from gui_forms_logic.dlgs.dlg_edit_price import gui_Dialog_EditPrice
-from gui_forms_logic.dlgs.dlg_edit_matflow import gui_Dialog_EditMatFlow
+from gui_forms_logic.dlgs.dlg_edit_matflow2 import gui_Dialog_EditMatFlow
 from gui_forms_logic.dlgs.dlg_sales_opportunity import gui_Dialog_EditSalesOpportunity
 from gui_forms_logic.dlgs.dlg_edit_kn_base_record import gui_DialogCrm_EditSimpleRecord
 

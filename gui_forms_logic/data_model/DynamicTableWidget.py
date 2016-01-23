@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 __author__ = 'User'
 
 from PyQt4 import QtCore, QtGui
@@ -29,8 +31,10 @@ class ListModel(QtCore.QAbstractListModel):
     def listdata(self, value):
         if not isinstance(value, list):
             raise ValueError('wrong input data {}, ,must be list'.format(value))
-        elif isinstance(value[0], list):
-            raise ValueError('list {} must be 1-dimensional'.format(value))
+        # Вот это не работает с пустыми листами
+        # (хотел так инстансировать DynamicTableWidget.ListModel([]) )
+        #elif isinstance(value[0], list):
+        #    raise ValueError('list {} must be 1-dimensional'.format(value))
         else:
             self._listdata = value
 
@@ -46,6 +50,14 @@ class ListModel(QtCore.QAbstractListModel):
             return self.listdata[index.row()]
         else:
             return QtCore.QVariant()
+
+    # Alexey add some logic
+
+    def refill_data(self, new_list):
+        self.beginResetModel()
+        self.listdata = new_list
+        self.endResetModel()
+
 
 
 class TableModel(QtCore.QAbstractTableModel):
@@ -81,16 +93,24 @@ class TableModel(QtCore.QAbstractTableModel):
                         return self.headers[num]
 
     def rowCount(self, *args, **kwargs):
-        if isinstance(self.mydata, list):
-            return len(self.mydata[0])
-        if isinstance(self.mydata, dict):
-            return len(self.mydata)
+        # Alexey
+        # if isinstance(self.mydata, list):
+        #     return len(self.mydata[0])
+        # if isinstance(self.mydata, dict):
+        #     return len(self.mydata)
+        return len(self.mapped_list_fr_dict)
 
     def columnCount(self, *args, **kwargs):
-        if isinstance(self.mydata, list):
-            return len(self.mydata)
-        if isinstance(self.mydata, dict):
-            return len(self.mydata.values()[0])+1
+        # Alexey
+        # if isinstance(self.mydata, list):
+        #     return len(self.mydata)
+        # if isinstance(self.mydata, dict):
+        #     # Alexey Временная заплатка
+        #     try: #а разве это не число строк вернет?...
+        #         return len(self.mydata.values()[0])+1
+        #     except IndexError:
+        #         return 2
+        return len(self.headers)
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         row_i = index.row()
@@ -150,6 +170,41 @@ class TableModel(QtCore.QAbstractTableModel):
 
     def flags(self, index):
         return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+    # Alexey  add some logic
+
+    def refill_data(self, data_dict):
+        # self.mydata = data_dict
+        # Оказывается, кроме mydata есть ещё self.mapped_list_fr_dict....
+        self.beginResetModel()
+        self.mapped_list_fr_dict = []
+        for k, v in self.mydata.iteritems():
+            self.mapped_list_fr_dict.append([k, v])
+        self.endResetModel()
+
+    def add_blank_row(self):
+        # Добавляем строчку в конец
+        # Скорей всего, неправильно использую beginInsertRows/endInsertRows
+        parent = QtCore.QModelIndex() # не знаю, зачем это..
+        position = parent.row()-1
+        self.beginInsertRows(parent, position, position)
+        empty_row = []
+        for k in range(len(self.headers)):
+            # TODO нужна типизация столбцов..
+            empty_row += ['']
+        self.mapped_list_fr_dict.append(empty_row)
+        self.endInsertRows()
+
+    def remove_row(self, an_index):
+        # Удаляем выбранную строчку
+        # Скорей всего, неправильно использую beginRemoveRows/endRemoveRows
+        self.beginRemoveRows(an_index, an_index.row(), an_index.row())
+        removed_row = self.mapped_list_fr_dict.pop(an_index.row())
+        self.endRemoveRows()
+
+    def get_mapped_data(self):
+        # так читаю данные из таблички. в словарь позже переделаю..
+        return self.mapped_list_fr_dict
 
 
 class ComboDelegate(QtGui.QItemDelegate):
