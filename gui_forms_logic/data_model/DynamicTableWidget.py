@@ -229,9 +229,17 @@ class TableModel(QtCore.QAbstractTableModel):
         removed_row = self.mapped_list_fr_dict.pop(an_index.row())
         self.endRemoveRows()
 
-    def get_mapped_data(self):
+    def get_mapped_data(self, format=list):
         # так читаю данные из таблички. в словарь позже переделаю..
-        return self.mapped_list_fr_dict
+        # material, probs =  self.mapped_list_fr_dict[0], self.mapped_list_fr_dict[1]
+        if format == list:
+            return [[el[0], el[1][0]] for el in self.mapped_list_fr_dict]
+        elif format == tuple:
+            return tuple((el[0], el[1][0]) for el in self.mapped_list_fr_dict)
+        elif format == dict:
+            return {el[0]: el[1][0] for el in self.mapped_list_fr_dict}
+        else:
+            return False
 
 
 class ComboDelegate(QtGui.QItemDelegate):

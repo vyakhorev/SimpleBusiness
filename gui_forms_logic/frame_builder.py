@@ -93,7 +93,6 @@ class RecFrame(QtGui.QFrame):
 
             self.sheet_text = mediator.get_HTML()
             self.html_field.setHtml(self.sheet_text)
-            self.html_field.setMaximumWidth(400)
 
             self.field_and_html_layout.addWidget(self.html_field)
             self.html_field.setAlignment(QtCore.Qt.AlignTop)

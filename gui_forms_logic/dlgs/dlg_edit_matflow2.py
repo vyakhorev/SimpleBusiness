@@ -105,6 +105,10 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
 
     def accept(self):
         # Сделаю после того, как модель устаканится
+        print self.matflow_tablemodel.get_mapped_data()
+        print self.matflow_tablemodel.get_mapped_data(list)
+        print self.matflow_tablemodel.get_mapped_data(tuple)
+        print self.matflow_tablemodel.get_mapped_data(dict)
         super(gui_Dialog_EditMatFlow, self).reject()
 
     def reject(self):
