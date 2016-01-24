@@ -74,6 +74,7 @@ class TableModel(QtCore.QAbstractTableModel):
         for k, v in self.mydata.iteritems():
             self.mapped_list_fr_dict.append([k, v])
 
+        self.headerData().res
     @property
     def mydata(self):
         return self._mydata
@@ -171,6 +172,7 @@ class TableModel(QtCore.QAbstractTableModel):
     def flags(self, index):
         return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
+
     # Alexey  add some logic
 
     def refill_data(self, data_dict):
@@ -178,8 +180,9 @@ class TableModel(QtCore.QAbstractTableModel):
         # Оказывается, кроме mydata есть ещё self.mapped_list_fr_dict....
         self.beginResetModel()
         self.mapped_list_fr_dict = []
-        for k, v in self.mydata.iteritems():
+        for k, v in data_dict.iteritems():
             self.mapped_list_fr_dict.append([k, v])
+
         self.endResetModel()
 
     def add_blank_row(self):
@@ -345,6 +348,7 @@ def add_tableview_to(window, model, delegates=None, layout=None, tableview=None)
 
 
     # resizing columns
+
     table.setVisible(False)
     table.resizeColumnsToContents()
     table.setVisible(True)
