@@ -121,6 +121,16 @@ class TableModel(QtCore.QAbstractTableModel):
             if col_i == 0:
                 return self.mapped_list_fr_dict[row_i][col_i].__repr__()
             if col_i == 1:
+                # implementing percetage
+                return '{:.2%}'.format(self.mapped_list_fr_dict[row_i][col_i][0])
+                # return self.mapped_list_fr_dict[row_i][col_i][0]
+            if col_i == 2:
+                return self.mapped_list_fr_dict[row_i][col_i-1][1]
+
+        elif role == QtCore.Qt.EditRole:
+            if col_i == 0:
+                return self.mapped_list_fr_dict[row_i][col_i].__repr__()
+            if col_i == 1:
                 return self.mapped_list_fr_dict[row_i][col_i][0]
             if col_i == 2:
                 return self.mapped_list_fr_dict[row_i][col_i-1][1]
@@ -135,10 +145,21 @@ class TableModel(QtCore.QAbstractTableModel):
                 self.dataChanged.emit(index, index)
 
             elif col_i == 1:
+                old_val = self.mapped_list_fr_dict[row_i][col_i][0]
                 try:
                     self.mapped_list_fr_dict[row_i][col_i][0] = value.toPyObject()
                 except:
-                    self.mapped_list_fr_dict[row_i][col_i][0] = value
+                    # converting to float and checking input
+                    try:
+                        value = value.toFloat()[0]
+                    except:
+                        pass
+
+                    if isinstance(value, int) or isinstance(value, float):
+                        self.mapped_list_fr_dict[row_i][col_i][0] = value
+                    else:
+                        self.mapped_list_fr_dict[row_i][col_i][0] = old_val
+
                 self.dataChanged.emit(index, index)
 
             elif col_i == 2:
@@ -163,7 +184,10 @@ class TableModel(QtCore.QAbstractTableModel):
             except:
                 oldlist.append(item[1][column-1])
 
-        normlist = [float(i)/sum(oldlist) for i in oldlist]
+        try :
+            normlist = [float(i)/sum(oldlist) for i in oldlist]
+        except ZeroDivisionError:
+            normlist = [0 for i in oldlist]
 
         for i, item in enumerate(self.mapped_list_fr_dict):
             item[1][column-1] = normlist[i]
@@ -272,7 +296,7 @@ class ComboDelegate(QtGui.QItemDelegate):
             editor.setCurrentIndex(pos)
 
         elif isinstance(editor, QtGui.QLineEdit):
-            choice = index.model().data(index, QtCore.Qt.DisplayRole)
+            choice = index.model().data(index, QtCore.Qt.EditRole)
             editor.setText(str(choice))
 
         elif isinstance(editor, QtGui.QSpinBox):

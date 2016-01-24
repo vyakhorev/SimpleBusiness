@@ -291,7 +291,8 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
                 item.widget().clear_active_buttons()
 
             except AttributeError:
-                print('Frame hasnt active buttons')
+                pass
+                # print('Frame hasnt active buttons')
             # print('going to remove {}'.format(item))
             layout.removeItem(item)
             item.widget().deleteLater()
