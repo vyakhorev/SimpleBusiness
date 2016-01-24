@@ -55,7 +55,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self._refresh_table_model_with_new_data({})
         self._refresh_delegate_with_new_data([])
         # reset columns width
-        self.tableView_materials_and_probs.resizeColumnsToContents()
+        # self._reset_table_view()
         # Сбрасываем прочие виджеты
         self.comboBox_material_type.setCurrentIndex(-1)
         self.comboBox_material_type.setEnabled(True)
@@ -76,7 +76,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self._refresh_table_model_with_matflow(self.my_mf_entity)
         self._refresh_delegate_with_material_type(self.my_mf_entity.material_type)
         # reset columns width
-        self.tableView_materials_and_probs.resizeColumnsToContents()
+        self._reset_table_view()
         # Перезаполняем прочие виджеты
         ## Находим индекс элемента (чтобы в комбобоксе то что надо выбрать).
         ## 40 - роль для поиска по ключу, ключ - строка, уникальная глобально - string_key()
@@ -126,8 +126,23 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         # new_dat - это list
         self.probs_column.refill_data(new_data)
 
+    def _reset_table_view(self):
+        self.tableView_materials_and_probs.setVisible(False)
+        self.tableView_materials_and_probs.resizeColumnsToContents()
+        self.tableView_materials_and_probs.setVisible(True)
+
+    @staticmethod
+    def repr_len(element):
+        # getting length of element repr
+        return len(element.__repr__())
+
     def _add_material(self):
         self.matflow_tablemodel.add_blank_row()
+
+        # get max length item from potential items and set column width
+        max_element = max(self._get_material_type().materials, key=self.repr_len)
+        length = len(max_element.__repr__())
+        self.tableView_materials_and_probs.setColumnWidth(0, length*6)
 
     def _remove_material(self):
         ind = self.tableView_materials_and_probs.currentIndex()

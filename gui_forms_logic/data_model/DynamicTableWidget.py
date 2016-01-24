@@ -335,13 +335,13 @@ def add_tableview_to(window, model, delegates=None, layout=None, tableview=None)
     """
         Adding tableView on any QWidget window
 
-        :param window: QWidget cls instance, wich we'll decorate
+        :param window: QWidget cls instance, which we'll decorate
         :param model: QAbstractTableModel cls instance
         :param delegates: QItemDelegate cls instance, if exist make delegates for column
         :param layout: if exist, adding table to it
         :param tableview: if exist, adding model to it
 
-        :return: window, decorated window
+        :return: decorated window
     """
     if tableview:
         table = tableview
