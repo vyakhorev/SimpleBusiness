@@ -31,10 +31,11 @@ class ListModel(QtCore.QAbstractListModel):
     def listdata(self, value):
         if not isinstance(value, list):
             raise ValueError('wrong input data {}, ,must be list'.format(value))
-        # Вот это не работает с пустыми листами
-        # (хотел так инстансировать DynamicTableWidget.ListModel([]) )
-        #elif isinstance(value[0], list):
-        #    raise ValueError('list {} must be 1-dimensional'.format(value))
+        elif not value:
+            # Empty list
+            self._listdata = value
+        elif isinstance(value[0], list):
+           raise ValueError('list {} must be 1-dimensional'.format(value))
         else:
             self._listdata = value
 
@@ -74,7 +75,6 @@ class TableModel(QtCore.QAbstractTableModel):
         for k, v in self.mydata.iteritems():
             self.mapped_list_fr_dict.append([k, v])
 
-        self.headerData().res
     @property
     def mydata(self):
         return self._mydata
@@ -116,6 +116,7 @@ class TableModel(QtCore.QAbstractTableModel):
     def data(self, index, role=QtCore.Qt.DisplayRole):
         row_i = index.row()
         col_i = index.column()
+        print('self.mapped_list_fr_dict  :  {}'.format(self.mapped_list_fr_dict))
 
         if role == QtCore.Qt.DisplayRole:
             if col_i == 0:
@@ -188,14 +189,14 @@ class TableModel(QtCore.QAbstractTableModel):
     def add_blank_row(self):
         # Добавляем строчку в конец
         # Скорей всего, неправильно использую beginInsertRows/endInsertRows
-        parent = QtCore.QModelIndex() # не знаю, зачем это..
-        position = parent.row()-1
-        self.beginInsertRows(parent, position, position)
+        index = QtCore.QModelIndex() # не знаю, зачем это..
+        position = index.row()-1
+        self.beginInsertRows(index, position, position)
         empty_row = []
         for k in range(len(self.headers)):
             # TODO нужна типизация столбцов..
             empty_row += ['']
-        self.mapped_list_fr_dict.append(empty_row)
+        self.mapped_list_fr_dict.append(['blank', [0]])
         self.endInsertRows()
 
     def remove_row(self, an_index):

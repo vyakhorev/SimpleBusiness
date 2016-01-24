@@ -54,6 +54,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         # Сбрасываем модели данных (грубо)
         self._refresh_table_model_with_new_data({})
         self._refresh_delegate_with_new_data([])
+        # reset columns width
+        self.tableView_materials_and_probs.resizeColumnsToContents()
         # Сбрасываем прочие виджеты
         self.comboBox_material_type.setCurrentIndex(-1)
         self.comboBox_material_type.setEnabled(True)
@@ -73,6 +75,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         # Заполняем модель
         self._refresh_table_model_with_matflow(self.my_mf_entity)
         self._refresh_delegate_with_material_type(self.my_mf_entity.material_type)
+        # reset columns width
+        self.tableView_materials_and_probs.resizeColumnsToContents()
         # Перезаполняем прочие виджеты
         ## Находим индекс элемента (чтобы в комбобоксе то что надо выбрать).
         ## 40 - роль для поиска по ключу, ключ - строка, уникальная глобально - string_key()
