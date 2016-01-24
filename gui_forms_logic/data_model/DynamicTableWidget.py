@@ -116,7 +116,6 @@ class TableModel(QtCore.QAbstractTableModel):
     def data(self, index, role=QtCore.Qt.DisplayRole):
         row_i = index.row()
         col_i = index.column()
-        print('self.mapped_list_fr_dict  :  {}'.format(self.mapped_list_fr_dict))
 
         if role == QtCore.Qt.DisplayRole:
             if col_i == 0:
