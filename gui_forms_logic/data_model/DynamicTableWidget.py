@@ -230,8 +230,11 @@ class TableModel(QtCore.QAbstractTableModel):
         self.endRemoveRows()
 
     def get_mapped_data(self, format=list):
+        """
+            :param format: default = list, type of export sequence
+            :return: list, tuple, dict or False in case of wrong format
+        """
         # так читаю данные из таблички. в словарь позже переделаю..
-        # material, probs =  self.mapped_list_fr_dict[0], self.mapped_list_fr_dict[1]
         if format == list:
             return [[el[0], el[1][0]] for el in self.mapped_list_fr_dict]
         elif format == tuple:
