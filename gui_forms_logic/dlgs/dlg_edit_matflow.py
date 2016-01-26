@@ -7,6 +7,8 @@ import utils
 import db_main
 import convert
 
+from gui_forms_logic.plot_window.matflow_plotting import Spreading, PlotViewer
+
 from ui.ui_Dialog_EditMatFlow import Ui_Dialog_EditMatFlow
 from gui_forms_logic.data_models import cDataModel_GeneralMaterialList, cDataModel_MatDistTable, \
     cDataModel_FilteredMaterialList, cDataModel_MatDistTable2
@@ -26,6 +28,9 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.matdist_model = cDataModel_MatDistTable()
         self.tableView_materials_and_probs.setModel(self.matdist_model)
         self.cmbx_in_table_model = cDataModel_FilteredMaterialList(parent=self, do_update=0)
+
+        self.graph_button = QtGui.QPushButton(unicode('График'))
+        self.horizontalLayout_6.insertWidget(1, self.graph_button)
         # self.tableView_materials_and_probs.setItemDelegateForColumn(0, gui_DelegateSelectMaterial(self, self.cmbx_in_table_model))
         self.connect(self.pushButton_EstimateStatistics, QtCore.SIGNAL("clicked()"), self.reestimate_from_statistics)
         # self.connect(self.pushButton_normalize_probs, QtCore.SIGNAL("clicked()"), self.matdist_model.normalize_probs)

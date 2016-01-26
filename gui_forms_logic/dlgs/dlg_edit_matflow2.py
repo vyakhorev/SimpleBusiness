@@ -3,11 +3,15 @@
 from PyQt4 import QtCore, QtGui
 
 import simple_locale, convert, db_main, utils
+import numpy as np
+from datetime import datetime
 
 from ui.ui_Dialog_EditMatFlow import Ui_Dialog_EditMatFlow
 from gui_forms_logic.data_models import cDataModel_GeneralMaterialList, cDataModel_MatDistTable2
 
 from gui_forms_logic.data_model import DynamicTableWidget
+
+from gui_forms_logic.plot_window.matflow_plotting import Spreading, PlotViewerDialog
 
 class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
     def __init__(self, parent=None):
@@ -23,7 +27,15 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.comboBox_material_type.setModel(self.general_materials_model)
 
         # Обновление при смене материала в главном Combo Box
-        self.connect(self.comboBox_material_type, QtCore.SIGNAL("currentIndexChanged(int)"), self._material_type_selected)
+        self.connect(self.comboBox_material_type, QtCore.SIGNAL("currentIndexChanged(int)"),
+                     self._material_type_selected)
+
+        # Кнопка графика
+        self.graph_button = QtGui.QPushButton(unicode('График'))
+        self.horizontalLayout_6.insertWidget(1, self.graph_button)
+
+        # Метод для кнопки - "График"
+        self.graph_button.clicked.connect(self.showplot)
 
         # Модель данных таблички
         headers = [u'Спецификация товара', u'Вероятность выбора']
@@ -377,3 +389,28 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
             return True
         elif self.checkBox_direct_order.checkState() == QtCore.Qt.Unchecked:
             return False
+
+    def showplot(self):
+        # Some data
+        data = {}
+        deltas = Spreading([15, 20, 60])
+        deltas2 = Spreading([1, 2, 3])
+
+        dates = [datetime(2015, 8, 15), datetime(2015, 10, 2), datetime(2016, 2, 17), datetime(2016, 4, 20),
+                 datetime(2016, 6, 9)]
+
+        dataset_matrix = np.array([[2, 4,  0, 0],
+                                    [3, 9,  0, 0],
+                                    [4, 7,  deltas, deltas2],
+                                    [5, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
+                                    [6, 8,  deltas, deltas2]])
+
+        # overwriting 1 column to dates
+        dataset_matrix[:, 0] = dates
+
+        data['Lantorec'] = dataset_matrix
+
+        wind = PlotViewerDialog(self)
+        wind.plot(data, current_date=datetime(2016, 1, 26))
+        # wind.plot(data)
+        wind.show()
