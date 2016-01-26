@@ -136,6 +136,7 @@ class RecFrame(QtGui.QFrame):
 
             one_field_label.setMaximumWidth(150)
             one_field_value.setMaximumWidth(150)
+            one_field_value.setReadOnly(True)
 
             one_field.setLayout(one_field_layout)
 

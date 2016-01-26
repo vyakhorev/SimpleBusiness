@@ -34,7 +34,7 @@ class Spreading(object):
         self.maxprob = maxprob
 
     @property
-    def sort_deltas(self):
+    def sorted_deltas(self):
         """ deltas from small to big radius """
         self._sort_deltas = sorted(self.deltas, reverse=True)
         return self._sort_deltas
@@ -54,11 +54,11 @@ class PlotViewerDialog(QtGui.QDialog):
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
 
-        ToolBar = NavigationToolbar(self.canvas, self)
+        self.toolBar = NavigationToolbar(self.canvas, self)
         self.button = QtGui.QPushButton('Plot')
 
         self.setLayout(self.main_layout)
-        self.layout().addWidget(ToolBar)
+        self.layout().addWidget(self.toolBar)
         self.layout().addWidget(self.button)
 
         self.main_layout.insertWidget(1, self.canvas)
@@ -97,7 +97,6 @@ class PlotViewerDialog(QtGui.QDialog):
             return min(data), max(data)
         else:
             return min(data), max(data)
-
 
     def plot(self, data, current_date=None):
         """
@@ -145,7 +144,7 @@ class PlotViewerDialog(QtGui.QDialog):
 
                 # multiple concentric ellipses of spreading
                 if t_dev_i > 0:
-                    for i, (t_dev_ij, val_dev_ij) in enumerate(zip(t_dev_i.sort_deltas, val_dev_i.sort_deltas)):
+                    for i, (t_dev_ij, val_dev_ij) in enumerate(zip(t_dev_i.sorted_deltas, val_dev_i.sorted_deltas)):
                         if t_dev_ij > 0:
                             ellip = Ellipse(xy=[t_i, val_i], width=t_dev_ij, height=val_dev_ij)
                             ellip.fill = True
@@ -176,10 +175,10 @@ if __name__ == '__main__':
              datetime(2016, 6, 9)]
 
     dataset_matrix = np.array([[2, 4,  0, 0],
-                                [3, 9,  0, 0],
-                                [4, 7,  deltas, deltas2],
-                                [5, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
-                                [6, 8,  deltas, deltas2]])
+                               [3, 9,  0, 0],
+                               [4, 7,  deltas, deltas2],
+                               [5, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
+                               [6, 8,  deltas, deltas2]])
 
     # overwriting 1 column to dates
     dataset_matrix[:, 0] = dates
@@ -189,7 +188,7 @@ if __name__ == '__main__':
     # data['Lantor'] = [DataPoint(dataset[i][0], dataset[i][1]) for i in xrange(len(dataset))]
     # data['Unigel'] = [DataPoint(dataset2[i][0], dataset2[i][1]) for i in xrange(len(dataset))]
 
-    wind = PlotViewer()
+    wind = PlotViewerDialog()
     wind.plot(data2, current_date=datetime(2015, 12, 16))
     # wind.plot(data)
     wind.show()
