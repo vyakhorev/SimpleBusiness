@@ -404,6 +404,15 @@ def estimate_shipment_stats(client, material_group = None):
     #print("estimated model for " + str(client) + ":" + str(material_group))
     return mf_dicts.values()
 
+def get_shipments_history(client, material_group):
+    fact_shipments_list = []
+    for sh_i in client.fact_shipments:
+        if sh_i.material.material_type == material_group:
+            fact_shipments_list.append([sh_i.ship_date, sh_i.ship_qtty])
+    return fact_shipments_list
+
+
+
 def get_hashtags_from_names(hashcode_list):
     #Получаем лист имен хэштегов и возвращаем инстансы базы (только существующие)
     found_hashtags = []

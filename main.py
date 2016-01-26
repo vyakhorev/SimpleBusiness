@@ -63,23 +63,23 @@ def run_simulations():
     param_dict = db_main.the_settings_manager.get_simul_settings()
     the_planner.run_observed_simulation(10, 200)
 
-def load_from_1C():
-    import admin_scripts
-    mng = admin_scripts.c_admin_tasks_manager()
-    mng.add_task(admin_scripts.c_read_lists_from_1C_task())
-    mng.add_task(admin_scripts.c_read_logs_from_1C_task())
-    mng.add_task(admin_scripts.c_read_dynamic_data_from_1C_task())
-    mng.add_task(admin_scripts.c_read_generalinfo_from_1C_task())
-    mng.add_task(admin_scripts.c_update_ccy_stats())
-    mng.add_task(admin_scripts.c_build_excessive_links())
-    mng.run_tasks()
-
-def upload_to_1C():
-    # TODO: test it and fix price <-> matflow relations
-    import admin_scripts
-    mng = admin_scripts.c_admin_tasks_manager()
-    mng.add_task(admin_scripts.c_print_budget_to_csv())
-    mng.run_tasks()
+# def load_from_1C():
+#     import admin_scripts
+#     mng = admin_scripts.c_admin_tasks_manager()
+#     mng.add_task(admin_scripts.c_read_lists_from_1C_task())
+#     mng.add_task(admin_scripts.c_read_logs_from_1C_task())
+#     mng.add_task(admin_scripts.c_read_dynamic_data_from_1C_task())
+#     mng.add_task(admin_scripts.c_read_generalinfo_from_1C_task())
+#     mng.add_task(admin_scripts.c_update_ccy_stats())
+#     mng.add_task(admin_scripts.c_build_excessive_links())
+#     mng.run_tasks()
+#
+# def upload_to_1C():
+#     # TODO: test it and fix price <-> matflow relations
+#     import admin_scripts
+#     mng = admin_scripts.c_admin_tasks_manager()
+#     mng.add_task(admin_scripts.c_print_budget_to_csv())
+#     mng.run_tasks()
 
 
 if __name__ == "__main__":
@@ -104,8 +104,8 @@ if __name__ == "__main__":
         # Этот вызов означает запуск скрипта
         if cmd_options.action == 'simul':
             run_simulations()
-        elif cmd_options.action == 'load':
-            load_from_1C()
-        elif cmd_options.action == 'upload':
-            upload_to_1C()
+        # elif cmd_options.action == 'load':
+        #     load_from_1C()
+        # elif cmd_options.action == 'upload':
+        #     upload_to_1C()
 

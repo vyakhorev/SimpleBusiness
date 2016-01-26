@@ -10,13 +10,14 @@ Created on Fri May 30 16:06:54 2014
 #****           X M L           *************************************
 #********************************************************************
 
+
+#from cnf import InputDir, FileWithLists, FileWithLogs, FileWithDynamicData, OutputDir, FileForSalesBudgetExport
+
 import xml.etree.ElementTree as ElementTree
 import unicodecsv
 from db_main import *
 from db_handlers import SynchFindingListError, SynchUnknownError
 from utils import c_task, c_msg
-
-from cnf import InputDir, FileWithLists, FileWithLogs, FileWithDynamicData, OutputDir, FileForSalesBudgetExport
 
 #################################
 def synch_error_handler(fn):
@@ -80,34 +81,6 @@ def get_and_report_obj(obj_class, account_system_code, msgs, obj_logname = ""):
     return obj_i
 
 #################################
-#   Синхронизация - вызывальщики
-#################################
-
-# def synch_with_1C_xml():
-#     #Синхронизация с 1С файлом
-#     print("Synchronize lists...")
-#     write_lists_from_xml_to_db()              #Обновляем списки
-#     print("Synchronize shipments statistics...")
-#     write_logs_from_xml_to_db()     #Грузим объемы отгрузок - с целью анализа динамики только
-#     print("Synchronize dynamic data - warehouse, money, orders...")
-#     xml_LoadDynamicData()                     #Грузим заказы и проекты по доставке
-#     print("Update_trading_firm_model")
-#     build_the_firm()
-#     print("Working with currency rates...")
-#     print("-- Add a fake model for macro market")
-#     #TODO: Estimate the model outside in R for GARCH(1,1), upload only USD/EUR rate from 1C
-#     a_ccy1 = the_session_handler.get_account_system_object(c_currency,unicode("840"))
-#     a_ccy2 = the_session_handler.get_account_system_object(c_currency,unicode("978"))
-#     a_ccy3 = the_session_handler.get_account_system_object(c_currency,unicode("643"))
-#     the_macro_model = the_session_handler.get_singleton_object(c_macro_market)
-#     the_macro_model.add_ccy_quote(a_ccy1,35.5,34.6,0.009)
-#     the_macro_model.add_ccy_quote(a_ccy2,49.9,49.0,0.007)
-#     the_macro_model.add_ccy_quote(a_ccy3,1,1,0)
-#     the_session_handler.add_object_to_session(the_macro_model)
-#     the_session_handler.commit_and_close_session()
-#     print("Synchronisation finished!")
-
-#################################
 #   Выгрузка бюджета в csv
 #################################
 
@@ -138,14 +111,15 @@ class c_print_budget_to_csv(c_task):
 
 class c_read_lists_from_1C_task(c_task):
     # Загрузка всех списков из xml-файла.
-    def __init__(self):
+    def __init__(self, xml_file_path):
+        self.xml_file_path = xml_file_path
         super(c_read_lists_from_1C_task, self).__init__(name=u"Обновление справочников")
 
     def run_task(self):
         # Вызывается в admin_scripts.c_admin_tasks_manager
         yield c_msg(u"%s - старт"%(self.name))
         #---- Грузим из XML списки
-        tree = ElementTree.parse(FileWithLists)
+        tree = ElementTree.parse(self.xml_file_path)
         root = tree.getroot()
         priority_list = []  # Заполняем список того, что хотим сделать
         priority_list.append(["Currencies", xml_LoadCurrency, 1]) #1 - commit, 0 - no commit till end of routine
@@ -252,26 +226,19 @@ def xml_LoadCP(xml_node):
         cp_class, cp_log_name = c_client_model, u"клиент"
     elif cp_type == "A_material_supplier":
         cp_class, cp_log_name = c_supplier_model, u"поставщик"
-    elif cp_type == "A_logist":
-        cp_class, cp_log_name = c_logistic_agent_model, u"логист"
-    elif cp_type == "A_financier":
-        cp_class, cp_log_name = c_finance_agent_model, u"банк"
-    elif cp_type == "A_customs_office":
-        cp_class, cp_log_name = c_customs_agent_model, u"таможня"
-    elif cp_type == "A_toller":
-        cp_class, cp_log_name = c_toller_agent_model, u"давальческая переработка"
-    elif cp_type == "Other_CP":
-        cp_class, cp_log_name = c_agent, u"прочий"
     else:
-        raise BaseException("Not supplied CP type %s"%(cp_type))
+        msgs += [u"Не могу обработать тип %s, код 1C: %s"%(cp_type, account_system_code)]
+        return [0, msgs]
     if not(the_session_handler.check_existance_of_account_object(cp_class, account_system_code)):
         msgs += [u"Создаю нового агента (%s) с кодом %s"%(cp_log_name, account_system_code)]
-        cp_i = cp_class(account_system_code = account_system_code)
+        cp_i = cp_class(account_system_code=account_system_code)
         the_session_handler.add_object_to_session(cp_i)
     else:
         cp_i = the_session_handler.get_account_system_object(cp_class, account_system_code)
     nappend(msgs, attr_ch(cp_i, "name", unicode(xml_node.attrib['CPName'])))
-    nappend(msgs, attr_ch(cp_i, "inn", unicode(xml_node.attrib['CP_INN'])))
+    nappend(msgs, attr_ch(cp_i, "full_name", unicode(xml_node.attrib['CPFullName'])))
+    nappend(msgs, attr_ch(cp_i, "inn", unicode(xml_node.attrib['inn'])))
+    #nappend(msgs, attr_ch(cp_i, "hashtag", unicode(xml_node.attrib['CPHashtag'])))
     return [1, msgs]
 
 @synch_error_handler
@@ -379,7 +346,8 @@ def xml_LoadFactPayment(xml_node):
 
 class c_read_dynamic_data_from_1C_task(c_task):
     # Загрузка всех списков из xml-файла.
-    def __init__(self):
+    def __init__(self, xml_file_path):
+        self.xml_file_path = xml_file_path
         super(c_read_dynamic_data_from_1C_task, self).__init__(name=u"загрузка склада, р/с, заказов, проектов из 1С")
 
     def run_task(self):
@@ -396,7 +364,7 @@ class c_read_dynamic_data_from_1C_task(c_task):
         the_BANK.set_to_zero()
         yield c_msg(u"Склад и расчетный счет обнулены")
         #---- Грузим из XML списки
-        tree = ElementTree.parse(FileWithDynamicData)
+        tree = ElementTree.parse(self.xml_file_path)
         root = tree.getroot()
         priority_list = []  # Заполняем список того, что хотим сделать
         priority_list.append(["Inventory", xml_LoadWarehousePosition, 1, the_WH]) #1 - commit, 0 - no commit till end of routine
@@ -618,3 +586,4 @@ class c_build_excessive_links(c_task):
         the_firm.define_main_currency(roubles)
         the_session_handler.commit_session()
         yield c_msg(u"%s - дело сделано"%(self.name))
+

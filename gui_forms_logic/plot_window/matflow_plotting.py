@@ -7,10 +7,12 @@ from matplotlib.patches import Ellipse
 from datetime import datetime, timedelta
 from itertools import cycle
 import numpy as np
+from scipy.stats import norm
+import math
 
 HD = [1280, 720]
 COLORS = cycle(['r', 'g', 'b'])
-COLORS_SEC = ['violet', 'm', 'darkviolet', 'r']
+COLORS_SEC = ['violet', 'm', 'darkviolet', 'r', 'orange']
 
 class DataPoint(object):
     def __init__(self, x, y):
@@ -155,6 +157,46 @@ class PlotViewerDialog(QtGui.QDialog):
         self.figure.tight_layout()
         ax1.legend(loc='best')
         self.canvas.draw()
+
+def get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, first_date, current_date, horiz=360):
+    levels = [0.15, 0.30, 0.5, 0.70, 0.85]
+    plevels = []
+    for v in norm.ppf(levels):
+        plevels += [v]
+
+    ExpectationsT = []
+    ExpectationsV = []
+    SpreadingsT = []
+    SpreadingsV = []
+
+    sh = int(max((first_date - current_date).days, 0))
+
+    row_count = 0
+    for t in xrange(sh, horiz, int(Edt)):
+        row_count += 1
+        # Calculate expectations
+        ExpectationsT += [current_date + timedelta(days=sh)]
+        ExpectationsV += [Ev]
+        # Calculate area
+        levels_T = []
+        levels_V = []
+        coef = math.sqrt(t)
+        for v in plevels:
+            levels_T += [v*Ddt*coef+Edt]
+            levels_V += [v*Dv*coef+Ev]
+        SpreadingsT += [Spreading(levels_T)]
+        SpreadingsV += [Spreading(levels_V)]
+
+    dataset_matrix = np.zeros([row_count, 4])
+    dataset_matrix[:, 0] = np.array(ExpectationsT)
+    dataset_matrix[:, 1] = np.array(ExpectationsV)
+    dataset_matrix[:, 2] = np.array(SpreadingsT)
+    dataset_matrix[:, 3] = np.array(SpreadingsV)
+
+    return dataset_matrix
+
+
+
 
 
 # testing

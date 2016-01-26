@@ -1,0 +1,12 @@
+#     print("-- Add a fake model for macro market")
+#     #TODO: Estimate the model outside in R for GARCH(1,1), upload only USD/EUR rate from 1C
+#     a_ccy1 = the_session_handler.get_account_system_object(c_currency,unicode("840"))
+#     a_ccy2 = the_session_handler.get_account_system_object(c_currency,unicode("978"))
+#     a_ccy3 = the_session_handler.get_account_system_object(c_currency,unicode("643"))
+#     the_macro_model = the_session_handler.get_singleton_object(c_macro_market)
+#     the_macro_model.add_ccy_quote(a_ccy1,35.5,34.6,0.009)
+#     the_macro_model.add_ccy_quote(a_ccy2,49.9,49.0,0.007)
+#     the_macro_model.add_ccy_quote(a_ccy3,1,1,0)
+#     the_session_handler.add_object_to_session(the_macro_model)
+#     the_session_handler.commit_and_close_session()
+#     print("Synchronisation finished!")

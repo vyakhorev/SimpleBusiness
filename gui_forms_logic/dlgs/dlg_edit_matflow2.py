@@ -4,7 +4,7 @@ from PyQt4 import QtCore, QtGui
 
 import simple_locale, convert, db_main, utils
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from ui.ui_Dialog_EditMatFlow import Ui_Dialog_EditMatFlow
 from gui_forms_logic.data_models import cDataModel_GeneralMaterialList, cDataModel_MatDistTable2
@@ -12,6 +12,7 @@ from gui_forms_logic.data_models import cDataModel_GeneralMaterialList, cDataMod
 from gui_forms_logic.data_model import DynamicTableWidget
 
 from gui_forms_logic.plot_window.matflow_plotting import Spreading, PlotViewerDialog
+from gui_forms_logic.plot_window.matflow_plotting import get_shipments_prediction_areas
 
 class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
     def __init__(self, parent=None):
@@ -390,31 +391,52 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         elif self.checkBox_direct_order.checkState() == QtCore.Qt.Unchecked:
             return False
 
+    def _get_next_date_prediction(self):
+        # TODO make a new base scheme....
+        return datetime.today() + timedelta(days=30)
+
+
     def showplot(self):
-        # Some data
+        mat_type = self._get_material_type()
+        history = db_main.get_shipments_history(self.client_model, mat_type)
+
+        current_date = datetime.today()
+        next_event_date = self._get_next_date_prediction()
+        Edt = self._get_periodicy_expectation_value()
+        Ev = self._get_cons_volume_mean_value()
+        Ddt = self._get_periodicy_stdev_value()
+        Dv = self._get_cons_volume_stdev_value()/100 * Ev
+
+        predictions = get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, next_event_date, current_date, 180)
+
         data = {}
-        deltas = Spreading([15, 20, 60])
-        deltas2 = Spreading([1, 2, 3])
+        data[unicode(mat_type)] = predictions
 
-        dates = [datetime(2015, 8, 15),
-                 datetime(2015, 10, 2),
-                 datetime(2016, 2, 17),
-                 datetime(2016, 4, 20),
-                 datetime(2016, 6, 9)]
+        # Some data
+        # data = {}
+        # deltas = Spreading([15, 20, 60])
+        # deltas2 = Spreading([1, 2, 3])
 
-        # array row - [dates values dates_dev values_dev]
-        dataset_matrix = np.array([[2, 4,  0, 0],
-                                   [3, 9,  0, 0],
-                                   [4, 7,  deltas, deltas2],
-                                   [5, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
-                                   [6, 8,  deltas, deltas2]])
+        # dates = [datetime(2015, 8, 15),
+        #          datetime(2015, 10, 2),
+        #          datetime(2016, 2, 17),
+        #          datetime(2016, 4, 20),
+        #          datetime(2016, 6, 9)]
+        #
+        # # array row - [dates values dates_dev values_dev]
+        # dataset_matrix = np.array([[2, 4,  0, 0],
+        #                            [3, 9,  0, 0],
+        #                            [4, 7,  deltas, deltas2],
+        #                            [5, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
+        #                            [6, 8,  deltas, deltas2]])
+        #
+        # # overwriting 1 column to dates
+        # dataset_matrix[:, 0] = dates
+        #
+        # data['Lantorec'] = dataset_matrix
 
-        # overwriting 1 column to dates
-        dataset_matrix[:, 0] = dates
-
-        data['Lantorec'] = dataset_matrix
 
         wind = PlotViewerDialog(self)
-        wind.plot(data, current_date=datetime(2016, 1, 26))
+        wind.plot(data, current_date=current_date)
         # wind.plot(data)
         wind.show()
