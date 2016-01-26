@@ -398,19 +398,30 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
 
     def showplot(self):
         mat_type = self._get_material_type()
-        history = db_main.get_shipments_history(self.client_model, mat_type)
-
         current_date = datetime.today()
+
+        history = db_main.get_shipments_history(self.client_model, mat_type)
+        tmp_lst = []
+        for date_bought, qtty_bought in history:
+            daysfromstart = (date_bought-current_date).days
+            tmp_lst.append([daysfromstart,qtty_bought,0,0])
+        history_array = np.array(tmp_lst)
+
         next_event_date = self._get_next_date_prediction()
         Edt = self._get_periodicy_expectation_value()
         Ev = self._get_cons_volume_mean_value()
         Ddt = self._get_periodicy_stdev_value()
-        Dv = self._get_cons_volume_stdev_value()/100 * Ev
+        Dv = self._get_cons_volume_stdev_value()/100. * Ev
 
-        predictions = get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, next_event_date, current_date, 180)
+        predictions = get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, next_event_date, current_date, 360)
 
         data = {}
-        data[unicode(mat_type)] = predictions
+        if len(history_array) > 0:
+            alldata = np.concatenate((history_array, predictions), axis=0)
+        else:
+            alldata = predictions
+
+        data[unicode(mat_type) + u" by " + unicode(self.client_model)] = alldata
 
         # Some data
         # data = {}
@@ -435,8 +446,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         #
         # data['Lantorec'] = dataset_matrix
 
-
+        wind = None
         wind = PlotViewerDialog(self)
-        wind.plot(data, current_date=current_date)
+        wind.plot(data)
         # wind.plot(data)
         wind.show()

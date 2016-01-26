@@ -132,8 +132,13 @@ class PlotViewerDialog(QtGui.QDialog):
             date_min, date_max = self.minmax(time)
             value_min, value_max = self.minmax(value)
 
+            # VYAKHOREV
+            value_min = 0
+
             # setting up boundaries
-            ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(30))
+            # VYAKHOREV
+            # ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(30))
+            ax1.set_xlim(date_min-30, date_max+30)
             ax1.set_ylim(value_min - (value_max-value_min)/4.0, value_max + (value_max-value_min)/4.0)
 
             ax1.plot(time, value, 'o', color=next(COLORS), label=name)
@@ -159,7 +164,7 @@ class PlotViewerDialog(QtGui.QDialog):
         self.canvas.draw()
 
 def get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, first_date, current_date, horiz=360):
-    levels = [0.15, 0.30, 0.5, 0.70, 0.85]
+    levels = [0.55, 0.60, 0.65]
     plevels = []
     for v in norm.ppf(levels):
         plevels += [v]
@@ -175,23 +180,31 @@ def get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, first_date, current_date, h
     for t in xrange(sh, horiz, int(Edt)):
         row_count += 1
         # Calculate expectations
-        ExpectationsT += [current_date + timedelta(days=sh)]
+        #ND = current_date + timedelta(days=t)
+        #ND.replace(hour=0, minute=0, second=0, microsecond=0)
+        ExpectationsT += [t]
         ExpectationsV += [Ev]
         # Calculate area
         levels_T = []
         levels_V = []
         coef = math.sqrt(t)
         for v in plevels:
-            levels_T += [v*Ddt*coef+Edt]
-            levels_V += [v*Dv*coef+Ev]
-        SpreadingsT += [Spreading(levels_T)]
-        SpreadingsV += [Spreading(levels_V)]
+            levels_T += [v*Ddt*coef]
+            levels_V += [v*Dv*coef]
+        SpreadingsT += [Spreading(levels_T, maxprob=0.1)]
+        SpreadingsV += [Spreading(levels_V, maxprob=0.1)]
 
-    dataset_matrix = np.zeros([row_count, 4])
-    dataset_matrix[:, 0] = np.array(ExpectationsT)
-    dataset_matrix[:, 1] = np.array(ExpectationsV)
-    dataset_matrix[:, 2] = np.array(SpreadingsT)
-    dataset_matrix[:, 3] = np.array(SpreadingsV)
+    tmp_lst = []
+    for r in range(0,row_count):
+        tmp_lst.append([None, None, None, None])
+    dataset_matrix = np.array(tmp_lst)
+
+    dataset_matrix[:, 0] = ExpectationsT
+    dataset_matrix[:, 1] = ExpectationsV
+    dataset_matrix[:, 2] = SpreadingsT
+    dataset_matrix[:, 3] = SpreadingsV
+
+    #print(dataset_matrix)
 
     return dataset_matrix
 

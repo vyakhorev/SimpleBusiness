@@ -408,6 +408,7 @@ def get_shipments_history(client, material_group):
     fact_shipments_list = []
     for sh_i in client.fact_shipments:
         if sh_i.material.material_type == material_group:
+            # TODO: group by date !
             fact_shipments_list.append([sh_i.ship_date, sh_i.ship_qtty])
     return fact_shipments_list
 
