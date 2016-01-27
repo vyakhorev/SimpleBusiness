@@ -129,7 +129,7 @@ class c_read_lists_from_1C_task(c_task):
         priority_list.append(["Items", xml_LoadMaterial, 0])
         priority_list.append(["CP", xml_LoadCP, 0])
         priority_list.append(["Vaults", xml_LoadVault, 0])
-        priority_list.append(["PayTypes", xml_LoadPaymentType, 0])
+        priority_list.append(["PayTypes", xml_LoadPaymentType, 0]) # Этих больше нет. Зафиг не нужны.
         for (nodename, load_function, do_commit) in priority_list:
             for child1 in root.iter(nodename):
                 yield c_msg(u"загружаю " + nodename)
@@ -265,7 +265,8 @@ def xml_LoadPaymentType(xml_node):
 
 class c_read_logs_from_1C_task(c_task):
     # Загрузка всех отгрузок и платежей из базы - статистики только ради.
-    def __init__(self):
+    def __init__(self, xml_file_path):
+        self.xml_file_path = xml_file_path
         super(c_read_logs_from_1C_task, self).__init__(name=u"Загрузка лога отгрузок и оплат")
 
     def run_task(self):
@@ -277,7 +278,7 @@ class c_read_logs_from_1C_task(c_task):
             yield c_msg(u"Удаляю %s (лог)"%(cl_name))
             the_session_handler.delete_all_objects(cl_i)
             yield c_msg(u"Все %s удалены"%(cl_name))
-        tree = ElementTree.parse(FileWithLogs)
+        tree = ElementTree.parse(self.xml_file_path)
         root = tree.getroot()
         priority_list = []  # Заполняем список того, что хотим сделать
         priority_list.append(["ShipmentsLog", xml_LoadFactShipment, 1]) #1 - commit, 0 - no commit till end of routine
@@ -286,12 +287,17 @@ class c_read_logs_from_1C_task(c_task):
             for child1 in root.iter(nodename):
                 yield c_msg(u"загружаю " + nodename)
                 a_counter = 0
+                not_counter = 0
                 for child2 in child1:
                     is_success, messages = load_function(child2)
-                    a_counter += 1
+                    if not is_success:
+                        yield c_msg(u"Ошибка с обработкой %s"%(nodename))
+                        not_counter += 1
+                    else:
+                        a_counter += 1
                     for msg_i in messages:
                         yield c_msg(msg_i)
-                yield c_msg(u"загружено %d записей %s"%(a_counter, nodename))
+                yield c_msg(u"%s загружено %d записей из %d"%(nodename, a_counter, not_counter+a_counter))
             if do_commit:
                 yield c_msg(u"записываю " + nodename)
                 the_session_handler.commit_session()
@@ -305,7 +311,11 @@ class c_read_logs_from_1C_task(c_task):
 def xml_LoadFactShipment(xml_node):
     msgs = []
     item_1C_code = unicode(xml_node.attrib['Item_the_code'])
-    a_item = the_session_handler.get_account_system_object(c_material, item_1C_code)
+    try:
+        a_item = the_session_handler.get_account_system_object(c_material, item_1C_code)
+    except SynchFindingListError:
+        msgs += [c_msg(u'SynchFindingListError: не нашёл товар с 1С кодом ' + item_1C_code)]
+        return [0, msgs]
     CP_1C_code = unicode(xml_node.attrib['CP_the_code'])
     a_CP = the_session_handler.get_account_system_object(c_client_model, CP_1C_code)
     item_qtty = convert(xml_node.attrib['Qtty'])

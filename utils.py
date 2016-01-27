@@ -121,6 +121,9 @@ class c_msg(object):
     def __repr__(self):
         return self.text
 
+    def __unicode__(self):
+        return unicode(self.text)
+
 def parse_hashtags(some_text):
     # TODO: lowercase! Exclude repeats!
     finder = re.compile(ur'(?i)(?<=\#)\w+', re.UNICODE)
