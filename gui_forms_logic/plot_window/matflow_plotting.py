@@ -41,6 +41,9 @@ class Spreading(object):
         self._sort_deltas = sorted(self.deltas, reverse=True)
         return self._sort_deltas
 
+    def max(self):
+        return max(self.deltas)
+
     def add_pair(self, pair):
         self.deltas += pair
 
@@ -128,12 +131,13 @@ class PlotViewerDialog(QtGui.QDialog):
                 time, value = [pt.time for pt in points], [pt.val for pt in points]
                 time_dev, value_dev = [pt.time_dev for pt in points], [pt.val_dev for pt in points]
 
+            maxval = [n.max() for n in value_dev if isinstance(n, Spreading)]
+
             # Calculating boundaries for data
             date_min, date_max = self.minmax(time)
-            value_min, value_max = self.minmax(value)
-
-            # VYAKHOREV
+            # value_min, value_max = self.minmax(value)
             value_min = 0
+            value_max = max(maxval)
 
             # setting up boundaries
             # VYAKHOREV
