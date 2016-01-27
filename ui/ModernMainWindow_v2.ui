@@ -36,7 +36,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -172,7 +172,7 @@
                <x>0</x>
                <y>0</y>
                <width>304</width>
-               <height>682</height>
+               <height>661</height>
               </rect>
              </property>
             </widget>
@@ -187,6 +187,32 @@
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>663</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Отчеты</string>
+    </property>
+    <addaction name="action_ReportPrices"/>
+    <addaction name="action_ReportInvoicePrices"/>
+    <addaction name="action_ReportSalesForecast"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>Команды</string>
+    </property>
+    <addaction name="action_Refresh"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+  </widget>
   <action name="action_Run_Simulate">
    <property name="text">
     <string>Запуск симуляции</string>
@@ -260,6 +286,39 @@
   <action name="action_AddNewCP">
    <property name="text">
     <string>+ Контрагент</string>
+   </property>
+  </action>
+  <action name="action_Refresh">
+   <property name="text">
+    <string>Обновить</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="action_ReportPrices">
+   <property name="text">
+    <string>Список цен продажи</string>
+   </property>
+  </action>
+  <action name="action_12">
+   <property name="text">
+    <string>Список цен (подробно)</string>
+   </property>
+  </action>
+  <action name="action_ReportInvoicePrices">
+   <property name="text">
+    <string>Список прайсов</string>
+   </property>
+  </action>
+  <action name="action_14">
+   <property name="text">
+    <string>Список прайсов (подробно)</string>
+   </property>
+  </action>
+  <action name="action_ReportSalesForecast">
+   <property name="text">
+    <string>Прогноз продаж</string>
    </property>
   </action>
  </widget>

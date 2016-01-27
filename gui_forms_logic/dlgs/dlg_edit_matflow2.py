@@ -14,6 +14,8 @@ from gui_forms_logic.data_model import DynamicTableWidget
 from gui_forms_logic.plot_window.matflow_plotting import Spreading, PlotViewerDialog
 from gui_forms_logic.plot_window.matflow_plotting import get_shipments_prediction_areas
 
+from gui_forms_logic.misc import qtdate_pack, qtdate_unpack
+
 class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
     def __init__(self, parent=None):
         super(gui_Dialog_EditMatFlow, self).__init__(parent)
@@ -84,6 +86,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.lineEdit_cons_period_mean.setText(zer)
         self.lineEdit_cons_vol_dev.setText(zer)
         self.lineEdit_cons_period_std.setText(zer)
+        self.dateEdit_NextExpectedOrder.setDate(datetime.today())
+        self.label_MeasUnit.setText(u"")
 
     def set_state_to_edit(self, mf_entity):
         # Глобальные аттрибуты
@@ -108,6 +112,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.lineEdit_cons_period_mean.setText(simple_locale.number2string(self.my_mf_entity.stats_mean_timedelta))
         self.lineEdit_cons_vol_dev.setText(simple_locale.number2string(round(self.my_mf_entity.get_volume_std_in_proc(),2)))
         self.lineEdit_cons_period_std.setText(simple_locale.number2string(self.my_mf_entity.stats_std_timedelta))
+        self.dateEdit_NextExpectedOrder.setDate(qtdate_pack(self.my_mf_entity.next_expected_order_date))
+        self.label_MeasUnit.setText(self.my_mf_entity.material_type.measure_unit)
         if self.my_mf_entity.are_materials_equal:
             self.checkBox_are_materials_substitude.setCheckState(QtCore.Qt.Checked)
         else:
@@ -151,6 +157,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
                 QtGui.QMessageBox.information(self,unicode(u"Ошибка ввода"),
                                               unicode(u"Хотя бы одна вероятность должна быть больше нуля"))
         if self.var_is_correct:
+            next_date_prediction = self._get_next_date_prediction()
+        if self.var_is_correct:
             # Напоследок, принимаем даныне из таблички
             prob_rows = self.matflow_tablemodel.get_mapped_data(list)
             if len(prob_rows) == 0:
@@ -172,6 +180,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.my_mf_entity.stats_mean_volume = cons_expectation
         # Проценты только после заполнения объёма
         self.my_mf_entity.set_volume_std_from_proc(cons_deviation)
+
+        self.my_mf_entity.next_expected_order_date = next_date_prediction
 
         # Сверяем табличку вероятностей выбора товара
         mat_dict = {}
@@ -257,6 +267,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         if new_index <= 0:
             return
         new_mat_type = self.comboBox_material_type.itemData(new_index, 35).toPyObject()
+        self.label_MeasUnit.setText(new_mat_type.measure_unit)
         self._refresh_delegate_with_material_type(new_mat_type)
         ans = QtGui.QMessageBox.question(self,
                                          self.client_model.name + u" - " + new_mat_type.material_type_name,
@@ -320,6 +331,9 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
             cons_volume_std_prc = 0
         self.lineEdit_cons_vol_dev.setText(simple_locale.number2string(cons_volume_std_prc))
         self.lineEdit_cons_period_std.setText(simple_locale.number2string(mfd["timedelta_std"]))
+        # Дату либо последняя + дельта, либо сегодня.
+        next_order_date = mfd["last_shipment_date"] + datetime.timedelta(days=mfd["timedelta_exp"])
+        self.dateEdit_NextExpectedOrder.setDate(qtdate_pack(next_order_date))
         # Табличку обновляем
         dict_for_model = {}
         for mat_i, prob_i in mfd["mat_dist"].return_table():
@@ -392,8 +406,11 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
             return False
 
     def _get_next_date_prediction(self):
-        # TODO make a new base scheme....
-        return datetime.today() + timedelta(days=30)
+        try:
+            return qtdate_unpack(self.dateEdit_NextExpectedOrder.date())
+        except ValueError:
+            self.var_is_correct = False
+            return None
 
 
     def showplot(self):

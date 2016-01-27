@@ -135,6 +135,11 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
                 self.update_valid_between()
                 self.dateEdit_PriceValidFrom.setDate(qtdate_pack(datetime.datetime.today()))
                 self.dateEdit_PriceValidTill.setDate(qtdate_pack(datetime.datetime.today()))
+            # Ну и ещё галка.. Агентские ли поставки.
+            if pr.is_agent_scheme:
+                self.checkBox_IsAgentScheme.setCheckState(QtCore.Qt.Checked)
+            else:
+                self.checkBox_IsAgentScheme.setCheckState(QtCore.Qt.Unchecked)
             # Теперь специфичные для клиента / поставщика
             if self.my_obj_mode == 'client':
                 if pr.is_delivery:
@@ -179,6 +184,7 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
             d2 = d1 + datetime.timedelta(days=180)
             self.dateEdit_PriceValidFrom.setDate(qtdate_pack(d1))
             self.dateEdit_PriceValidTill.setDate(qtdate_pack(d2))
+            self.checkBox_IsAgentScheme.setCheckState(QtCore.Qt.Unchecked)
             if self.my_obj_mode == 'client':
                 self.checkBox_ClPrPerOrderOnly.setCheckState(QtCore.Qt.Checked)
                 self.update_only_per_order_chbox()
@@ -446,6 +452,11 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
             date_valid_till = self.get_valid_till_date()
         else:
             is_valid_between_dates = False
+        if self.checkBox_IsAgentScheme.checkState() == QtCore.Qt.Checked:
+            is_agent_scheme = True
+        else:
+            is_agent_scheme = False
+
         if self.my_obj_mode == 'client': #Это только для цены клиента
             if self.var_is_correct: #Важно, что после get_paycond - надо убедиться, что выбраны
                 is_factoring = self.get_is_factoring()
@@ -501,6 +512,7 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
             else:
                 self.my_price_entity.date_valid_from = None
                 self.my_price_entity.date_valid_till = None
+            self.my_price_entity.is_agent_scheme = is_agent_scheme
             if self.my_price_entity.discriminator == "sell_price":
                 self.my_price_entity.is_factoring = is_factoring
                 self.my_price_entity.is_per_order_only = is_per_order_only

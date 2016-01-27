@@ -56,9 +56,9 @@ class cb_simul_dataframe(BASE):
     __tablename__ = "simul_dataframes"
     rec_id = Column(Integer, primary_key=True)
     data_frame = Column(PickleType)  #Можно не трачить мутабельность
-    var_name = Column(String(255))   #Название переменной
-    data_frame_type = Column(String(255))
-    observer_name = Column(String(255))     #Адрес переменной - пока открытый вопрос. Пока без адреса, все в корень.
+    var_name = Column(Unicode(255))   #Название переменной
+    data_frame_type = Column(Unicode(255))
+    observer_name = Column(Unicode(255))     #Адрес переменной - пока открытый вопрос. Пока без адреса, все в корень.
 
 class console_log_printer(object):
     def pr(self, timestamp, sender_name, msg_text):
@@ -360,7 +360,7 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
     stats_std_timedelta = Column(SqliteNumeric) #С.к.о. интервала между заказами
     stats_mean_volume = Column(SqliteNumeric) #Ожидаемое значение объёма заказа
     stats_std_volume = Column(SqliteNumeric)  #Отклонение объёма заказа
-    stats_last_order_date = Column(DateTime)  #Последний заказ
+    next_expected_order_date = Column(DateTime)  #Следующий заказ
 
     def __repr__(self):
         return self.log_repr()
@@ -368,11 +368,26 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
     def log_repr(self):
         return "flow " + unicode(self.material_type) + " -> " + unicode(self.client_model)
 
+    def get_expected_budget_iter(self, horizon_days = 360):
+        if self.material_dist is not None:
+            if not self.next_expected_order_date is None:
+                sh_date = self.next_expected_order_date
+            else:
+                sh_date = datetime.datetime.now()
+            tod = datetime.date.today()
+            today_with_time = datetime.datetime(year=tod.year, month=tod.month, day=tod.day)
+            while (sh_date - today_with_time).days <= horizon_days:  #should be able to be negative
+                for md_i in self.material_dist:
+                    material = md_i.material
+                    qtty = float(self.stats_mean_volume * md_i.choice_prob)
+                    yield sh_date, material, qtty
+                sh_date = sh_date + datetime.timedelta(days = self.stats_mean_timedelta)
+
     def get_next_order_date_expectation(self):
-        #gui
+        #gui А?
         if self.stats_mean_volume > 0 and self.is_active:
-            if self.stats_last_order_date is None:
-                st_date = self.stats_last_order_date
+            if not self.next_expected_order_date is None:
+                return self.next_expected_order_date
             else:
                 st_date = datetime.date.today()
             if not(self.stats_mean_timedelta is None):
@@ -394,7 +409,13 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
         self.stats_std_volume = dict_with_stats["qtty_std"]
         self.stats_mean_timedelta = dict_with_stats["timedelta_exp"]
         self.stats_std_timedelta = dict_with_stats["timedelta_std"]
-        self.stats_last_order_date = dict_with_stats["last_shipment_date"] #last shipment or confirmed order
+        #self.stats_last_order_date = dict_with_stats["last_shipment_date"] #last shipment or confirmed order
+        if (dict_with_stats["last_shipment_date"] is None) or (dict_with_stats["timedelta_exp"] is None):
+            self.next_expected_order_date = None
+        else:
+            timed = datetime.timedelta(days=dict_with_stats["timedelta_exp"])
+            nextdate = dict_with_stats["last_shipment_date"] + timed
+            self.next_expected_order_date = nextdate
         self.rewrite_material_probs_from_dict(dict_with_stats["mat_dist"])
 
     def rewrite_material_probs_from_dict(self, a_random_dict):
@@ -415,7 +436,7 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
 
     def prepare_for_simulation(self):
         if self.disconnected_from_session:
-            self.stats_last_order_date = self.devs.convert_datetime_to_simtime(self.stats_last_order_date)
+            self.next_expected_order_date = self.devs.convert_datetime_to_simtime(self.next_expected_order_date)
             self.last_order_num = 0  # при симуляции именуем
             #Собираем случайный словарик - будем по нему материалы разыгрывать
             self.material_dist_dict = c_random_dict()
@@ -454,13 +475,13 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
         return materials_dict
 
     def order_sh_time(self):
-        if self.stats_last_order_date is None:
-            self.stats_last_order_date = 0
+        if self.next_expected_order_date is None:
+            self.next_expected_order_date = 0
         if not((self.stats_mean_timedelta is None) or (self.stats_std_timedelta is None)):
             dT = self.devs.random_generator.normalvariate(self.stats_mean_timedelta, self.stats_std_timedelta)
             dT = max([dT,1])
-            new_order_date = self.stats_last_order_date + dT
-            self.stats_last_order_date = new_order_date
+            new_order_date = self.next_expected_order_date
+            self.next_expected_order_date = new_order_date + dT
             return new_order_date
 
     def order_qtty(self):
@@ -498,25 +519,6 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
             self.stats_std_volume = (std_in_proc * self.stats_mean_volume) / 100
         else:
             self.stats_std_volume = 0
-
-    def get_expected_budget_iter(self, horizon_days = 360):
-        #TODO : это надо как-то состыковать с моделью симуляций, либо симулировать прям тут.
-        #Либо выводить квантиль, а не ожидание (чтобы менеджеры думали, когда отклонения вводят). Хотя слишком сложно.
-        #Это подтянется в 1С. Должно "стыковаться" с моделью симуляций в терминах ожидаемых значений.
-        #Так, если добавим блуждание в self.stats_mean_volume, тут тоже нужно поправить.
-        if self.material_dist is not None:
-            if self.stats_last_order_date is not None:
-                sh_date = self.stats_last_order_date
-            else:
-                sh_date = datetime.datetime.now()
-            tod = datetime.date.today()
-            today_with_time = datetime.datetime(year=tod.year, month=tod.month, day=tod.day)
-            while (sh_date - today_with_time).days <= horizon_days:  #should be able to be negative
-                sh_date = sh_date + datetime.timedelta(days = self.stats_mean_timedelta)
-                for md_i in self.material_dist:
-                    material = md_i.material
-                    qtty = float(self.stats_mean_volume * md_i.choice_prob)
-                    yield sh_date, material, qtty
 
 class c_material_flow_matdist(BASE, abst_key,connected_to_DEVS):
     #Отвечает за выбор конкретного материала в табличке с материальными потоками.
@@ -564,13 +566,13 @@ class c_sales_oppotunity(BASE, abst_key, connected_to_DEVS):
         if self.devs.random_generator.uniform(0,1) > (1-self.success_prob):
             # Сделка получилась. Иначе - облом.
             self.devs.sent_log(self, "start of sales!")
-            new_matflow = self.create_matflow()
+            new_matflow = self.create_matflow_sim()
             self.devs.simpy_env.process(new_matflow.my_generator())
 
-    def create_matflow(self):
+    def create_matflow_sim(self):
         # Создаём поток потребления.
         new_matflow = c_material_flow()
-        new_matflow.stats_last_order_date = self.devs.nowsimtime()
+        new_matflow.next_expected_order_date = self.devs.nowsimtime()
         new_matflow.client_model = self.client_model
         new_matflow.material_type = self.material_type
         new_matflow.is_active = True
@@ -584,6 +586,7 @@ class c_sales_oppotunity(BASE, abst_key, connected_to_DEVS):
         av_qtty_std = 0.
         eq_mat = [0.0,0.0] #first for True, second for False
         c = 0
+        are_mat_eq = False
         for cl_i in self.devs.clients_list:
             for mf_i in cl_i.material_flows:
                 if mf_i.material_type == self.material_type:
@@ -778,7 +781,7 @@ class c_warehouse_position(BASE, abst_key, connected_to_DEVS):
     material = relationship("c_material")
     vault_rec_id = Column(Integer, ForeignKey('warehouse_vaults.rec_id'))
     vault = relationship("c_warehouse_vault")
-    acc_code = Column(String(255)) # Строка типа 41.01 или 41.04
+    acc_code = Column(Unicode(255)) # Строка типа 41.01 или 41.04
     qtty = Column(SqliteNumeric)
     cost = Column(SqliteNumeric) #БУ
 
@@ -1108,8 +1111,8 @@ class c_project_order(c_project):
     __tablename__ = 'projects_orders'
     __mapper_args__ = {'polymorphic_identity': 'orders'}
     rec_id = Column(Integer, ForeignKey('projects.rec_id'), primary_key=True)
-    account_system_code = Column(String(255))
-    AgreementName = Column(String(255, convert_unicode = True))        #Спецификация
+    account_system_code = Column(Unicode(255))
+    AgreementName = Column(Unicode(255, convert_unicode = True))        #Спецификация
     DocDate = Column(DateTime)
     DateShipmentScheduled = Column(DateTime)
     DateFactShipment = Column(DateTime)
@@ -1455,7 +1458,7 @@ class c_project_import_shipment(c_project):
     __tablename__ = 'projects_import_shipment'
     __mapper_args__ = {'polymorphic_identity': 'import_shipment'}
     rec_id = Column(Integer, ForeignKey('projects.rec_id'), primary_key=True)
-    account_system_code = Column(String(255))
+    account_system_code = Column(Unicode(255))
 
 class c_step(BASE, abst_key, connected_to_DEVS):
     #Base class for all steaps
@@ -1467,7 +1470,7 @@ class c_step(BASE, abst_key, connected_to_DEVS):
     is_scheduled = Column(Boolean)  #Если False, то не обращает внимания на даты - просто запускает, не думая.
     planned_time_expected = Column(DateTime)
     planned_time_possible_delay = Column(SqliteNumeric) #days - always and everywhere
-    step_name = Column(String(255))
+    step_name = Column(Unicode(255))
     project_rec_id = Column(Integer, ForeignKey('projects.rec_id'))
     project = relationship("c_project", backref=backref('all_steps', cascade="all,delete"))
     parent_step_rec_id = Column(Integer, ForeignKey('steps.rec_id'))
@@ -1755,7 +1758,7 @@ class c_step_defined_payment(c_step):
     # Это когда не нужна чёткая привязка к underlying проекту по суммам.
     __tablename__ = 'steps_defined_payment'
     __mapper_args__ = {'polymorphic_identity': 'defined_payment'}
-    account_system_code = Column(String(255))
+    account_system_code = Column(Unicode(255))
     rec_id = Column(Integer, ForeignKey('steps.rec_id'), primary_key=True)
     is_incoming = Column(Boolean) # Если истина, то приход. Иначе - расход.
     pay_sum = Column(SqliteNumeric)
@@ -1767,7 +1770,7 @@ class c_step_wh_movement(c_step):
     # Со склада на склад
     __tablename__ = 'steps_wh_movement'
     __mapper_args__ = {'polymorphic_identity': 'wh_movement'}
-    account_system_code = Column(String(255))
+    account_system_code = Column(Unicode(255))
     rec_id = Column(Integer, ForeignKey('steps.rec_id'), primary_key=True)
     vault_from_rec_id = Column(Integer, ForeignKey('warehouse_vaults.rec_id'))
     vault_from = relationship("c_warehouse_vault", foreign_keys=[vault_from_rec_id])
@@ -1777,7 +1780,7 @@ class c_step_wh_movement(c_step):
 class c_step_shipment_service(c_step):
     __tablename__ = 'steps_sh_service'
     __mapper_args__ = {'polymorphic_identity': 'sh_service'}
-    account_system_code = Column(String(255))
+    account_system_code = Column(Unicode(255))
     rec_id = Column(Integer, ForeignKey('steps.rec_id'), primary_key=True)
     cost = Column(SqliteNumeric)
     vat_rate = Column(SqliteNumeric)
@@ -1790,7 +1793,7 @@ class c_step_shipment_service(c_step):
 class c_step_customs_clearance(c_step):
     __tablename__ = 'steps_customs_clear'
     __mapper_args__ = {'polymorphic_identity': 'customs_clear'}
-    account_system_code = Column(String(255))
+    account_system_code = Column(Unicode(255))
     rec_id = Column(Integer, ForeignKey('steps.rec_id'), primary_key=True)
     duty_sum = Column(SqliteNumeric)
     vat_sum = Column(SqliteNumeric)
@@ -1807,10 +1810,10 @@ class c_agent(BASE, abst_key, connected_to_DEVS):
     discriminator = Column(String(50))
     __mapper_args__ = {'polymorphic_identity':'agent', 'polymorphic_on': discriminator}
     rec_id = Column(Integer, primary_key=True)
-    name = Column(String(255))
-    full_name = Column(String(255))
-    inn = Column(String(255))   #Возможно, несколько через ";"
-    account_system_code = Column(String(255))  #Возможно, несколько через ";"
+    name = Column(Unicode(255))
+    full_name = Column(Unicode(255))
+    inn = Column(Unicode(255))   #Возможно, несколько через ";"
+    account_system_code = Column(Unicode(255))  #Возможно, несколько через ";"
 
     def __repr__(self):
         return unicode(self.name)
@@ -2041,8 +2044,8 @@ class c_warehouse_vault(BASE, abst_key, connected_to_DEVS):
     #В понимании 1С - склад
     __tablename__ = 'warehouse_vaults'
     rec_id = Column(Integer, primary_key=True)
-    account_system_code = Column(String(255))
-    vault_name = Column(String(255))
+    account_system_code = Column(Unicode(255))
+    vault_name = Column(Unicode(255))
     is_available_exw = Column(Boolean)
     warehouse_rec_id = Column(Integer, ForeignKey('warehouse.rec_id'))
     warehouse = relationship("c_warehouse", backref=backref('vaults'), foreign_keys=[warehouse_rec_id])
@@ -2053,8 +2056,8 @@ class c_warehouse_vault(BASE, abst_key, connected_to_DEVS):
 class c_material(BASE, abst_key, connected_to_DEVS):
     __tablename__ = 'materials'
     rec_id = Column(Integer, primary_key=True)
-    account_system_code = Column(String(255))
-    material_name = Column(String(255))
+    account_system_code = Column(Unicode(255))
+    material_name = Column(Unicode(255))
     material_type_rec_id = Column(Integer, ForeignKey('material_types.rec_id'))
     material_type = relationship("c_material_type", backref=backref('materials'), foreign_keys=[material_type_rec_id])
     material_type_acc_rec_id = Column(Integer, ForeignKey('material_types_accounting.rec_id'))
@@ -2071,11 +2074,11 @@ class c_material_type(BASE, abst_key, connected_to_DEVS):
     #Номенклатурная группа (папка-родитель) - её потребление и моделируем
     __tablename__ = 'material_types'
     rec_id = Column(Integer, primary_key=True)
-    account_system_code = Column(String(255))
-    material_type_name = Column(String(255))
+    account_system_code = Column(Unicode(255))
+    material_type_name = Column(Unicode(255))
     #Равнозначны ли материалы в группе.
     are_materials_equal = Column(Boolean)  #Надо это как-то вводить где-то.
-    measure_unit = Column(String(255))
+    measure_unit = Column(Unicode(255))
 
     def __repr__(self):
         return unicode(self.material_type_name)
@@ -2087,9 +2090,9 @@ class c_material_type_accounting(BASE, abst_key, connected_to_DEVS):
     #Номенклатурная группа бухгалтерская - лишь для учета прибыли (так как только в разрезе по группе есть себестоимость).
     __tablename__ = 'material_types_accounting'
     rec_id = Column(Integer, primary_key=True)
-    account_system_code = Column(String(255))
-    material_type_accounting_name = Column(String(255))
-    measure_unit = Column(String(255))
+    account_system_code = Column(Unicode(255))
+    material_type_accounting_name = Column(Unicode(255))
+    measure_unit = Column(Unicode(255))
 
     def __repr__(self):
         return unicode(self.material_type_accounting_name)
@@ -2098,7 +2101,7 @@ class c_payment_type(BASE, abst_key, connected_to_DEVS):
     # Статья движения ДС
     __tablename__ = 'payment_types'
     rec_id = Column(Integer, primary_key=True)
-    account_system_code = Column(String(255))
+    account_system_code = Column(Unicode(255))
     name = Column(Unicode(255))
 
     def __repr__(self):
@@ -2107,8 +2110,8 @@ class c_payment_type(BASE, abst_key, connected_to_DEVS):
 class c_payment_terms(BASE, abst_key, connected_to_DEVS):
     __tablename__ = 'payment_terms'
     rec_id = Column(Integer, primary_key=True)
-    account_system_code = Column(String(255))
-    payterm_name = Column(String(255))
+    account_system_code = Column(Unicode(255))
+    payterm_name = Column(Unicode(255))
     payterm_stages = Column(PickleType)  #Mutabca надо трачить мутабельность - если только будем где-то по частям менять.
     fixation_at_shipment = Column(Boolean) # False - при платеже
     ccy_quote_rec_id = Column(Integer, ForeignKey('currencies.rec_id'))
@@ -2167,10 +2170,10 @@ class c_payment_stages():
 class c_currency(BASE, abst_key):
     __tablename__ = 'currencies'
     rec_id = Column(Integer, primary_key=True)
-    account_system_code = Column(String(255))
-    ccy_public_code =  Column(String(255))#Для синхронизации с web
-    ccy_general_name = Column(String(255))
-    ccy_name = Column(String(255))
+    account_system_code = Column(Unicode(255))
+    ccy_public_code =  Column(Unicode(255))#Для синхронизации с web
+    ccy_general_name = Column(Unicode(255))
+    ccy_name = Column(Unicode(255))
 
     def __repr__(self):
         return unicode(self.ccy_general_name)
@@ -2198,6 +2201,7 @@ class c_material_price(BASE, abst_key, connected_to_DEVS):
     min_order_sum = Column(SqliteNumeric)
     is_foreign_ccy = Column(Boolean)
     nonformal_conditions = Column(UnicodeText)
+    is_agent_scheme = Column(Boolean)
 
     def __repr__(self):
         if self.is_for_group:

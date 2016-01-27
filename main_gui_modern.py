@@ -65,6 +65,14 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
                 self.setStyleSheet(QtCore.QVariant(style_sheet_src.readAll()).toString())
             style_sheet_src.close()
 
+        ############
+        # Menu
+        ############
+
+        self.action_Refresh.triggered.connect(self.refresh_active_tab)
+        self.action_ReportPrices.triggered.connect(self.report_sale_prices_all)
+        self.action_ReportInvoicePrices.triggered.connect(self.report_invoce_prices_all)
+        self.action_ReportSalesForecast.triggered.connect(self.report_sales_forecast)
 
         ############
         # Counterparty tab
@@ -181,6 +189,8 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             Here will be automation right before application close
         """
         event.accept()
+
+
 
     #################
     # Вкладка с контрагентами
@@ -463,6 +473,12 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         return selected_item
 
     ###################
+    # Ctrl+R handle
+    ###################
+    def refresh_active_tab(self):
+        print('refresh!')
+
+    ###################
     # Управление диалоговыми окнами
     ###################
 
@@ -739,6 +755,15 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
     def report_print_offer(self, cp):
         file_reports.print_offer(cp)
+
+    def report_sale_prices_all(self):
+        print('reporting!')
+
+    def report_invoce_prices_all(self):
+        print('reporting!')
+
+    def report_sales_forecast(self):
+        print('reporting!')
 
 class cIteratorDispenser():
     '''

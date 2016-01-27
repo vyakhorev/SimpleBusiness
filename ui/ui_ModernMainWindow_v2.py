@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'E:\Code\SimpleBusiness\ui\ModernMainWindow_v2.ui'
 #
-# Created: Sat Jan 23 19:10:40 2016
+# Created: Thu Jan 28 00:26:17 2016
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -104,7 +104,7 @@ class Ui_MainWindowModern(object):
         self.scrollArea_KnBaseRecords.setWidgetResizable(True)
         self.scrollArea_KnBaseRecords.setObjectName(_fromUtf8("scrollArea_KnBaseRecords"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 304, 682))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 304, 661))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.scrollArea_KnBaseRecords.setWidget(self.scrollAreaWidgetContents)
         self.horizontalLayout_4.addWidget(self.scrollArea_KnBaseRecords)
@@ -115,6 +115,14 @@ class Ui_MainWindowModern(object):
         self.statusbar = QtGui.QStatusBar(MainWindowModern)
         self.statusbar.setObjectName(_fromUtf8("statusbar"))
         MainWindowModern.setStatusBar(self.statusbar)
+        self.menuBar = QtGui.QMenuBar(MainWindowModern)
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 663, 21))
+        self.menuBar.setObjectName(_fromUtf8("menuBar"))
+        self.menu = QtGui.QMenu(self.menuBar)
+        self.menu.setObjectName(_fromUtf8("menu"))
+        self.menu_2 = QtGui.QMenu(self.menuBar)
+        self.menu_2.setObjectName(_fromUtf8("menu_2"))
+        MainWindowModern.setMenuBar(self.menuBar)
         self.action_Run_Simulate = QtGui.QAction(MainWindowModern)
         self.action_Run_Simulate.setObjectName(_fromUtf8("action_Run_Simulate"))
         self.action_Synhronize_xm_with_db = QtGui.QAction(MainWindowModern)
@@ -145,9 +153,27 @@ class Ui_MainWindowModern(object):
         self.action_8.setObjectName(_fromUtf8("action_8"))
         self.action_AddNewCP = QtGui.QAction(MainWindowModern)
         self.action_AddNewCP.setObjectName(_fromUtf8("action_AddNewCP"))
+        self.action_Refresh = QtGui.QAction(MainWindowModern)
+        self.action_Refresh.setObjectName(_fromUtf8("action_Refresh"))
+        self.action_ReportPrices = QtGui.QAction(MainWindowModern)
+        self.action_ReportPrices.setObjectName(_fromUtf8("action_ReportPrices"))
+        self.action_12 = QtGui.QAction(MainWindowModern)
+        self.action_12.setObjectName(_fromUtf8("action_12"))
+        self.action_ReportInvoicePrices = QtGui.QAction(MainWindowModern)
+        self.action_ReportInvoicePrices.setObjectName(_fromUtf8("action_ReportInvoicePrices"))
+        self.action_14 = QtGui.QAction(MainWindowModern)
+        self.action_14.setObjectName(_fromUtf8("action_14"))
+        self.action_ReportSalesForecast = QtGui.QAction(MainWindowModern)
+        self.action_ReportSalesForecast.setObjectName(_fromUtf8("action_ReportSalesForecast"))
+        self.menu.addAction(self.action_ReportPrices)
+        self.menu.addAction(self.action_ReportInvoicePrices)
+        self.menu.addAction(self.action_ReportSalesForecast)
+        self.menu_2.addAction(self.action_Refresh)
+        self.menuBar.addAction(self.menu.menuAction())
+        self.menuBar.addAction(self.menu_2.menuAction())
 
         self.retranslateUi(MainWindowModern)
-        self.Global_tabs.setCurrentIndex(1)
+        self.Global_tabs.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindowModern)
 
     def retranslateUi(self, MainWindowModern):
@@ -159,6 +185,8 @@ class Ui_MainWindowModern(object):
         self.pushButton_RenameHashtag.setText(_translate("MainWindowModern", "Переименовать", None))
         self.pushButton_DeleteHashtag.setText(_translate("MainWindowModern", "Удалить", None))
         self.Global_tabs.setTabText(self.Global_tabs.indexOf(self.tab_KnBase), _translate("MainWindowModern", "База знаний", None))
+        self.menu.setTitle(_translate("MainWindowModern", "Отчеты", None))
+        self.menu_2.setTitle(_translate("MainWindowModern", "Команды", None))
         self.action_Run_Simulate.setText(_translate("MainWindowModern", "Запуск симуляции", None))
         self.action_Synhronize_xm_with_db.setText(_translate("MainWindowModern", "Загрузить из 1С", None))
         self.action_upload_budget_csv.setText(_translate("MainWindowModern", "Выгрузить в 1С", None))
@@ -174,4 +202,11 @@ class Ui_MainWindowModern(object):
         self.action_7.setText(_translate("MainWindowModern", "+ Клиент", None))
         self.action_8.setText(_translate("MainWindowModern", "+ Поставщик", None))
         self.action_AddNewCP.setText(_translate("MainWindowModern", "+ Контрагент", None))
+        self.action_Refresh.setText(_translate("MainWindowModern", "Обновить", None))
+        self.action_Refresh.setShortcut(_translate("MainWindowModern", "Ctrl+R", None))
+        self.action_ReportPrices.setText(_translate("MainWindowModern", "Список цен продажи", None))
+        self.action_12.setText(_translate("MainWindowModern", "Список цен (подробно)", None))
+        self.action_ReportInvoicePrices.setText(_translate("MainWindowModern", "Список прайсов", None))
+        self.action_14.setText(_translate("MainWindowModern", "Список прайсов (подробно)", None))
+        self.action_ReportSalesForecast.setText(_translate("MainWindowModern", "Прогноз продаж", None))
 

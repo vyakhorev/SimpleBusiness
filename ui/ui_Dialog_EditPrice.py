@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'D:\Research\THE_PROJ\ui\Dialog_EditPrice.ui'
+# Form implementation generated from reading ui file 'E:\Code\SimpleBusiness\ui\Dialog_EditPrice.ui'
 #
-# Created: Fri Apr 10 00:53:52 2015
-#      by: PyQt4 UI code generator 4.9.6
+# Created: Thu Jan 28 00:02:12 2016
+#      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -27,7 +27,7 @@ class Ui_Dialog_EditClientPrice(object):
     def setupUi(self, Dialog_EditClientPrice):
         Dialog_EditClientPrice.setObjectName(_fromUtf8("Dialog_EditClientPrice"))
         Dialog_EditClientPrice.setWindowModality(QtCore.Qt.WindowModal)
-        Dialog_EditClientPrice.resize(510, 415)
+        Dialog_EditClientPrice.resize(510, 507)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -80,6 +80,9 @@ class Ui_Dialog_EditClientPrice(object):
         self.label_units = QtGui.QLabel(Dialog_EditClientPrice)
         self.label_units.setObjectName(_fromUtf8("label_units"))
         self.horizontalLayout_2.addWidget(self.label_units)
+        self.checkBox_IsAgentScheme = QtGui.QCheckBox(Dialog_EditClientPrice)
+        self.checkBox_IsAgentScheme.setObjectName(_fromUtf8("checkBox_IsAgentScheme"))
+        self.horizontalLayout_2.addWidget(self.checkBox_IsAgentScheme)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
         self.gridLayout_2.addLayout(self.horizontalLayout_2, 1, 1, 1, 1)
@@ -344,6 +347,7 @@ class Ui_Dialog_EditClientPrice(object):
         self.label_currency_name.setText(_translate("Dialog_EditClientPrice", "currency name", None))
         self.label_17.setText(_translate("Dialog_EditClientPrice", "за", None))
         self.label_units.setText(_translate("Dialog_EditClientPrice", "Units", None))
+        self.checkBox_IsAgentScheme.setText(_translate("Dialog_EditClientPrice", "Агентская схема", None))
         self.groupBox_2.setTitle(_translate("Dialog_EditClientPrice", "Условия оплаты", None))
         self.checkBox_IsFactoring.setToolTip(_translate("Dialog_EditClientPrice", "Если расчеты предложены по факторингу", None))
         self.checkBox_IsFactoring.setText(_translate("Dialog_EditClientPrice", "Факторинг", None))
