@@ -477,12 +477,13 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
     # Ctrl+R handle
     ###################
     def refresh_active_tab(self):
-        # self.data_model_counterparties.beginResetModel()
-        self.data_model_counterparties.reset()
-        # self.data_model_counterparties.endResetModel()
+        self.data_model_counterparties.beginResetModel()
+        print self.data_model_counterparties
+        self.data_model_counterparties.update_list()
+        self.data_model_counterparties.endResetModel()
         if not self.current_cp is None:
             self.redraw_mediators(self.current_cp)
-        #print('refresh!')
+        print('refresh!')
 
     ###################
     # Управление диалоговыми окнами

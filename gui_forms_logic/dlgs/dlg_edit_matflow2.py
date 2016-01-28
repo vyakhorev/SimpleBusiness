@@ -112,7 +112,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.lineEdit_cons_period_mean.setText(simple_locale.number2string(self.my_mf_entity.stats_mean_timedelta))
         self.lineEdit_cons_vol_dev.setText(simple_locale.number2string(round(self.my_mf_entity.get_volume_std_in_proc(),2)))
         self.lineEdit_cons_period_std.setText(simple_locale.number2string(self.my_mf_entity.stats_std_timedelta))
-        self.dateEdit_NextExpectedOrder.setDate(qtdate_pack(self.my_mf_entity.next_expected_order_date))
+        if self.my_mf_entity.next_expected_order_date is None:
+            self.dateEdit_NextExpectedOrder.setDate(qtdate_pack(datetime.today()))
         self.label_MeasUnit.setText(self.my_mf_entity.material_type.measure_unit)
         if self.my_mf_entity.are_materials_equal:
             self.checkBox_are_materials_substitude.setCheckState(QtCore.Qt.Checked)
@@ -442,8 +443,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
 
         data[unicode(mat_type) + u" by " + unicode(self.client_model)] = alldata
 
-        print data
-
+        # print data
         wind = None
         wind = PlotViewerDialog(self)
         wind.plot(data, current_date=current_date)

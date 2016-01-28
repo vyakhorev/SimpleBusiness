@@ -148,8 +148,10 @@ class PlotViewerDialog(QtGui.QDialog):
             # setting up boundaries
             # VYAKHOREV
             # ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(30))
-            ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(30))
-            ax1.set_ylim(value_min - (value_max-value_min)/4.0, value_max + (value_max-value_min)/4.0)
+            ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(90))
+            # ax1.set_ylim(value_min - (value_max-value_min)/4.0, value_max + (value_max-value_min)/4.0)
+            ax1.set_ylim(value_min - (value_max-value_min)/4.0, value_max)
+            # print 'value_max : {}'.format(value_max)
 
             ax1.plot(time, value, 'o', color=next(COLORS), label=name)
             if current_date:
