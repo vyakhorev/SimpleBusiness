@@ -165,6 +165,7 @@ class RecFrame(QtGui.QFrame):
         #                                      -
         #                 [edit] [delete]      -
         # --------------------------------------
+
         self.button_hor_layout = QtGui.QHBoxLayout()
         for button_cal_i in mediator.iter_button_calls():
             button = QtGui.QPushButton(unicode(button_cal_i.label_name))

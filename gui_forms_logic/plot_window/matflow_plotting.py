@@ -210,7 +210,7 @@ def get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, first_date, current_date, h
         SpreadingsV += [Spreading(levels_V, maxprob=0.1)]
 
     tmp_lst = []
-    for r in range(0,row_count):
+    for r in range(0, row_count):
         tmp_lst.append([None, None, None, None])
     dataset_matrix = np.array(tmp_lst)
 
