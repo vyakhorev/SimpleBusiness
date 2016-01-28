@@ -13,6 +13,7 @@ import math
 HD = [1280, 720]
 COLORS = cycle(['r', 'g', 'b'])
 COLORS_SEC = ['violet', 'm', 'darkviolet', 'r', 'orange']
+LightGreen = [val/256. for val in [171, 205, 170]]
 
 class DataPoint(object):
     def __init__(self, x, y):
@@ -24,6 +25,7 @@ class DataPoint(object):
     def __repr__(self):
         return 'DataPoint time : {} with spread {}, value : {} with spread {}'.format(self.time, self.time_dev,
                                                                                self.val,  self.val_dev)
+
 
 class Spreading(object):
     """
@@ -50,6 +52,7 @@ class Spreading(object):
     def __repr__(self):
         return 'spread : {}'.format(self.deltas)
 
+
 class PlotViewerDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         super(PlotViewerDialog, self).__init__(parent)
@@ -67,33 +70,6 @@ class PlotViewerDialog(QtGui.QDialog):
 
         self.main_layout.insertWidget(1, self.canvas)
         self.resize(*HD)
-
-
-# class PlotViewer(QtGui.QMainWindow):
-#     def __init__(self, parent=None):
-#         super(PlotViewer, self).__init__(parent)
-#
-#         self.figure = plt.figure()
-#         self.canvas = FigureCanvas(self.figure)
-#
-#         # use addToolbar to add toolbars to the main window directly!
-#         self.toolbar = NavigationToolbar(self.canvas, self)
-#         self.addToolBar(self.toolbar)
-#
-#         self.button = QtGui.QPushButton('Plot')
-#         # self.button.clicked.connect(self.plot)
-#
-#         # self.lineEditMomentum1 = QtGui.QLineEdit()
-#         # self.lineEditMomentum1.setMaximumSize(200, 30)
-#
-#         self.main_widget = QtGui.QWidget(self)
-#         self.setCentralWidget(self.main_widget)
-#
-#         layout = QtGui.QVBoxLayout()
-#         layout.addWidget(self.canvas)
-#         layout.addWidget(self.button)
-#
-#         self.main_widget.setLayout(layout)
 
     @staticmethod
     def minmax(data):
@@ -126,6 +102,7 @@ class PlotViewerDialog(QtGui.QDialog):
             # unpacking series
             if isinstance(data.values()[0], np.ndarray):
                 time, value, time_dev, value_dev = data.values()[0].T.tolist()
+                print value_dev
 
             else:
                 time, value = [pt.time for pt in points], [pt.val for pt in points]
@@ -150,13 +127,13 @@ class PlotViewerDialog(QtGui.QDialog):
             # ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(30))
             ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(90))
             # ax1.set_ylim(value_min - (value_max-value_min)/4.0, value_max + (value_max-value_min)/4.0)
-            ax1.set_ylim(value_min - (value_max-value_min)/4.0, value_max)
+            ax1.set_ylim(value_min, value_max)
             # print 'value_max : {}'.format(value_max)
 
             ax1.plot(time, value, 'o', color=next(COLORS), label=name)
             if current_date:
                 ax1.axvline(current_date, linewidth=2, color='g', ymin=0, ymax=10)
-                ax1.axvspan(xmin=date_min-timedelta(30), xmax=current_date, ymin=0, ymax=10, color='g')
+                ax1.axvspan(xmin=date_min-timedelta(30), xmax=current_date, ymin=0, ymax=10, color=LightGreen)
 
             # making ellipses
             for t_i, val_i, t_dev_i, val_dev_i in zip(time, value, time_dev, value_dev):
@@ -165,6 +142,7 @@ class PlotViewerDialog(QtGui.QDialog):
                 if t_dev_i > 0:
                     for i, (t_dev_ij, val_dev_ij) in enumerate(zip(t_dev_i.sorted_deltas, val_dev_i.sorted_deltas)):
                         if t_dev_ij > 0:
+                            print 'ellipse {} with width {} and height {}'.format(i, t_dev_ij, val_dev_ij)
                             ellip = Ellipse(xy=[t_i, val_i], width=t_dev_ij, height=val_dev_ij)
                             ellip.fill = True
                             ellip._alpha = t_dev_i.maxprob

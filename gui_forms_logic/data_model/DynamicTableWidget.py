@@ -264,10 +264,10 @@ class ComboDelegate(QtGui.QItemDelegate):
             Making inline widget for delegate
             checking for each column
         """
-        print(self.data_col_list)
+        # print(self.data_col_list)
         if isinstance(self.data_col_list[0], list):
             for pair in self.data_col_list:
-                print self.data_col_list
+                # print self.data_col_list
                 if index.column() == pair[1]:
                     # if isinstance(pair[0], ProbListModel):
                     #     editor = QtGui.QSpinBox(parent)
@@ -303,7 +303,7 @@ class ComboDelegate(QtGui.QItemDelegate):
         if isinstance(editor, QtGui.QComboBox):
             choice = index.model().data(index, QtCore.Qt.DisplayRole)
             pos = editor.findText(unicode(choice), QtCore.Qt.MatchFixedString)
-            print('Searching selected Value : \n pos {} val {}'.format(pos, editor.setCurrentIndex(pos)))
+            # print('Searching selected Value : \n pos {} val {}'.format(pos, editor.setCurrentIndex(pos)))
             editor.setCurrentIndex(pos)
 
         elif isinstance(editor, QtGui.QLineEdit):
@@ -312,7 +312,7 @@ class ComboDelegate(QtGui.QItemDelegate):
 
         elif isinstance(editor, QtGui.QSpinBox):
             value = index.model().data(index, QtCore.Qt.DisplayRole)
-            print(index.model())
+            # print(index.model())
             editor.setValue(value)
 
     def setModelData(self, editor, model, index):
@@ -322,9 +322,9 @@ class ComboDelegate(QtGui.QItemDelegate):
         # grab data from selected position
         if isinstance(editor, QtGui.QComboBox):
             pos = editor.findText(editor.currentText(), QtCore.Qt.MatchFixedString)
-            print editor.currentText()
+            # print editor.currentText()
             curData = editor.itemData(pos)
-            print curData.toPyObject()
+            # print curData.toPyObject()
             model.setData(index, curData)
 
         elif isinstance(editor, QtGui.QLineEdit):

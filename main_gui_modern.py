@@ -494,9 +494,10 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
     ###################
     def refresh_active_tab(self):
         self.data_model_counterparties.beginResetModel()
-        print self.data_model_counterparties
         self.data_model_counterparties.update_list()
         self.data_model_counterparties.endResetModel()
+        self.data_model_hashtags.update_list()
+
         if not self.current_cp is None:
             self.redraw_mediators(self.current_cp)
 
@@ -644,7 +645,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
         # print data
         wind = None
-        print data
         wind = PlotViewerDialog(self)
         wind.plot(data, current_date=current_date)
         # wind.plot(data)
