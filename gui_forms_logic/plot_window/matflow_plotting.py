@@ -102,7 +102,6 @@ class PlotViewerDialog(QtGui.QDialog):
             # unpacking series
             if isinstance(data.values()[0], np.ndarray):
                 time, value, time_dev, value_dev = data.values()[0].T.tolist()
-                print value_dev
 
             else:
                 time, value = [pt.time for pt in points], [pt.val for pt in points]
@@ -142,7 +141,7 @@ class PlotViewerDialog(QtGui.QDialog):
                 if t_dev_i > 0:
                     for i, (t_dev_ij, val_dev_ij) in enumerate(zip(t_dev_i.sorted_deltas, val_dev_i.sorted_deltas)):
                         if t_dev_ij > 0:
-                            print 'ellipse {} with width {} and height {}'.format(i, t_dev_ij, val_dev_ij)
+                            # print 'ellipse {} with width {} and height {}'.format(i, t_dev_ij, val_dev_ij)
                             ellip = Ellipse(xy=[t_i, val_i], width=t_dev_ij, height=val_dev_ij)
                             ellip.fill = True
                             ellip._alpha = t_dev_i.maxprob
