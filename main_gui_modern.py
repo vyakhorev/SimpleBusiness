@@ -432,18 +432,19 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         new_name, is_ok = QtGui.QInputDialog.getText(self, u"Новое имя для #"+ht_i.text,
                                                      u'Заменить  #' + ht_i.text + u'  на:',
                                                      QtGui.QLineEdit.Normal, ht_i.text)
+        new_name = unicode(new_name)
         if not is_ok:
             return
 
-        does_exist = db_main.check_if_hashtag_name_exists(ht_i.text)
+        does_exist = db_main.check_if_hashtag_name_exists(new_name)
         if does_exist:
             a_reply = QtGui.QMessageBox.question(self, u'Подтвердите',
                                                  u'Хештег ' + new_name + u' уже есть, объединяю?',
                                              QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-        if a_reply != QtGui.QMessageBox.Yes:
-            return
+            if a_reply != QtGui.QMessageBox.Yes:
+                return
 
-        print(u'look like renaming .. ' + unicode(new_name))
+        db_main.rename_hashtag_usages(old_hashtag_name=ht_i.text, new_hashtag_name=new_name)
 
     def delete_hastag(self):
         ht_i = self._get_selected_hashtag()

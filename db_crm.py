@@ -375,4 +375,3 @@ def crm_template_material_request(client = None, a_mat_flow = None):
         s += u"Клиент ... запросил товар из группы ..."
     s += u"<br><br> Наша реакция на запрос: "
     return s
-

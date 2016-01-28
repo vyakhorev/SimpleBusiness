@@ -241,10 +241,10 @@ def check_if_hashtag_from_system(hashtag_text):
         if hashtag_text == ag_i.hashtag_name()[1:]:  # убираем "#"
             return True
 
-    # Не материал ли?
-    for mat_i in the_session_handler.get_all_objects_list_iter(c_material):
-        if hashtag_text == mat_i.hashtag_name()[1:]:
-            return True
+    # # Не материал ли?
+    # for mat_i in the_session_handler.get_all_objects_list_iter(c_material):
+    #     if hashtag_text == mat_i.hashtag_name()[1:]:
+    #         return True
 
     # Не группа ли материалов?
     for mat_i in the_session_handler.get_all_objects_list_iter(c_material_type):
@@ -284,9 +284,11 @@ def rename_hashtag_usages(old_hashtag_name, new_hashtag_name):
                     an_ind = rec_i.hashtags.index(new_ht)
                     to_delete += [rec_i.hashtags.pop(an_ind)]
                     rec_i.hashtags += [old_hashtag]
-            the_session_handler.commit_session()
+            #the_session_handler.commit_session()
             for forg_ht in to_delete:
-                the_session_handler.delete_concrete_object(forg_ht)
+                #the_session_handler.delete_concrete_object(forg_ht)
+                the_session_handler.active_session.delete(forg_ht)
+        the_session_handler.commit_session()
 
 def delete_hashtag_usage(hashtag_obj):
     for rec_i in hashtag_obj.records:
