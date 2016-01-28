@@ -442,31 +442,10 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
 
         data[unicode(mat_type) + u" by " + unicode(self.client_model)] = alldata
 
-        # Some data
-        # data = {}
-        # deltas = Spreading([15, 20, 60])
-        # deltas2 = Spreading([1, 2, 3])
-
-        # dates = [datetime(2015, 8, 15),
-        #          datetime(2015, 10, 2),
-        #          datetime(2016, 2, 17),
-        #          datetime(2016, 4, 20),
-        #          datetime(2016, 6, 9)]
-        #
-        # # array row - [dates values dates_dev values_dev]
-        # dataset_matrix = np.array([[2, 4,  0, 0],
-        #                            [3, 9,  0, 0],
-        #                            [4, 7,  deltas, deltas2],
-        #                            [5, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
-        #                            [6, 8,  deltas, deltas2]])
-        #
-        # # overwriting 1 column to dates
-        # dataset_matrix[:, 0] = dates
-        #
-        # data['Lantorec'] = dataset_matrix
+        print data
 
         wind = None
         wind = PlotViewerDialog(self)
-        wind.plot(data)
+        wind.plot(data, current_date=current_date)
         # wind.plot(data)
         wind.show()

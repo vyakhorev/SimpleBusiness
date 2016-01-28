@@ -476,6 +476,10 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
     # Ctrl+R handle
     ###################
     def refresh_active_tab(self):
+        # self.data_model_counterparties.beginResetModel()
+        self.data_model_counterparties.reset()
+        # self.data_model_counterparties.endResetModel()
+        self.redraw_mediators(self.current_cp)
         print('refresh!')
 
     ###################

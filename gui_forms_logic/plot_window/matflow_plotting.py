@@ -54,17 +54,16 @@ class PlotViewerDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         super(PlotViewerDialog, self).__init__(parent)
         self.main_layout = QtGui.QVBoxLayout()
-        # self.graph_layout = QtGui.QVBoxLayout()
 
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
 
         self.toolBar = NavigationToolbar(self.canvas, self)
-        self.button = QtGui.QPushButton('Plot')
+        # self.button = QtGui.QPushButton('Plot')
 
         self.setLayout(self.main_layout)
         self.layout().addWidget(self.toolBar)
-        self.layout().addWidget(self.button)
+        # self.layout().addWidget(self.button)
 
         self.main_layout.insertWidget(1, self.canvas)
         self.resize(*HD)
@@ -127,22 +126,29 @@ class PlotViewerDialog(QtGui.QDialog):
             # unpacking series
             if isinstance(data.values()[0], np.ndarray):
                 time, value, time_dev, value_dev = data.values()[0].T.tolist()
+
             else:
                 time, value = [pt.time for pt in points], [pt.val for pt in points]
                 time_dev, value_dev = [pt.time_dev for pt in points], [pt.val_dev for pt in points]
 
+            # converting days to date
+            # date_N_days_ago = current_date - timedelta(days=time)
+            time = [current_date + timedelta(days=ts) for ts in time]
+
             maxval = [n.max() for n in value_dev if isinstance(n, Spreading)]
+            # print value_dev
 
             # Calculating boundaries for data
             date_min, date_max = self.minmax(time)
-            # value_min, value_max = self.minmax(value)
+            value_min, value_max = self.minmax(value)
             value_min = 0
+            # value_max = value_max + max(maxval)
             value_max = max(maxval)
 
             # setting up boundaries
             # VYAKHOREV
             # ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(30))
-            ax1.set_xlim(date_min-30, date_max+30)
+            ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(30))
             ax1.set_ylim(value_min - (value_max-value_min)/4.0, value_max + (value_max-value_min)/4.0)
 
             ax1.plot(time, value, 'o', color=next(COLORS), label=name)
@@ -162,6 +168,9 @@ class PlotViewerDialog(QtGui.QDialog):
                             ellip._alpha = t_dev_i.maxprob
                             ellip.set_color(COLORS_SEC[i])
                             ax1.add_artist(ellip)
+
+
+        # ax1.format_coord = Formatter(data.values()[0])
 
         self.figure.tight_layout()
         ax1.legend(loc='best')
@@ -214,11 +223,23 @@ def get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, first_date, current_date, h
 
 
 
+class Formatter(object):
+    """
+        Capturing mouse position
+    """
+    def __init__(self, info):
+        self.info = info
+        self.time, self.value, self.time_dev, self.value_dev = self.info.T.tolist()
 
+    def __call__(self, x, y):
+        # z = self.im.get_array()[int(y), int(x)]
+        print(int(y), int(x))
+        # print dates.num2date(x)
+        return 'testing stuff'
+        # return 'x={:.01f}, y={:.01f}, z={:.01f}'.format(x, y, z)
 
 # testing
 if __name__ == '__main__':
-
     qApp = QtGui.QApplication(sys.argv)
 
     data = {}
@@ -238,6 +259,13 @@ if __name__ == '__main__':
                                [4, 7,  deltas, deltas2],
                                [5, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
                                [6, 8,  deltas, deltas2]])
+
+
+    # dates = [datetime(2015, 10, 2), datetime(2016, 2, 17), datetime(2016, 4, 20)]
+    #
+    # dataset_matrix = np.array([[4, 7,  deltas, deltas2],
+    #                            [5, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
+    #                            [6, 8,  deltas, deltas2]])
 
     # overwriting 1 column to dates
     dataset_matrix[:, 0] = dates
