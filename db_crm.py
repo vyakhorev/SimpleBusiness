@@ -84,7 +84,7 @@ class c_crm_contact(BASE, abst_key):
     subs_to_payments = Column(Boolean)
 
     def __repr__(self):
-        s = unicode(self.name) + u", " + unicode(self.job) + u"\n"
+        s = unicode(self.name) + u", " + unicode(self.job)
         s += u"@" + unicode(self.company) + u"\n"
         if hasattr(self, "details"):
             for d_i in self.details:
@@ -106,6 +106,35 @@ class c_crm_contact(BASE, abst_key):
         else: # Если ошибка логики - данные нельзя терять. Ну задвоятся..
             print("[c_crm_contact][change_existing_contact_detail] - error!")
             self.add_new_contact_detail(t, v, is_fixed)
+
+    def to_dict(self):
+        new_dict = {}
+        new_dict['company_name'] = unicode(self.company.name)
+        new_dict['name'] = unicode(self.name)
+        new_dict['job'] = unicode(self.job)
+        new_dict['is_person'] = self.is_person
+        new_dict['additional_info'] = unicode(self.additional_info)
+        new_dict['subs_to_prices'] = self.subs_to_prices
+        new_dict['subs_to_logistics'] = self.subs_to_logistics
+        new_dict['subs_to_payments'] = self.subs_to_payments
+        list_details = []
+        for det_i in self.details:
+            list_details += [det_i.to_dict()]
+        new_dict['details'] = list_details
+        return new_dict
+
+    def from_dict(self, a_dict):
+        self.name = a_dict['name']
+        self.job = a_dict['job']
+        self.is_person = a_dict['is_person']
+        self.additional_info = a_dict['additional_info']
+        self.subs_to_prices = a_dict['subs_to_prices']
+        self.subs_to_logistics = a_dict['subs_to_logistics']
+        self.subs_to_payments = a_dict['subs_to_payments']
+        for det_dict_i in a_dict['details']:
+            d_i = c_crm_contact_details()
+            d_i.from_dict(det_dict_i)
+            self.details +=[d_i]
 
 class c_crm_contact_details(BASE, abst_key):
     # Если совсем приспичит, можно сделать классы-наследники для e-mail и т.п.
@@ -134,6 +163,19 @@ class c_crm_contact_details(BASE, abst_key):
 
     def check_is_website_format(self):
         pass
+
+    def to_dict(self):
+        new_dict = {}
+        new_dict['contact_name'] = unicode(self.contact.name)
+        new_dict['cont_type'] = unicode(self.cont_type)
+        new_dict['cont_value'] = unicode(self.cont_value)
+        new_dict['is_type_fixed'] = self.is_type_fixed
+        return new_dict
+
+    def from_dict(self, a_dict):
+        self.cont_type = a_dict['cont_type']
+        self.cont_value = a_dict['cont_value']
+        self.is_type_fixed = a_dict['is_type_fixed']
 
 def crm_template_priceoffer(client):
     s = u"<b>Коммерческие предложения клиенту (#Офер)</b><br>"
