@@ -200,7 +200,7 @@ def create_and_open_email_link(to_list = None, cc_list = None, a_subj = "", a_bo
     a_link = generate_mailto_link(to_list, cc_list, a_subj, a_body)
     webbrowser.open(a_link)
 
-def do_send_bot_email(to_list, a_sub, html_body):
+def do_send_bot_email(to_list, a_sub, html_body, smtp_server, login_user, login_pass):
     # Пока только на @cableprod.ru
     to_str = ""
     cleaned_to_list = []
@@ -219,14 +219,12 @@ def do_send_bot_email(to_list, a_sub, html_body):
     msg['To'] = to_str
     print("sending e-mail to: " + to_str)
 
-    cnf = ConfigParser.ConfigParser()
-    cnf.read('main.ini')
-    smtp_server = cnf.get("MailServerConfig","smtp_server")
-    login_user = cnf.get("MailServerConfig","login_user")
-    login_pass = cnf.get("MailServerConfig","login_pass")
-    cnf = None
-
-    #TODO: переделать  msg['To']  -  там список должен быть для server.sendmail !
+    # cnf = ConfigParser.ConfigParser()
+    # cnf.read('main.ini')
+    # smtp_server = cnf.get("MailServerConfig","smtp_server")
+    # login_user = cnf.get("MailServerConfig","login_user")
+    # login_pass = cnf.get("MailServerConfig","login_pass")
+    # cnf = None
 
     m = re.search(r'(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*', smtp_server)
     smtp_server_host = m.group('host')

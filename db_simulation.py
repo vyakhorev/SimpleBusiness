@@ -411,7 +411,7 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
         self.stats_std_timedelta = dict_with_stats["timedelta_std"]
         #self.stats_last_order_date = dict_with_stats["last_shipment_date"] #last shipment or confirmed order
         if (dict_with_stats["last_shipment_date"] is None) or (dict_with_stats["timedelta_exp"] is None):
-            self.next_expected_order_date = None
+            self.next_expected_order_date = datetime.datetime.today()
         else:
             timed = datetime.timedelta(days=dict_with_stats["timedelta_exp"])
             nextdate = dict_with_stats["last_shipment_date"] + timed
@@ -1852,8 +1852,8 @@ class c_client_model(c_agent):
         for dict_mf_i in list_with_stats_dict:
             gr = dict_mf_i["material_type"]
             if not(existing_mfs.has_key(gr)):
-                existing_mfs[gr] = c_material_flow(client_model = self, are_materials_equal = 1,
-                                                   put_supplier_order_if_not_available = 0, material_type = gr)
+                existing_mfs[gr] = c_material_flow(client_model=self, are_materials_equal=1,
+                                                   put_supplier_order_if_not_available=0, material_type=gr)
             existing_mfs[gr].update_stats(dict_mf_i)
             existing_mfs.pop(gr)
         #Все, кто остались в словаре existing_mfs подлежат обнулению - их нет в статистике

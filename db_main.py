@@ -395,9 +395,15 @@ def estimate_shipment_stats(client, material_group = None):
     for m_gr in all_material_groups:
         mf_dicts[m_gr] = dict(material_type = m_gr, time_series = statistics.c_event_predictive_ts(), mat_dist = c_random_dict())
     # А теперь прогоняем статистику еще раз и заполняем временные ряды, откуда потом будем статистику тянуть
+    not_aggregated = []
+
     for date_i, material_i, qtty_i in fact_shipments_list:
-        mf_dicts[material_i.material_type]["time_series"].add_point(date_i,qtty_i)
+        not_aggregated.append([date_i, qtty_i])
         mf_dicts[material_i.material_type]["mat_dist"].add_elem(material_i, qtty_i)
+
+    for date_i, qtty_i in aggregate_shipments(not_aggregated):
+        mf_dicts[material_i.material_type]["time_series"].add_point(date_i,qtty_i)
+
     for mf_i in mf_dicts.itervalues():
         # Переоцениваем временной ряд
         mf_i["time_series"].run_estimations()
@@ -414,13 +420,28 @@ def estimate_shipment_stats(client, material_group = None):
     #print("estimated model for " + str(client) + ":" + str(material_group))
     return mf_dicts.values()
 
+def aggregate_shipments(shipments_list):
+    # 0 - date, 1 - qtty
+    # Все по порядку. Наверное.
+    grouped_shipment_list = []
+    last_date = None
+    new_shipment = 0
+    for date_i, qtty_i in shipments_list:
+        if last_date is None:
+            last_date = date_i
+        if date_i <> last_date:
+            grouped_shipment_list.append([last_date, new_shipment])
+            new_shipment = 0
+            last_date = date_i
+        new_shipment += qtty_i
+    return grouped_shipment_list
+
 def get_shipments_history(client, material_group):
     fact_shipments_list = []
     for sh_i in client.fact_shipments:
         if sh_i.material.material_type == material_group:
-            # TODO: group by date !
             fact_shipments_list.append([sh_i.ship_date, sh_i.ship_qtty])
-    return fact_shipments_list
+    return aggregate_shipments(fact_shipments_list)
 
 
 
@@ -433,43 +454,7 @@ def get_hashtags_from_names(hashcode_list):
 
 """ А вот эти надо сделать сильно проще """
 
-# class c_base_settings_manager():
-#
-#     def get_simul_settings(self):
-#         simul_params = ["pring_log", "epoch_num", "until"]
-#         a_dict = dict()
-#         for obj_i in the_session_handler.get_all_objects_list_iter(cb_base_settings):
-#             if obj_i.param_name in simul_params:
-#                 a_dict[obj_i.param_name] = obj_i.param_data
-#         return a_dict
-#
-#     def set_default_base_simul_settings(self):
-#         param_dict = dict(pring_log = False, epoch_num = 10, until = 200)
-#         for par_k,par_v in param_dict.iteritems():
-#             self.set_param(par_k, par_v)
-#
-#     def set_param(self,parameter_name,param_value):
-#         print(parameter_name, param_value)
-#         #Только этой процедурой!  Иначе задвоятся
-#         #if the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).count() == 0:
-#         #    the_param = cb_base_settings(param_name = parameter_name)
-#         #    the_session_handler.add_object_to_session(the_param)
-#         #else:
-#         #    the_param = the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).one()
-#         #the_param.param_data = param_value
-#         #the_session_handler.commit_session()
-#         #pass
-#
-#     def get_param_value(self,parameter_name):
-#         the_param = the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).one()
-#         return the_param.param_data
-#
-#     def iter_all_params(self):
-#         for param_i in the_session_handler.get_all_objects_list_iter(cb_base_settings):
-#             yield param_i
-#
-# #the_settings_manager = c_base_settings_manager()
-# #the_settings_manager.set_default_base_simul_settings()
+
 
 def init_system_from_database(the_devs):
     list_to_read = connected_to_DEVS.__subclasses__()
@@ -541,3 +526,42 @@ if __name__ == "__main__":
     the_devs.simpy_env.run(until = 500)
     print "*" * 20
     print "FINISH"
+
+
+# class c_base_settings_manager():
+#
+#     def get_simul_settings(self):
+#         simul_params = ["pring_log", "epoch_num", "until"]
+#         a_dict = dict()
+#         for obj_i in the_session_handler.get_all_objects_list_iter(cb_base_settings):
+#             if obj_i.param_name in simul_params:
+#                 a_dict[obj_i.param_name] = obj_i.param_data
+#         return a_dict
+#
+#     def set_default_base_simul_settings(self):
+#         param_dict = dict(pring_log = False, epoch_num = 10, until = 200)
+#         for par_k,par_v in param_dict.iteritems():
+#             self.set_param(par_k, par_v)
+#
+#     def set_param(self,parameter_name,param_value):
+#         print(parameter_name, param_value)
+#         #Только этой процедурой!  Иначе задвоятся
+#         #if the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).count() == 0:
+#         #    the_param = cb_base_settings(param_name = parameter_name)
+#         #    the_session_handler.add_object_to_session(the_param)
+#         #else:
+#         #    the_param = the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).one()
+#         #the_param.param_data = param_value
+#         #the_session_handler.commit_session()
+#         #pass
+#
+#     def get_param_value(self,parameter_name):
+#         the_param = the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).one()
+#         return the_param.param_data
+#
+#     def iter_all_params(self):
+#         for param_i in the_session_handler.get_all_objects_list_iter(cb_base_settings):
+#             yield param_i
+#
+# #the_settings_manager = c_base_settings_manager()
+# #the_settings_manager.set_default_base_simul_settings()

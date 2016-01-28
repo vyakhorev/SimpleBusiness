@@ -26,6 +26,9 @@ import db_main
 import gl_shared
 
 import file_reports
+import threading
+import cnf
+import utils
 
 # import threading
 
@@ -785,7 +788,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
         pin_dialog.show()
 
-
     def dlg_add_knbase_record(self, hashtags_list=[], htmltext='', header=''):
         edit_dialog = self.get_DlgEditSimpleRecord()
         edit_dialog.set_state_to_add_new([], htmltext, header)
@@ -795,6 +797,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             db_main.the_session_handler.commit_session()
             # try_send_email_about_new_record(new_rec)
             self.sig_knbase_record_added.emit(new_rec.string_key())
+            try_send_email_about_new_record(new_rec)
 
     def dlg_edit_knbase_record(self, a_rec):
         if a_rec is None:
@@ -861,3 +864,23 @@ class cIteratorDispenser():
                 return ans
         return ans
 
+def try_send_email_about_new_record(new_crm_rec):
+    user_name = cnf.get_cnf_text('UserConfig','UserName')
+    user_group_email = cnf.get_cnf_text('UserConfig','GroupEmail')
+    smtp_server = cnf.get_cnf_text("MailServerConfig","smtp_server")
+    login_user = cnf.get_cnf_text("MailServerConfig","login_user")
+    login_pass = cnf.get_cnf_text("MailServerConfig","login_pass")
+
+    subj = u"[INT-news][%s] %s [Theme: %s]"%(user_name,new_crm_rec.headline, new_crm_rec.hashtags_string)
+    body = new_crm_rec.long_html_text
+
+    t_email = threading.Thread(target=send_background_email_to_group, args=(subj, body, user_group_email,
+                                                                            smtp_server, login_user, login_pass))
+    t_email.start()
+
+def send_background_email_to_group(a_subj, a_body, user_group_email, smtp_server, login_user, login_pass):
+    try:
+        utils.do_send_bot_email([user_group_email], a_subj, a_body, smtp_server, login_user, login_pass)
+    except:
+        print "Unable to send e-mail to " + user_group_email
+        print gl_shared.traceback.format_exc()
