@@ -77,7 +77,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         ############
         # Counterparty tab
         ############
-
+        self.current_cp = None
         # Left-side logic
 
         self.data_model_counterparties = cDataModel_CounterpartyList()
@@ -459,11 +459,11 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         is_reserved = db_main.check_if_hashtag_from_system(ht_i.text)
         if is_reserved:
             QtGui.QMessageBox.information(self, u'Внимание',
-                                          u'Имя зарезервировано, не могу удалить',
+                                          u'Имя зарезервировано клиентом или товаром, не могу удалить',
                                           QtGui.QMessageBox.Ok)
             return
 
-        print(u'look like deleting .. ' + unicode(ht_i.text))
+        db_main.delete_hashtag_usage(ht_i.text)
 
     def _get_selected_hashtag(self):
         indeces = self.listView_Hashtags.selectedIndexes()
@@ -480,8 +480,9 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         # self.data_model_counterparties.beginResetModel()
         self.data_model_counterparties.reset()
         # self.data_model_counterparties.endResetModel()
-        self.redraw_mediators(self.current_cp)
-        print('refresh!')
+        if not self.current_cp is None:
+            self.redraw_mediators(self.current_cp)
+        #print('refresh!')
 
     ###################
     # Управление диалоговыми окнами

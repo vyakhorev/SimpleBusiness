@@ -39,7 +39,7 @@ class SqliteNumeric(TypeDecorator):
         else:
             return None
 
-class cb_base_settings(BASE):
-    __tablename__ = "base_settings"
-    param_name = Column(String(255), primary_key=True)
-    param_data = Column(PickleType)   #Mutabca надо трачить мутабельность
+# class cb_base_settings(BASE):
+#     __tablename__ = "base_settings"
+#     param_name = Column(String(255), primary_key=True)
+#     param_data = Column(PickleType)   #Mutabca надо трачить мутабельность

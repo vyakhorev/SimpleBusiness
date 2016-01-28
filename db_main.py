@@ -266,36 +266,44 @@ def rename_hashtag_usages(old_hashtag_name, new_hashtag_name):
     new_hashtag_name = new_hashtag_name.lower()
     found_tags_old = get_hashtags_from_names([old_hashtag_name])
     found_tags_new = get_hashtags_from_names([new_hashtag_name])
-    if len(found_tags_old) >= 1:
-        old_hashtag = found_tags_old[0]
-        old_hashtag.text = new_hashtag_name
-        for rec_i in old_hashtag.records:
-            h_old = u"#" + old_hashtag_name
-            h_new = u"#" + new_hashtag_name
-            rec_i.headline = replace_unicode_text(unicode(rec_i.headline), h_old, h_new)
-            rec_i.hashtags_string = replace_unicode_text(unicode(rec_i.hashtags_string), h_old, h_new)
-            rec_i.long_html_text = replace_unicode_text(unicode(rec_i.long_html_text), h_old, h_new)
-        if len(found_tags_new) >= 1:
-            # TODO: можно было просто переделать таблицу соответствия
-            # Надо прилепить все одномиенные к этому - ссылки перебросить
-            to_delete = []
-            for new_ht in found_tags_new:
-                for rec_i in new_ht.records:
-                    an_ind = rec_i.hashtags.index(new_ht)
-                    to_delete += [rec_i.hashtags.pop(an_ind)]
-                    rec_i.hashtags += [old_hashtag]
-            #the_session_handler.commit_session()
-            for forg_ht in to_delete:
-                #the_session_handler.delete_concrete_object(forg_ht)
-                the_session_handler.active_session.delete(forg_ht)
-        the_session_handler.commit_session()
+    if len(found_tags_old) == 0:
+        return
+    old_hashtag = found_tags_old[0]
+    old_hashtag.text = new_hashtag_name
+    for rec_i in old_hashtag.records:
+        h_old = u"#" + old_hashtag_name
+        h_new = u"#" + new_hashtag_name
+        rec_i.headline = replace_unicode_text(unicode(rec_i.headline), h_old, h_new)
+        rec_i.hashtags_string = replace_unicode_text(unicode(rec_i.hashtags_string), h_old, h_new)
+        rec_i.long_html_text = replace_unicode_text(unicode(rec_i.long_html_text), h_old, h_new)
+    if len(found_tags_new) >= 1:
+        # Надо прилепить все одномиенные к этому - ссылки перебросить
+        to_delete = []
+        for new_ht in found_tags_new:
+            for rec_i in new_ht.records:
+                an_ind = rec_i.hashtags.index(new_ht)
+                to_delete += [rec_i.hashtags.pop(an_ind)]
+                rec_i.hashtags += [old_hashtag]
+        #the_session_handler.commit_session()
+        for forg_ht in to_delete:
+            #the_session_handler.delete_concrete_object(forg_ht)
+            the_session_handler.active_session.delete(forg_ht)
+    the_session_handler.commit_session()
 
-def delete_hashtag_usage(hashtag_obj):
-    for rec_i in hashtag_obj.records:
-        # Удаляем из текста rec_i все упоминания (убираем '#')
-        pass
-
-
+def delete_hashtag_usage(hashtag_name):
+    found_tags = get_hashtags_from_names([hashtag_name])
+    if len(found_tags) == 0:
+        return
+    hashtag = found_tags[0]
+    for rec_i in hashtag.records:
+        # Убираем "#" от тега
+        str_old = u"#" + hashtag_name
+        str_new = hashtag_name
+        rec_i.headline = replace_unicode_text(unicode(rec_i.headline), str_old, str_new)
+        rec_i.hashtags_string = replace_unicode_text(unicode(rec_i.hashtags_string), str_old, str_new)
+        rec_i.long_html_text = replace_unicode_text(unicode(rec_i.long_html_text), str_old, str_new)
+    the_session_handler.active_session.delete(hashtag)
+    the_session_handler.commit_session()
 
 
 def get_contacts_list(agent = None):
@@ -425,41 +433,43 @@ def get_hashtags_from_names(hashcode_list):
 
 """ А вот эти надо сделать сильно проще """
 
-class c_base_settings_manager():
-
-    def get_simul_settings(self):
-        simul_params = ["pring_log", "epoch_num", "until"]
-        a_dict = dict()
-        for obj_i in the_session_handler.get_all_objects_list_iter(cb_base_settings):
-            if obj_i.param_name in simul_params:
-                a_dict[obj_i.param_name] = obj_i.param_data
-        return a_dict
-
-    def set_default_base_simul_settings(self):
-        param_dict = dict(pring_log = False, epoch_num = 10, until = 200)
-        for par_k,par_v in param_dict.iteritems():
-            self.set_param(par_k, par_v)
-
-    def set_param(self,parameter_name,param_value):
-        #Только этой процедурой!  Иначе задвоятся
-        if the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).count() == 0:
-            the_param = cb_base_settings(param_name = parameter_name)
-            the_session_handler.add_object_to_session(the_param)
-        else:
-            the_param = the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).one()
-        the_param.param_data = param_value
-#        the_session_handler.commit_session()
-
-    def get_param_value(self,parameter_name):
-        the_param = the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).one()
-        return the_param.param_data
-
-    def iter_all_params(self):
-        for param_i in the_session_handler.get_all_objects_list_iter(cb_base_settings):
-            yield param_i
-
-the_settings_manager = c_base_settings_manager()
-the_settings_manager.set_default_base_simul_settings()
+# class c_base_settings_manager():
+#
+#     def get_simul_settings(self):
+#         simul_params = ["pring_log", "epoch_num", "until"]
+#         a_dict = dict()
+#         for obj_i in the_session_handler.get_all_objects_list_iter(cb_base_settings):
+#             if obj_i.param_name in simul_params:
+#                 a_dict[obj_i.param_name] = obj_i.param_data
+#         return a_dict
+#
+#     def set_default_base_simul_settings(self):
+#         param_dict = dict(pring_log = False, epoch_num = 10, until = 200)
+#         for par_k,par_v in param_dict.iteritems():
+#             self.set_param(par_k, par_v)
+#
+#     def set_param(self,parameter_name,param_value):
+#         print(parameter_name, param_value)
+#         #Только этой процедурой!  Иначе задвоятся
+#         #if the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).count() == 0:
+#         #    the_param = cb_base_settings(param_name = parameter_name)
+#         #    the_session_handler.add_object_to_session(the_param)
+#         #else:
+#         #    the_param = the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).one()
+#         #the_param.param_data = param_value
+#         #the_session_handler.commit_session()
+#         #pass
+#
+#     def get_param_value(self,parameter_name):
+#         the_param = the_session_handler.get_active_session().query(cb_base_settings).filter(cb_base_settings.param_name == parameter_name).one()
+#         return the_param.param_data
+#
+#     def iter_all_params(self):
+#         for param_i in the_session_handler.get_all_objects_list_iter(cb_base_settings):
+#             yield param_i
+#
+# #the_settings_manager = c_base_settings_manager()
+# #the_settings_manager.set_default_base_simul_settings()
 
 def init_system_from_database(the_devs):
     list_to_read = connected_to_DEVS.__subclasses__()
