@@ -289,14 +289,21 @@ class c_read_logs_from_1C_task(c_task):
                 a_counter = 0
                 not_counter = 0
                 for child2 in child1:
+                    try_msg = []
+                    # try:
                     is_success, messages = load_function(child2)
                     if not is_success:
-                        yield c_msg(u"Ошибка с обработкой %s"%(nodename))
+                        try_msg += [c_msg(u"Ошибка с обработкой %s"%(nodename))]
                         not_counter += 1
                     else:
                         a_counter += 1
                     for msg_i in messages:
-                        yield c_msg(msg_i)
+                        try_msg += [c_msg(msg_i)]
+                    # except SynchFindingListError:
+                    #     try_msg += [c_msg(u"Ошибка с обработкой %s"%(nodename))]
+                    #     not_counter += 1
+                    for msg in try_msg:
+                        yield msg
                 yield c_msg(u"%s загружено %d записей из %d"%(nodename, a_counter, not_counter+a_counter))
             if do_commit:
                 yield c_msg(u"записываю " + nodename)
@@ -317,7 +324,11 @@ def xml_LoadFactShipment(xml_node):
         msgs += [c_msg(u'SynchFindingListError: не нашёл товар с 1С кодом ' + item_1C_code)]
         return [0, msgs]
     CP_1C_code = unicode(xml_node.attrib['CP_the_code'])
-    a_CP = the_session_handler.get_account_system_object(c_client_model, CP_1C_code)
+    try:
+        a_CP = the_session_handler.get_account_system_object(c_client_model, CP_1C_code)
+    except SynchFindingListError:
+        msgs += [c_msg(u'SynchFindingListError: не нашёл клиента с 1С кодом ' + CP_1C_code)]
+        return [0, msgs]
     item_qtty = convert(xml_node.attrib['Qtty'])
     shipment_date = convert_str_2_date(xml_node.attrib['Date'])
     sh_i = c_fact_shipment(ship_qtty = item_qtty, ship_date = shipment_date,material=a_item, client_model = a_CP)
