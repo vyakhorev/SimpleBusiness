@@ -7,7 +7,7 @@ def build_synch_logger():
     # https://docs.python.org/2/howto/logging-cookbook.html
     logger = logging.getLogger('sycnh_app')
     logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(r'synch.log')
+    fh = logging.FileHandler('synch.log')
     fh.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
     ch.setLevel(logging.ERROR)

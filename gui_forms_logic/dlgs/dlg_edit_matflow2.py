@@ -424,7 +424,9 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
             tmp_lst.append([daysfromstart,qtty_bought,0,0])
         history_array = np.array(tmp_lst)
 
-        next_event_date = self._get_next_date_prediction()
+        nd = self._get_next_date_prediction()
+        next_event_date = datetime(year=nd.year, month=nd.month, day=nd.day)
+
         Edt = self._get_periodicy_expectation_value()
         Ev = self._get_cons_volume_mean_value()
         Ddt = self._get_periodicy_stdev_value()
