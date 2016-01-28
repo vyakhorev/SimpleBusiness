@@ -12,6 +12,11 @@ from gui_forms_logic.hashtag_editor.table import ui_EditorHtmlTableSettings
 from gui_forms_logic.hashtag_editor.tag_lighter import ui_TagHighlighter
 from ui.ui_DialogCrm_EditSimpleRecord import Ui_DialogCrm_EditSimpleRecord
 
+from pydocx import PyDocX
+import os
+import cnf
+from gui_forms_logic.hashtag_editor import html_prettify
+
 class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecord):
     def __init__(self, parent=None):
         super(gui_DialogCrm_EditSimpleRecord, self).__init__(parent)
@@ -42,6 +47,11 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
         # We need our own context menu for tables
         self.textEdit_longtext.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.textEdit_longtext.customContextMenuRequested.connect(self.context)
+
+        # Handle
+        self.button_templates = QtGui.QPushButton(u'По шаблону')
+        self.horizontalLayout.insertWidget(0, self.button_templates)
+        self.button_templates.clicked.connect(self.handle_templates)
 
     #def dropEvent(self, *args, **kwargs):
 
@@ -175,12 +185,19 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
         table.insertColumns(cell.column(),1)
 
     def clear_fonts(self):
-        # TODO: тут нужно всё поправить + поднимать вызов по событию "вставка" в браузер.
+        # readable_font = QtGui.QFont()
+        # readable_font.setPointSize(10)
+        # readable_font.setStyleHint(QtGui.QFont.Courier)
+        # self.textEdit_longtext.selectAll()
+        # self.textEdit_longtext.setCurrentFont(readable_font)
         readable_font = QtGui.QFont()
         readable_font.setPointSize(10)
         readable_font.setStyleHint(QtGui.QFont.Courier)
         self.textEdit_longtext.selectAll()
         self.textEdit_longtext.setCurrentFont(readable_font)
+        new_cursor = self.textEdit_longtext.textCursor()
+        new_cursor.clearSelection()
+        self.textEdit_longtext.setTextCursor(new_cursor)
 
     def set_state_to_add_new(self, suggested_tags=[], text_template="", header=""):
         # self.record_entity создается перед закрытием с кнопкой "ОК"
@@ -233,7 +250,7 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
                     ans = QtGui.QMessageBox.question(self,unicode(u"Пропущен хэш-тэг"), unicode(u'Добавить #' + ht_i + u" ?"),
                                                      QtGui.QMessageBox.Yes, QtGui.QMessageBox.No,QtGui.QMessageBox.Cancel)
                     if ans == QtGui.QMessageBox.Yes:
-                        self.textEdit_longtext.insertHtml(ht_i)
+                        self.insert_text(u"#"+ht_i)
                         tag_list += [ht_i]
                     elif ans == QtGui.QMessageBox.No: #Ну нет так нет. Значит, лишний был.
                         pass
@@ -284,3 +301,29 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
             return [user_decision, self.record_entity]
         elif user_decision == QtGui.QDialog.Rejected:
             return [user_decision, None]
+
+    def insert_text(self, new_text):
+        possibly_bad_html = str(new_text) # Cleans up QString usages
+        desired_html = QtCore.QString(html_prettify.safe_html(possibly_bad_html))
+        cursor = self.textEdit_longtext.textCursor()
+        cursor.insertHtml(desired_html)
+        # И правим во всем editor шрифт
+        self.clear_fonts()
+
+    # Handle templates
+    def handle_templates(self):
+        # Формируем список файлов
+        templates_dir = cnf.get_cnf_text("Templates", "templates_dir")
+        filenames_list = []
+        for f_i in os.listdir(templates_dir):
+            filename, file_extension = os.path.splitext(f_i)
+            if file_extension == u'.docx':
+                filenames_list += [filename]
+        template_name, ok = QtGui.QInputDialog.getItem(self, u'Template', u'Выберете шаблон заметки из файла',
+                                                       filenames_list, editable=False)
+        if ok:
+            full_file_name = templates_dir + unicode(template_name) + u'.docx'
+            text = PyDocX.to_html(full_file_name)
+            self.insert_text(text)
+
+

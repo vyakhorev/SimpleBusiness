@@ -156,7 +156,7 @@ class PlotViewerDialog(QtGui.QDialog):
             ax1.plot(time, value, 'o', color=next(COLORS), label=name)
             if current_date:
                 ax1.axvline(current_date, linewidth=2, color='g', ymin=0, ymax=10)
-                ax1.axvspan(xmin=date_min-timedelta(30), xmax=current_date, ymin=0, ymax=10, color='lightsage')
+                ax1.axvspan(xmin=date_min-timedelta(30), xmax=current_date, ymin=0, ymax=10, color='g')
 
             # making ellipses
             for t_i, val_i, t_dev_i, val_dev_i in zip(time, value, time_dev, value_dev):

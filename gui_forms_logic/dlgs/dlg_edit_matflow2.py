@@ -333,7 +333,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.lineEdit_cons_vol_dev.setText(simple_locale.number2string(cons_volume_std_prc))
         self.lineEdit_cons_period_std.setText(simple_locale.number2string(mfd["timedelta_std"]))
         # Дату либо последняя + дельта, либо сегодня.
-        next_order_date = mfd["last_shipment_date"] + datetime.timedelta(days=mfd["timedelta_exp"])
+        next_order_date = mfd["last_shipment_date"] + timedelta(days=mfd["timedelta_exp"])
         self.dateEdit_NextExpectedOrder.setDate(qtdate_pack(next_order_date))
         # Табличку обновляем
         dict_for_model = {}

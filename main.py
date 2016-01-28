@@ -60,7 +60,7 @@ def run_simulations():
     from c_planner import c_planner
     import db_main
     the_planner = c_planner()
-    param_dict = db_main.the_settings_manager.get_simul_settings()
+    #param_dict = db_main.the_settings_manager.get_simul_settings()
     the_planner.run_observed_simulation(10, 200)
 
 

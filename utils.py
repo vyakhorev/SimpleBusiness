@@ -168,6 +168,13 @@ def replace_unicode_text(long_text, string_to_find, string_to_place):
     new_text = patt.sub(string_to_place, long_text)
     return new_text
 
+def replace_unicode_text_html(long_text, string_to_find, string_to_place):
+    patt = re.compile(re.escape(string_to_find), re.IGNORECASE)
+    patt.sub(string_to_place, long_text)
+    return long_text
+    # new_text = patt.sub(string_to_place, long_text)
+    # return new_text
+
 def create_html_from_link(a_valid_link, link_repr = None):
     if link_repr is None:
         link_repr = a_valid_link

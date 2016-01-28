@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 from gui_forms_logic.plot_window.matflow_plotting import Spreading, PlotViewerDialog
 from gui_forms_logic.plot_window.matflow_plotting import get_shipments_prediction_areas
-import numpy as np
 
 from ui.ui_ModernMainWindow_v2 import Ui_MainWindowModern
 
@@ -40,6 +39,7 @@ STYLE_URL = None
 # How many lines to load first time
 RECORDS_NUM = 5
 # TODO move this to ini and settings..
+LD = [640, 360]
 HD = [1280, 720]
 UHD = [1920, 1080]
 
@@ -437,6 +437,14 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         ht_i = self._get_selected_hashtag()
         if ht_i is None:
             return
+
+        is_reserved = db_main.check_if_hashtag_from_system(ht_i.text)
+        if is_reserved:
+            QtGui.QMessageBox.information(self, u'Внимание',
+                                          u'Имя зарезервировано клиентом или товаром, не могу переименовать',
+                                          QtGui.QMessageBox.Ok)
+            return
+
         new_name, is_ok = QtGui.QInputDialog.getText(self, u"Новое имя для #"+ht_i.text,
                                                      u'Заменить  #' + ht_i.text + u'  на:',
                                                      QtGui.QLineEdit.Normal, ht_i.text)
@@ -491,7 +499,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         self.data_model_counterparties.endResetModel()
         if not self.current_cp is None:
             self.redraw_mediators(self.current_cp)
-        print('refresh!')
 
     ###################
     # Управление диалоговыми окнами
@@ -607,44 +614,8 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
 
     # ПОТОКИ СНАБЖЕНИЯ (MATFLOW)
 
-    # def showplot(self):
-    #     mat_type = self._get_material_type()
-    #     current_date = datetime.today()
-    #
-    #     history = db_main.get_shipments_history(self.client_model, mat_type)
-    #     tmp_lst = []
-    #     for date_bought, qtty_bought in history:
-    #         daysfromstart = (date_bought-current_date).days
-    #         tmp_lst.append([daysfromstart,qtty_bought,0,0])
-    #     history_array = np.array(tmp_lst)
-    #
-        # nd = self._get_next_date_prediction()
-        # next_event_date = datetime(year=nd.year, month=nd.month, day=nd.day)
-        #
-        # Edt = self._get_periodicy_expectation_value()
-        # Ev = self._get_cons_volume_mean_value()
-        # Ddt = self._get_periodicy_stdev_value()
-        # Dv = self._get_cons_volume_stdev_value()/100. * Ev
-        #
-        # predictions = get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, next_event_date, current_date, 360)
-        #
-        # data = {}
-        # if len(history_array) > 0:
-        #     alldata = np.concatenate((history_array, predictions), axis=0)
-        # else:
-        #     alldata = predictions
-        #
-        # data[unicode(mat_type) + u" by " + unicode(self.client_model)] = alldata
-        #
-        # # print data
-        # wind = None
-        # wind = PlotViewerDialog(self)
-        # wind.plot(data, current_date=current_date)
-        # # wind.plot(data)
-        # wind.show()
-
-
     def show_plot_for_price(self, matflow_instance):
+        import numpy as np
         current_date = datetime.today()
         history = db_main.get_shipments_history(matflow_instance.client_model, matflow_instance.material_type)
         tmp_lst = []
@@ -659,7 +630,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         Edt = matflow_instance.stats_mean_timedelta
         Ev = matflow_instance.stats_mean_volume
         Ddt = matflow_instance.stats_std_timedelta
-        Dv = matflow_instance.stats_std_volume/100. * Ev
+        Dv = matflow_instance.stats_std_volume
 
         predictions = get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, next_event_date, current_date, 360)
 
@@ -679,16 +650,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         # wind.plot(data)
         wind.show()
 
-        # stats_mean_timedelta
-        # stats_std_timedelta
-        # stats_mean_volume
-        # stats_std_volume
-        # next_expected_order_date
-        # client_model
-
-
     def dlg_add_matflow(self, agent):
-        # FIXME: сыро работает: не добавляет вообще табличку из диалога.
         # Походу, старый вариант диалога.. Надо поискать новый или пофиксить.
         if agent is None:
             raise BaseException("No agent selected!")
@@ -738,7 +700,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             k = matflow_instance.string_key()
             db_main.the_session_handler.delete_concrete_object(matflow_instance)
             self.sig_cp_record_deleted.emit(k)
-            #TODO: заметка!
 
     def estimate_group_mat_flows(self, agent):
         if agent is None:
@@ -806,7 +767,6 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             db_main.the_session_handler.delete_concrete_object(a_lead)
             # Сигнал
             self.sig_cp_record_deleted.emit(k)
-            # TODO: заметка
 
     # ЗАМЕТКИ
 
@@ -820,7 +780,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         some_text_view.setHtml(a_rec.long_html_text)
         pin_dialog.setLayout(base_layout)
         pin_dialog.layout().addWidget(some_text_view)
-        pin_dialog.resize(*HD)
+        pin_dialog.resize(*LD)
         # preset_tags = a_rec.get_tags_text()
 
         pin_dialog.show()

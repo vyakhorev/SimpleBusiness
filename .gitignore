@@ -221,4 +221,6 @@ pip-log.txt
 # Secrets
 __secret/
 __old/
-temp/
+temp/*
+crm_templates/*.docx
+crm_templates/*.odt
