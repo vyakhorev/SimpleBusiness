@@ -17,7 +17,7 @@ from PyQt4 import QtGui, QtCore
 conn = sqlite3.connect('__secret\\PyIn_last_before_modern.db')
 
 do_load_crm_records = False
-do_load_contacts = True
+do_load_contacts = False
 
 # Грузим заметки CRM (и создаем по ходу хештеги)
 if do_load_crm_records:
@@ -89,15 +89,49 @@ if do_load_contacts:
     dict_with_companies = pickle.load(file_to_read)
     not_found_dict = {}
 
-    for company_name, contact_list in dict_with_companies.iteritems():
-        company_name = company_name.lower()
+    agents = db_main.get_agent_list_by_name('NullClient')
+    if len(agents)==0:
+        NullClient = db_main.c_client_model(name='NullClient')
+    else:
+        NullClient = agents[0]
+
+    agents = db_main.get_agent_list_by_name('NullSupplier')
+    if len(agents)==0:
+        NullSupplier = db_main.c_client_model(name='NullSupplier')
+    else:
+        NullSupplier = agents[0]
+
+
+    for company_name, company_meta in dict_with_companies.iteritems():
+        is_null = False
+        contact_list = company_meta['contacts_list']
         agents = db_main.get_agent_list_by_name(company_name)
+        if len(agents) == 0: agents = db_main.get_agent_list_by_name(company_name.lower())
+        if len(agents) == 0: agents = db_main.get_agent_list_by_name(utils.sanitize_to_hashtext(company_name))
+        if len(agents) == 0: agents = db_main.get_agent_list_by_name(company_meta['full_name'])
+        if len(agents) == 0: agents = db_main.get_agent_list_by_inn(utils.sanitize_to_hashtext(company_meta['inn']))
+        if len(agents) == 0:
+            if company_meta['discriminator'] == 'supplier':
+                agents = []
+                agents.append(NullSupplier)
+                is_null = True
+            elif company_meta['discriminator'] == 'client':
+                agents = []
+                agents.append(NullClient)
+                is_null = True
+            else:
+                agents = []
+                agents.append(NullClient)
+                is_null = True
+
         if len(agents) > 0:
             the_agent = agents[0]
             for cont_dict_i in contact_list:
                 new_contact = db_main.c_crm_contact()
                 new_contact.company = the_agent
                 new_contact.from_dict(cont_dict_i)
+                if is_null:
+                    new_contact.name = company_name + u" : " + new_contact.name
                 db_main.the_session_handler.add_object_to_session(new_contact)
                 #logger.info(u'contact added to session:' + unicode(new_contact))
         else:
@@ -106,12 +140,12 @@ if do_load_contacts:
             for cont_dict_i in contact_list:
                 bad_contact = db_main.c_crm_contact()
                 bad_contact.from_dict(cont_dict_i)
-                logger.info(unicode(bad_contact))
-                bad_contact = None
+                #logger.info(unicode(bad_contact))
+                #bad_contact = None
             not_found_dict[company_name] = contact_list
 
     db_main.the_session_handler.commit_and_close_session()
 
-    file_to_save = open("__secret\\cont_dump.p", "wb")
-    pickle.dump(not_found_dict, file_to_save)
+    #file_to_save = open("__secret\\cont_dump.p", "wb")
+    #pickle.dump(not_found_dict, file_to_save)
 
