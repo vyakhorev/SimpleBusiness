@@ -1,11 +1,23 @@
+#-*- coding: utf-8 -*-
+
 import sys
 from PyQt4 import QtCore, QtGui
+
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
+import matplotlib.dates as mdates
+from matplotlib import rc
+
+rc('font', **{'family':'verdana'})
+rc('text.latex', unicode=True)
+rc('text.latex', preamble='\usepackage[utf8]{inputenc}')
+rc('text.latex', preamble='\usepackage[russian]{babel}')
+
 from datetime import datetime, timedelta
 from itertools import cycle
+
 import numpy as np
 from scipy.stats import norm
 import math
@@ -102,34 +114,33 @@ class PlotViewerDialog(QtGui.QDialog):
             # unpacking series
             if isinstance(data.values()[0], np.ndarray):
                 time, value, time_dev, value_dev = data.values()[0].T.tolist()
+                # print data
 
             else:
                 time, value = [pt.time for pt in points], [pt.val for pt in points]
                 time_dev, value_dev = [pt.time_dev for pt in points], [pt.val_dev for pt in points]
 
-            # converting days to date
-            # date_N_days_ago = current_date - timedelta(days=time)
+            # converting days to date from current date
             time = [current_date + timedelta(days=ts) for ts in time]
 
             maxval = [n.max() for n in value_dev if isinstance(n, Spreading)]
-            # print value_dev
+            maxdate = [t.max() for t in time_dev if isinstance(t, Spreading)]
 
             # Calculating boundaries for data
             date_min, date_max = self.minmax(time)
             value_min, value_max = self.minmax(value)
             value_min = 0
-            # value_max = value_max + max(maxval)
-            value_max = max(maxval)
+            # summing up max values with max spreadings
+            value_max = value_max+max(maxval)
+            date_max = date_max + timedelta(max(maxdate))
 
             # setting up boundaries
-            # VYAKHOREV
-            # ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(30))
-            ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(90))
-            # ax1.set_ylim(value_min - (value_max-value_min)/4.0, value_max + (value_max-value_min)/4.0)
-            ax1.set_ylim(value_min, value_max)
-            # print 'value_max : {}'.format(value_max)
+            ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(30))
+            ax1.set_ylim(value_min, value_max+(value_max-value_min)/5.)
 
-            ax1.plot(time, value, 'o', color=next(COLORS), label=name)
+            ax1.grid()
+            ax1.plot(time, value, 'o', color=next(COLORS), label=unicode(name))
+
             if current_date:
                 ax1.axvline(current_date, linewidth=2, color='g', ymin=0, ymax=10)
                 ax1.axvspan(xmin=date_min-timedelta(30), xmax=current_date, ymin=0, ymax=10, color=LightGreen)
@@ -142,7 +153,7 @@ class PlotViewerDialog(QtGui.QDialog):
                     for i, (t_dev_ij, val_dev_ij) in enumerate(zip(t_dev_i.sorted_deltas, val_dev_i.sorted_deltas)):
                         if t_dev_ij > 0:
                             # print 'ellipse {} with width {} and height {}'.format(i, t_dev_ij, val_dev_ij)
-                            ellip = Ellipse(xy=[t_i, val_i], width=t_dev_ij, height=val_dev_ij)
+                            ellip = Ellipse(xy=[t_i, val_i], width=t_dev_ij*2, height=val_dev_ij*2)
                             ellip.fill = True
                             ellip._alpha = t_dev_i.maxprob
                             ellip.set_color(COLORS_SEC[i])
@@ -150,13 +161,18 @@ class PlotViewerDialog(QtGui.QDialog):
 
 
         # ax1.format_coord = Formatter(data.values()[0])
+        ax1.xaxis.set_major_locator(mdates.MonthLocator())
+        ax1.xaxis.set_minor_locator(mdates.DayLocator(bymonthday=(1, 15)))
+        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d %y'))
+
+        self.figure.autofmt_xdate(bottom=0.2, rotation=35, ha='right')
 
         self.figure.tight_layout()
         ax1.legend(loc='best')
         self.canvas.draw()
 
-def get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, first_date, current_date, horiz=360):
-    levels = [0.55, 0.60, 0.65]
+def get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, first_date, current_date, horiz):
+    levels = [0.55]
     plevels = []
     for v in norm.ppf(levels):
         plevels += [v]
@@ -167,6 +183,9 @@ def get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, first_date, current_date, h
     SpreadingsV = []
 
     sh = int(max((first_date - current_date).days, 0))
+
+    if sh < horiz*2:
+        horiz = horiz*2
 
     row_count = 0
     for t in xrange(sh, horiz, int(Edt)):
@@ -204,7 +223,7 @@ def get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, first_date, current_date, h
 
 class Formatter(object):
     """
-        Capturing mouse position
+        Capturing mouse position, not using atm
     """
     def __init__(self, info):
         self.info = info
@@ -213,6 +232,7 @@ class Formatter(object):
     def __call__(self, x, y):
         # z = self.im.get_array()[int(y), int(x)]
         print(int(y), int(x))
+
         # print dates.num2date(x)
         return 'testing stuff'
         # return 'x={:.01f}, y={:.01f}, z={:.01f}'.format(x, y, z)
@@ -233,11 +253,13 @@ if __name__ == '__main__':
     dates = [datetime(2015, 8, 15), datetime(2015, 10, 2), datetime(2016, 2, 17), datetime(2016, 4, 20),
              datetime(2016, 6, 9)]
 
-    dataset_matrix = np.array([[2, 4,  0, 0],
-                               [3, 9,  0, 0],
-                               [4, 7,  deltas, deltas2],
-                               [5, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
-                               [6, 8,  deltas, deltas2]])
+    dataset_matrix = np.array([[-112, 4,  0, 0],
+                               [-93, 9,  0, 0],
+                               [-84, 7,  deltas, deltas2],
+                               [-55, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
+                               [-36, 8,  deltas, deltas2],
+                               [ 50, 31, Spreading([15, 30, 60], maxprob=0.5), Spreading([1, 2, 3]) ]])
+
 
 
     # dates = [datetime(2015, 10, 2), datetime(2016, 2, 17), datetime(2016, 4, 20)]
@@ -247,7 +269,7 @@ if __name__ == '__main__':
     #                            [6, 8,  deltas, deltas2]])
 
     # overwriting 1 column to dates
-    dataset_matrix[:, 0] = dates
+    # dataset_matrix[:, 0] = dates
     print type(datetime(2015, 8, 15))
 
     data2['Lantorec'] = dataset_matrix

@@ -433,7 +433,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         Ddt = self._get_periodicy_stdev_value()
         Dv = self._get_cons_volume_stdev_value()/100. * Ev
 
-        predictions = get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, next_event_date, current_date, 360)
+        predictions = get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, next_event_date, current_date, 90)
 
         data = {}
         if len(history_array) > 0:

@@ -642,7 +642,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         if (Edt == 0) or (Ev == 0) or (Ddt == 0) or (Dv == 0):
             print ('cant plot ')
             return False
-        predictions = get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, next_event_date, current_date, 360)
+        predictions = get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, next_event_date, current_date, 90)
 
         data = {}
         if len(history_array) > 0:
