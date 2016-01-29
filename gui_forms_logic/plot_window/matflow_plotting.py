@@ -135,12 +135,13 @@ class PlotViewerDialog(QtGui.QDialog):
             date_max = date_max + timedelta(max(maxdate))
 
             # setting up boundaries
-            ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(30))
+            ax1.set_xlim(date_min-timedelta(30), date_max+timedelta(60))
             ax1.set_ylim(value_min, value_max+(value_max-value_min)/5.)
 
             ax1.grid()
             ax1.plot(time, value, 'o', color=next(COLORS), label=unicode(name))
 
+            # fit graph
             if current_date:
                 ax1.axvline(current_date, linewidth=2, color='g', ymin=0, ymax=10)
                 ax1.axvspan(xmin=date_min-timedelta(30), xmax=current_date, ymin=0, ymax=10, color=LightGreen)
@@ -161,12 +162,15 @@ class PlotViewerDialog(QtGui.QDialog):
 
 
         # ax1.format_coord = Formatter(data.values()[0])
+        # adjusting axis locator's
         ax1.xaxis.set_major_locator(mdates.MonthLocator())
         ax1.xaxis.set_minor_locator(mdates.DayLocator(bymonthday=(1, 15)))
         ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d %y'))
 
+        # rotating locator's on x axis
         self.figure.autofmt_xdate(bottom=0.2, rotation=35, ha='right')
 
+        # adjusting plot on widget
         self.figure.tight_layout()
         ax1.legend(loc='best')
         self.canvas.draw()
@@ -215,6 +219,8 @@ def get_shipments_prediction_areas(Edt, Ev, Ddt, Dv, first_date, current_date, h
     dataset_matrix[:, 2] = SpreadingsT
     dataset_matrix[:, 3] = SpreadingsV
 
+    # cutting array only 2 predictions
+    dataset_matrix = dataset_matrix[0:2, :]
     #print(dataset_matrix)
 
     return dataset_matrix
@@ -232,8 +238,6 @@ class Formatter(object):
     def __call__(self, x, y):
         # z = self.im.get_array()[int(y), int(x)]
         print(int(y), int(x))
-
-        # print dates.num2date(x)
         return 'testing stuff'
         # return 'x={:.01f}, y={:.01f}, z={:.01f}'.format(x, y, z)
 
@@ -258,23 +262,16 @@ if __name__ == '__main__':
                                [-84, 7,  deltas, deltas2],
                                [-55, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
                                [-36, 8,  deltas, deltas2],
-                               [ 50, 31, Spreading([15, 30, 60], maxprob=0.5), Spreading([1, 2, 3]) ]])
+                               [ 50, 31, Spreading([15, 30, 60], maxprob=0.5), Spreading([1, 2, 3]) ],
+                               [250, 131, Spreading([15, 30, 60], maxprob=0.5), Spreading([1, 2, 3]) ]])
 
 
-
-    # dates = [datetime(2015, 10, 2), datetime(2016, 2, 17), datetime(2016, 4, 20)]
-    #
-    # dataset_matrix = np.array([[4, 7,  deltas, deltas2],
-    #                            [5, 14, Spreading([15, 30, 60, 90], maxprob=0.1), Spreading([1, 2, 3, 4])],
-    #                            [6, 8,  deltas, deltas2]])
 
     # overwriting 1 column to dates
     # dataset_matrix[:, 0] = dates
     print type(datetime(2015, 8, 15))
 
     data2['Lantorec'] = dataset_matrix
-    # data['Lantor'] = [DataPoint(dataset[i][0], dataset[i][1]) for i in xrange(len(dataset))]
-    # data['Unigel'] = [DataPoint(dataset2[i][0], dataset2[i][1]) for i in xrange(len(dataset))]
 
     wind = PlotViewerDialog()
     wind.plot(data2, current_date=datetime(2015, 12, 16))
