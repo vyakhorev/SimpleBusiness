@@ -12,7 +12,8 @@ from cnf import user_name
 
 records_to_hastags = Table('crm_records_to_hastags', BASE.metadata,
                            Column('rec_id', Integer, ForeignKey('crm_record.rec_id')),
-                           Column('hash_id', Integer, ForeignKey('crm_hastag.rec_id')))
+                           Column('hash_id', Integer, ForeignKey('crm_hastag.rec_id')),
+                           PrimaryKeyConstraint('rec_id', 'hash_id'))
 
 class c_hastag(BASE, abst_key):
     __tablename__ = "crm_hastag"
@@ -36,12 +37,11 @@ class c_crm_record(BASE, abst_key):
     hashtags = relationship("c_hastag", secondary=records_to_hastags, backref="records")
 
     def __repr__(self):
-        s = ""
+        s = u""
         for h_i in self.hashtags:
-            s += str(h_i) + ", "
-        s += "\n" + str(self.date_added) + "\n"
-        s += self.headline + "\n"
-        s += self.long_html_text + "\n"
+            s += unicode(h_i) + u", "
+        s += u" " + unicode(self.date_added)
+        s += self.headline
         return s
 
     def get_html_text(self):

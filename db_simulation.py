@@ -351,7 +351,7 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
     #У material_type есть аттрибут are_materials_equal. Если истина, то заполняем процесс для
     #группы материалов. Если ложь, то для конкретного материала.
     are_materials_equal = Column(Boolean)
-    put_supplier_order_if_not_available =  Column(Boolean)
+    put_supplier_order_if_not_available = Column(Boolean)
     material_type_rec_id = Column(Integer, ForeignKey('material_types.rec_id'))
     material_type = relationship("c_material_type")
     is_active = Column(Boolean)
@@ -1009,7 +1009,7 @@ class c_macro_market(BASE, abst_key, connected_to_DEVS):
 
 class c_project(BASE, abst_key, connected_to_DEVS):
     __tablename__ = 'projects'
-    discriminator = Column(String(50))
+    discriminator = Column(Unicode(50))
     __mapper_args__ = {'polymorphic_identity':'base_project', 'polymorphic_on': discriminator}
     rec_id = Column(Integer, primary_key=True)
     is_completed = Column(Boolean)
@@ -1463,7 +1463,7 @@ class c_project_import_shipment(c_project):
 class c_step(BASE, abst_key, connected_to_DEVS):
     #Base class for all steaps
     __tablename__ = 'steps'
-    discriminator = Column(String(50))
+    discriminator = Column(Unicode(50))
     __mapper_args__ = {'polymorphic_identity':'base_step', 'polymorphic_on': discriminator}
     rec_id = Column(Integer, primary_key=True)
     is_completed = Column(Boolean)
@@ -1807,7 +1807,7 @@ class c_agent(BASE, abst_key, connected_to_DEVS):
     # TODO: обогатить логику агента договорами и учётной системой (отражение наших операций)
     # Любой контрагент
     __tablename__ = 'agents'
-    discriminator = Column(String(50))
+    discriminator = Column(Unicode(50))
     __mapper_args__ = {'polymorphic_identity':'agent', 'polymorphic_on': discriminator}
     rec_id = Column(Integer, primary_key=True)
     name = Column(Unicode(255))
@@ -2062,7 +2062,7 @@ class c_material(BASE, abst_key, connected_to_DEVS):
     material_type = relationship("c_material_type", backref=backref('materials'), foreign_keys=[material_type_rec_id])
     material_type_acc_rec_id = Column(Integer, ForeignKey('material_types_accounting.rec_id'))
     material_type_acc = relationship("c_material_type_accounting", backref=backref('materials'), foreign_keys=[material_type_acc_rec_id])
-    measure_unit = Column(String(255))
+    measure_unit = Column(Unicode(255))
 
     def __repr__(self):
         return unicode(self.material_name)
@@ -2180,7 +2180,7 @@ class c_currency(BASE, abst_key):
 
 class c_material_price(BASE, abst_key, connected_to_DEVS):
     __tablename__ = 'material_prices'
-    discriminator = Column(String(50))
+    discriminator = Column(Unicode(50))
     __mapper_args__ = {'polymorphic_identity':'base_material_price', 'polymorphic_on': discriminator}
     rec_id = Column(Integer, primary_key=True)
     price_value = Column(SqliteNumeric)
