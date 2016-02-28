@@ -88,6 +88,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.lineEdit_cons_period_std.setText(zer)
         self.dateEdit_NextExpectedOrder.setDate(datetime.today())
         self.label_MeasUnit.setText(u"")
+        # Тюнингуем ручки
+        self.horizontalSlider_EconomyShare.setValue(0)
 
     def set_state_to_edit(self, mf_entity):
         # Глобальные аттрибуты
@@ -112,17 +114,24 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.lineEdit_cons_period_mean.setText(simple_locale.number2string(self.my_mf_entity.stats_mean_timedelta))
         self.lineEdit_cons_vol_dev.setText(simple_locale.number2string(round(self.my_mf_entity.get_volume_std_in_proc(),2)))
         self.lineEdit_cons_period_std.setText(simple_locale.number2string(self.my_mf_entity.stats_std_timedelta))
-        if self.my_mf_entity.next_expected_order_date is None:
+        if self.my_mf_entity.next_expected_shipment_date is None:
             self.dateEdit_NextExpectedOrder.setDate(qtdate_pack(datetime.today()))
+        else:
+            self.dateEdit_NextExpectedOrder.setDate(qtdate_pack(self.my_mf_entity.next_expected_shipment_date))
         self.label_MeasUnit.setText(self.my_mf_entity.material_type.measure_unit)
         if self.my_mf_entity.are_materials_equal:
             self.checkBox_are_materials_substitude.setCheckState(QtCore.Qt.Checked)
         else:
             self.checkBox_are_materials_substitude.setCheckState(QtCore.Qt.Unchecked)
-        if self.my_mf_entity.put_supplier_order_if_not_available:
-            self.checkBox_direct_order.setCheckState(QtCore.Qt.Checked)
+        # if self.my_mf_entity.put_supplier_order_if_not_available:
+        #     self.checkBox_direct_order.setCheckState(QtCore.Qt.Checked)
+        # else:
+        #     self.checkBox_direct_order.setCheckState(QtCore.Qt.Unchecked)
+        # Тюнингуем ручки
+        if self.my_mf_entity.economy_orders_share is None:
+            self.horizontalSlider_EconomyShare.setValue(0.)
         else:
-            self.checkBox_direct_order.setCheckState(QtCore.Qt.Unchecked)
+            self.horizontalSlider_EconomyShare.setValue(self.my_mf_entity.economy_orders_share*100)
 
     def run_dialog(self):
         user_decision = self.exec_()  #0 или 1
@@ -160,6 +169,8 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         if self.var_is_correct:
             next_date_prediction = self._get_next_date_prediction()
         if self.var_is_correct:
+            economy_share = self.horizontalSlider_EconomyShare.value() / 100.
+        if self.var_is_correct:
             # Напоследок, принимаем даныне из таблички
             prob_rows = self.matflow_tablemodel.get_mapped_data(list)
             if len(prob_rows) == 0:
@@ -175,14 +186,15 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
             self.my_mf_entity.client_model = self.client_model
             self.my_mf_entity.material_type = material_type
         self.my_mf_entity.are_materials_equal = self._get_are_materials_substitude()
-        self.my_mf_entity.put_supplier_order_if_not_available = self._get_is_direct_order()
+        #self.my_mf_entity.put_supplier_order_if_not_available = self._get_is_direct_order()
         self.my_mf_entity.stats_mean_timedelta = periodicy_expectation
         self.my_mf_entity.stats_std_timedelta = periodicy_std
         self.my_mf_entity.stats_mean_volume = cons_expectation
         # Проценты только после заполнения объёма
         self.my_mf_entity.set_volume_std_from_proc(cons_deviation)
+        self.my_mf_entity.economy_orders_share = economy_share
 
-        self.my_mf_entity.next_expected_order_date = next_date_prediction
+        self.my_mf_entity.next_expected_shipment_date = next_date_prediction
 
         # Сверяем табличку вероятностей выбора товара
         mat_dict = {}
@@ -400,11 +412,11 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         elif self.checkBox_are_materials_substitude.checkState() == QtCore.Qt.Unchecked:
             return False
 
-    def _get_is_direct_order(self):
-        if self.checkBox_direct_order.checkState() == QtCore.Qt.Checked:
-            return True
-        elif self.checkBox_direct_order.checkState() == QtCore.Qt.Unchecked:
-            return False
+    # def _get_is_direct_order(self):
+    #     if self.checkBox_direct_order.checkState() == QtCore.Qt.Checked:
+    #         return True
+    #     elif self.checkBox_direct_order.checkState() == QtCore.Qt.Unchecked:
+    #         return False
 
     def _get_next_date_prediction(self):
         try:

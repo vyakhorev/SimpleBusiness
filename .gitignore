@@ -224,3 +224,4 @@ __old/
 temp/*
 crm_templates/*.docx
 crm_templates/*.odt
+*.ini

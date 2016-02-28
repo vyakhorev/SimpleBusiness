@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# call this from 1C
+######
+# 1C #
+######
 
 # А теперь работаем
 import cnf

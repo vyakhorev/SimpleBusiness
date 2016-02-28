@@ -628,7 +628,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
             daysfromstart = (date_bought-current_date).days
             tmp_lst.append([daysfromstart, qtty_bought, 0, 0])
         history_array = np.array(tmp_lst)
-        nd = matflow_instance.next_expected_order_date
+        nd = matflow_instance.next_expected_shipment_date
         if nd:
             next_event_date = datetime(year=nd.year, month=nd.month, day=nd.day)
         else:

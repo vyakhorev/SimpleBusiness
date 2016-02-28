@@ -51,7 +51,7 @@
      <item row="0" column="1">
       <widget class="QLineEdit" name="lineEdit_cons_volume_mean">
        <property name="toolTip">
-        <string>Ожидаемый объём потребления.</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ожидаемый объём потребления - сколько единиц товара клиент берет за 1 заказ.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
@@ -92,7 +92,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>С вероятностью 68% в этом интервале, указывайте реальный интервал</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;С вероятностью 68% реальное потребление окажется в этом интервале. Пожалуйста, указывается реалистичное значение.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
@@ -118,7 +118,11 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="lineEdit_cons_period_mean"/>
+      <widget class="QLineEdit" name="lineEdit_cons_period_mean">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ожидаемая периодичность потребления - раз в сколько календарных дней клиент размещает заказ.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
      </item>
      <item row="1" column="4">
       <widget class="QLineEdit" name="lineEdit_cons_period_std">
@@ -127,6 +131,9 @@
          <width>40</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;С вероятностью 68% клиент разместит заказ в этом интервале относительно следующей даты заказа. Пожалуйста, обратите внимание на то, чтобы этот интервал не был слишком оптимистичным.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
@@ -138,12 +145,54 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QDateEdit" name="dateEdit_NextExpectedOrder"/>
+      <widget class="QDateEdit" name="dateEdit_NextExpectedOrder">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Прогноз даты следующего заказа. Оценивается автоматически при каждом новом размещенном заказе в 1С, но для крупных заказов и в случае задержки заказов, лучше указывать эту дату вручную, пообщавшись с клиентом.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="label_10">
        <property name="text">
-        <string>Следующий заказ:</string>
+        <string>Следующая отгрузка:</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_8">
+     <property name="text">
+      <string>Доля &quot;прямых&quot; (экономных) поставок</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>Склад (дороже)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="horizontalSlider_EconomyShare">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Если слайдер полностью влево, то клиенту нужны только срочные поставки со склада. Если слайдер полностью вправо, то клиенту нужны только экономичные поставки напрямую.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_11">
+       <property name="text">
+        <string>Напрямую (экономия)</string>
        </property>
       </widget>
      </item>
@@ -189,16 +238,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="checkBox_direct_order">
-     <property name="toolTip">
-      <string>Если на складе нет свободного товара, будет просимулирован заказ поставщику.</string>
-     </property>
-     <property name="text">
-      <string>Под заказ, если нет в наличии</string>
-     </property>
-    </widget>
    </item>
    <item>
     <widget class="Line" name="line">

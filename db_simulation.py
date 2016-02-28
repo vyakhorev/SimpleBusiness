@@ -76,6 +76,7 @@ class list_log_printer(object):
         msg[2] = msg_text
         self.log_list += [msg]
 
+# TODO delete this class in next version
 class c_sales_budget(BASE):
     #После симуляции, сюда отдельно пишутся ожидания о потреблении клиентами
     #(все записи перетираются при этом)
@@ -351,7 +352,7 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
     #У material_type есть аттрибут are_materials_equal. Если истина, то заполняем процесс для
     #группы материалов. Если ложь, то для конкретного материала.
     are_materials_equal = Column(Boolean)
-    put_supplier_order_if_not_available = Column(Boolean)
+    #put_supplier_order_if_not_available = Column(Boolean)
     material_type_rec_id = Column(Integer, ForeignKey('material_types.rec_id'))
     material_type = relationship("c_material_type")
     is_active = Column(Boolean)
@@ -360,7 +361,9 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
     stats_std_timedelta = Column(SqliteNumeric) #С.к.о. интервала между заказами
     stats_mean_volume = Column(SqliteNumeric) #Ожидаемое значение объёма заказа
     stats_std_volume = Column(SqliteNumeric)  #Отклонение объёма заказа
-    next_expected_order_date = Column(DateTime)  #Следующий заказ
+    last_shipment_date = Column(DateTime)  #Последняя дата отгрузки (должен обновляться при синхронизации)
+    next_expected_shipment_date = Column(DateTime)  #Следующая отгрузка (должен обновляться при синхронизации)
+    economy_orders_share = Column(SqliteNumeric)
 
     def __repr__(self):
         return self.log_repr()
@@ -368,26 +371,46 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
     def log_repr(self):
         return "flow " + unicode(self.material_type) + " -> " + unicode(self.client_model)
 
-    def get_expected_budget_iter(self, horizon_days = 360):
+    def get_expected_budget_iter(self, horizon_days=180):
+        if self.stats_mean_timedelta < 1:
+            print("[c_material_flow][get_expected_budget_iter] too small timedelta!")
+            self.stats_mean_timedelta = 1
+
         if self.material_dist is not None:
-            if not self.next_expected_order_date is None:
-                sh_date = self.next_expected_order_date
+            tod = datetime.datetime.now()
+            # today_with_time = datetime.datetime(year=tod.year, month=tod.month, day=tod.day)
+            if self.next_expected_shipment_date is None:
+                self.next_expected_shipment_date = datetime.datetime.today()
+
+            too_old = False
+            if (self.next_expected_shipment_date - tod).days < -1*horizon_days:
+                # хрень с вводом на тестовых данных
+                too_old = True
+
+            if (self.next_expected_shipment_date is None) or too_old:
+                sh_date = tod
             else:
-                sh_date = datetime.datetime.now()
-            tod = datetime.date.today()
-            today_with_time = datetime.datetime(year=tod.year, month=tod.month, day=tod.day)
-            while (sh_date - today_with_time).days <= horizon_days:  #should be able to be negative
+                sh_date = self.next_expected_shipment_date
+
+            timestep = datetime.timedelta(days=self.stats_mean_timedelta)
+            sh = self.economy_orders_share
+            if self.economy_orders_share is None:
+                sh = 0.0
+            while (sh_date - tod).days <= horizon_days:
                 for md_i in self.material_dist:
                     material = md_i.material
                     qtty = float(self.stats_mean_volume * md_i.choice_prob)
-                    yield sh_date, material, qtty
-                sh_date = sh_date + datetime.timedelta(days = self.stats_mean_timedelta)
+                    if qtty*sh > 0.01:
+                        yield sh_date, material, qtty*sh, True #urgent shipment
+                    if qtty*(1-sh) > 0.01:
+                        yield sh_date, material, qtty*(1-sh), False #non-urgent shipment
+                sh_date = sh_date + timestep
 
     def get_next_order_date_expectation(self):
         #gui А?
         if self.stats_mean_volume > 0 and self.is_active:
-            if not self.next_expected_order_date is None:
-                return self.next_expected_order_date
+            if not self.next_expected_shipment_date is None:
+                return self.next_expected_shipment_date
             else:
                 st_date = datetime.date.today()
             if not(self.stats_mean_timedelta is None):
@@ -411,11 +434,11 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
         self.stats_std_timedelta = dict_with_stats["timedelta_std"]
         #self.stats_last_order_date = dict_with_stats["last_shipment_date"] #last shipment or confirmed order
         if (dict_with_stats["last_shipment_date"] is None) or (dict_with_stats["timedelta_exp"] is None):
-            self.next_expected_order_date = datetime.datetime.today()
+            self.next_expected_shipment_date = datetime.datetime.today()
         else:
             timed = datetime.timedelta(days=dict_with_stats["timedelta_exp"])
             nextdate = dict_with_stats["last_shipment_date"] + timed
-            self.next_expected_order_date = nextdate
+            self.next_expected_shipment_date = nextdate
         self.rewrite_material_probs_from_dict(dict_with_stats["mat_dist"])
 
     def rewrite_material_probs_from_dict(self, a_random_dict):
@@ -436,7 +459,7 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
 
     def prepare_for_simulation(self):
         if self.disconnected_from_session:
-            self.next_expected_order_date = self.devs.convert_datetime_to_simtime(self.next_expected_order_date)
+            self.next_expected_shipment_date = self.devs.convert_datetime_to_simtime(self.next_expected_shipment_date)
             self.last_order_num = 0  # при симуляции именуем
             #Собираем случайный словарик - будем по нему материалы разыгрывать
             self.material_dist_dict = c_random_dict()
@@ -475,13 +498,13 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
         return materials_dict
 
     def order_sh_time(self):
-        if self.next_expected_order_date is None:
-            self.next_expected_order_date = 0
+        if self.next_expected_shipment_date is None:
+            self.next_expected_shipment_date = 0
         if not((self.stats_mean_timedelta is None) or (self.stats_std_timedelta is None)):
             dT = self.devs.random_generator.normalvariate(self.stats_mean_timedelta, self.stats_std_timedelta)
             dT = max([dT,1])
-            new_order_date = self.next_expected_order_date
-            self.next_expected_order_date = new_order_date + dT
+            new_order_date = self.next_expected_shipment_date
+            self.next_expected_shipment_date = new_order_date + dT
             return new_order_date
 
     def order_qtty(self):
@@ -572,7 +595,7 @@ class c_sales_oppotunity(BASE, abst_key, connected_to_DEVS):
     def create_matflow_sim(self):
         # Создаём поток потребления.
         new_matflow = c_material_flow()
-        new_matflow.next_expected_order_date = self.devs.nowsimtime()
+        new_matflow.next_expected_shipment_date = self.devs.nowsimtime()
         new_matflow.client_model = self.client_model
         new_matflow.material_type = self.material_type
         new_matflow.is_active = True
