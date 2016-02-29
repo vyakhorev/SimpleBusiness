@@ -23,9 +23,10 @@ class abst_key(object):
         return hash(self.__my_key())
 
 class SqliteNumeric(TypeDecorator):
-    impl = Integer
+    # We do not need for MySQL...
+    impl = BigInteger
     def load_dialect_impl(self, dialect):
-        return dialect.type_descriptor(Integer)
+        return dialect.type_descriptor(self.impl)
 
     def process_bind_param(self, value, dialect):
         if value is not None:

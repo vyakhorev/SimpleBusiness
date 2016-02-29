@@ -257,7 +257,7 @@ from cnf import db_type, db_conn_str, db_do_echo, db_is_prod
 if db_type == "SQLite":
     engine = create_engine(db_conn_str, echo=db_do_echo, encoding=ultimate_encoding)
 elif db_type == "MySQL":
-    engine = create_engine(db_conn_str, echo=db_do_echo, encoding=ultimate_encoding)
+    engine = create_engine(db_conn_str, echo=db_do_echo, encoding=ultimate_encoding, pool_recycle=3600)
 else:
     raise BaseException("Unknown database type in main.ini")
 

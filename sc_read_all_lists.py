@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-# call this from 1C
+######
+# 1C #
+######
 
 
 # А теперь работаем
 import cnf
 import sc
 from scripts_interface import c_admin_tasks_manager
-from xml_synch import c_read_lists_from_1C_task
+from xml_synch import c_read_lists_from_1C_task, c_build_excessive_links
 
 def main():
     load_file_dir = cnf.get_cnf_text("SynchData", "DirWith1Cdata")
@@ -30,6 +32,7 @@ def main():
     # Формируем список задач
     for fn in file_names:
         mng.add_task(c_read_lists_from_1C_task(load_file_dir + fn))
+    mng.add_task(c_build_excessive_links())
 
     # Запускаем (запустятся в порядке добавления)
     mng.run_tasks()

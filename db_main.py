@@ -13,10 +13,16 @@ import statistics
 
 BASE.metadata.create_all(engine)  #TODO: почему это не после импорта?
 
+# # система контроля версий - пока не очень понятно, как это можно применить так..
+# from alembic.config import Config
+# from alembic import command
+# alembic_cfg = Config("alembic.ini")
+# command.stamp(alembic_cfg, "head")
+
 from db_handlers import the_session_handler
 
 
-""" RECORD SIMULATION RESULTS and set settings """
+# RECORD SIMULATION RESULTS and set settings
 
 def iter_epoch_data():
     for sim_res in the_session_handler.get_all_objects_list_iter(cb_epoh_data):
@@ -326,43 +332,6 @@ def get_contacts_by_email(email_address):
 
 ###########################################################
 
-def fix_sales_budget(client = None, mat_flow = None):
-    # Пересчет данных из mat_flow/всех mat_flow по клиенту / по всем mat_flow в ожидаемые значения.
-    mat_flow_list = []  #вот по этим
-    if client is None and mat_flow is None:  #по всем обновим
-        mat_flow_list = the_session_handler.get_all_objects_list_iter(c_material_flow)  #итератор
-    if mat_flow is not None and client is None:  #только по одному материальному потоку
-        mat_flow_list += [mat_flow]
-    if client is not None and mat_flow is None:  #Достаем все материальные потоки
-        mat_flow_list = get_mat_flows_list(client) #итератор
-    # Очищаем бюджет TODO: проверить, что удаляется сначала, потом добавляется
-    the_session_handler.delete_all_objects(c_sales_budget)
-    #the_session_handler.commit_session()   #Проверить с и без
-    the_firm = the_session_handler.get_singleton_object(c_trading_firm)
-    wh_vault = the_firm.default_wh_vault
-    prices_dict = dict()  #Заполняем промежуточный словарик, чтобы проще было цены искать для mf_i
-    for pr_i in the_session_handler.get_all_objects_list_iter(c_sell_price):
-        if pr_i.is_for_group:
-            k_i = (pr_i.client_model, pr_i.material_type)
-        else:
-            k_i = (pr_i.client_model, pr_i.material)
-        prices_dict[k_i] = pr_i
-    for mf_i in mat_flow_list: #для каждого мат. потока пишем ожидания прям в бюджет. Без симуляций пока..
-        for sh_date, material, qtty in mf_i.get_expected_budget_iter():
-            if prices_dict.has_key((mf_i.client_model,material.material_type)):
-                pr_ent = prices_dict[(mf_i.client_model,material.material_type)]
-                bgt_i = c_sales_budget(material=material, client=mf_i.client_model, quantity=qtty, price=pr_ent.price_value,
-                                       payment_terms=pr_ent.payterm, expected_date_of_shipment=sh_date, wh_vault=wh_vault)
-                the_session_handler.add_object_to_session(bgt_i)
-            elif prices_dict.has_key((mf_i.client_model,material)):
-                pr_ent = prices_dict[(mf_i.client_model,material)]
-                bgt_i = c_sales_budget(material=material, client=mf_i.client_model, quantity=qtty, price=pr_ent.price_value,
-                                       payment_terms=pr_ent.payterm, expected_date_of_shipment=sh_date, wh_vault=wh_vault)
-                the_session_handler.add_object_to_session(bgt_i)
-            else:
-                print("[fix_sales_budget]: no price available of %s for %s " % (str(material), str(mf_i.client_model)))
-    the_session_handler.commit_session()
-
 def estimate_shipment_stats(client, material_group = None):
     # 1. Вызываем в GUI (или где надо).
     # 2. Передаём словари в material_flow, если нужно в базу записать.
@@ -513,7 +482,8 @@ if __name__ == "__main__":
     """ read them and run simulation"""
     print "*" * 20
     print "PREPARE SIMULATION..."
-    start_date = the_settings_manager.get_param_value("initial_data_date")
+    #start_date = the_settings_manager.get_param_value("initial_data_date")
+    start_date = datetime.datetime.now()
     the_devs = c_discrete_event_system(simpy.Environment(), start_date)
     the_devs.set_seed()
     init_system_from_database(the_devs)

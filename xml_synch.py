@@ -15,6 +15,8 @@ Created on Fri May 30 16:06:54 2014
 
 import xml.etree.ElementTree as ElementTree
 import unicodecsv
+import csv
+import codecs
 from db_main import *
 from db_handlers import SynchFindingListError, SynchUnknownError
 from utils import c_task, c_msg
@@ -69,8 +71,8 @@ def nappend(a_list, a_value):
     if a_value is not None:
         a_list.append(a_value)
 
-def get_and_report_obj(obj_class, account_system_code, msgs, obj_logname = ""):
-    if obj_logname == "":
+def get_and_report_obj(obj_class, account_system_code, msgs, obj_logname = u""):
+    if obj_logname == u"":
         obj_logname = obj_class.__name__
     if not(the_session_handler.check_existance_of_account_object(obj_class, account_system_code)):
         msgs += [u"Создаю новый объект [%s] с кодом %s"%(obj_logname,account_system_code)]
@@ -86,21 +88,80 @@ def get_and_report_obj(obj_class, account_system_code, msgs, obj_logname = ""):
 
 class c_print_budget_to_csv(c_task):
     # Выгрузка бюджета продаж в csv (пока не результаты симуляций)
-    def __init__(self):
+    def __init__(self, csv_file_path):
         super(c_print_budget_to_csv, self).__init__(name=u"Выгрузка бюджета продаж")
+        self.csv_file_path = csv_file_path
 
     def run_task(self):
         # Вызывается в admin_scripts.c_admin_tasks_manager
         yield c_msg(u"%s - старт"%(self.name))
-        yield c_msg(u"фиксирую таблицу бюджета продаж..."%(self.name))
-        fix_sales_budget() # Процедура из db_main.
-        yield c_msg(u"выгружаю файл..."%(self.name))
-        budget_file = open(FileForSalesBudgetExport, mode='wb')
-        csv_budget = unicodecsv.writer(budget_file, encoding="cp1251")
-        for k, bgt in enumerate(the_session_handler.get_all_objects_list_iter(c_sales_budget)):
-            if k == 0:
-                csv_budget.writerow(bgt.csv_header())
-            csv_budget.writerow(bgt.csv_line())
+        yield c_msg(u"выгружаю файл %s..."%(self.csv_file_path))
+        budget_file = open(self.csv_file_path, mode='wb')
+        csv_budget_file = unicodecsv.writer(budget_file, encoding='cp1251')
+
+        the_firm = the_session_handler.get_singleton_object(c_trading_firm)
+        wh_vault = the_firm.default_wh_vault
+        prices_dict = dict()  #Заполняем промежуточный словарик цен (внутри - листы)
+        for pr_i in the_session_handler.get_all_objects_list_iter(c_sell_price):
+            if pr_i.is_for_group:
+                k_i = (pr_i.client_model, pr_i.material_type)
+            else:
+                k_i = (pr_i.client_model, pr_i.material)
+            if not(prices_dict.has_key(k_i)):
+                prices_dict[k_i] = []
+            prices_dict[k_i] += [pr_i]
+
+        csv_budget_file.writerow(["mf_key",
+                                  "date",
+                                  "material_id",
+                                  "client_id",
+                                  "warehouse_id",
+                                  "payment_cond_id",
+                                  "quantity",
+                                  "price",
+                                  "is_subs",
+                                  "is_urgent",
+                                  "desired_lead_time"]) # TODO: implement in matflow is_urgent
+
+        #для каждого мат. потока пишем ожидания прям в бюджет. Без симуляций пока..
+        k = 0
+        for mf_i in the_session_handler.get_all_objects_list_iter(c_material_flow):
+            for sh_date, material, qtty, is_urgent in mf_i.get_expected_budget_iter(horizon_days=360):
+                has_price = True
+                if prices_dict.has_key((mf_i.client_model, material)):
+                    pr_ent_list = prices_dict[(mf_i.client_model, material)]
+                elif prices_dict.has_key((mf_i.client_model, material.material_type)):
+                    pr_ent_list = prices_dict[(mf_i.client_model, material.material_type)]
+                else:
+                    yield c_msg(u"нету цены на %s для %s " % (unicode(material), unicode(mf_i.client_model)))
+                    has_price = False
+                if has_price: # без цены не печатаем
+                    # Подбираем подходящую цену из списка
+                    has_price = False
+                    for pr_i in pr_ent_list:
+                        if pr_i.is_per_order_only and not is_urgent:
+                            if pr_i.min_order_quantity <= qtty:
+                                pr_ent = pr_i
+                                has_price = True
+                        elif not pr_i.is_per_order_only and is_urgent:
+                            if pr_i.min_order_quantity <= qtty:
+                                pr_ent = pr_i
+                                has_price = True
+                if has_price:
+                    csv_budget_file.writerow([mf_i.string_key(),
+                                              datetime.date(year=sh_date.year, month=sh_date.month, day=sh_date.day).strftime("%Y.%m.%d"),
+                                              material.account_system_code,
+                                              mf_i.client_model.account_system_code,
+                                              wh_vault.account_system_code,
+                                              pr_ent.payterm.account_system_code,
+                                              qtty,
+                                              pr_ent.price_value,
+                                              mf_i.are_materials_equal,
+                                              is_urgent,
+                                              pr_ent.order_fulfilment_timedelta])
+                    k += 1
+                else:
+                    yield c_msg(u"нету подходящей цены на %s для %s " % (unicode(material), unicode(mf_i.client_model)))
         budget_file.close()
         yield c_msg(u"Выгрузил %d строк"%(k))
         yield c_msg(u"%s - успешно завершено"%(self.name))
@@ -245,7 +306,7 @@ def xml_LoadCP(xml_node):
 def xml_LoadVault(xml_node):
     msgs = []
     account_system_code = unicode(xml_node.attrib['account_system_code'])
-    vault_i = get_and_report_obj(c_warehouse_vault,account_system_code,msgs,u"место хранения")
+    vault_i = get_and_report_obj(c_warehouse_vault, account_system_code, msgs, u"место хранения")
     nappend(msgs, attr_ch(vault_i, "vault_name", unicode(xml_node.attrib['vault_name'])))
     nappend(msgs, attr_ch(vault_i, "is_available_exw", unicode(xml_node.attrib['is_available_exw'])))
     return [1, msgs]
@@ -576,6 +637,7 @@ class c_update_ccy_stats(c_task):
         super(c_update_ccy_stats, self).__init__(name=u"Оценка статистики курса валют")
 
     def run_task(self):
+        # TODO: а вот это надо сделать нормально
         yield c_msg(u"%s - старт"%(self.name))
         a_ccy1 = the_session_handler.get_account_system_object(c_currency,unicode("840"))
         a_ccy2 = the_session_handler.get_account_system_object(c_currency,unicode("978"))
@@ -590,12 +652,11 @@ class c_update_ccy_stats(c_task):
             yield c_msg(u"%s buy: %f, sell:%f, stdev:%f"%(unicode(s["ccy"]),s["buy"],s["sell"],s["stdev"]))
 
 class c_build_excessive_links(c_task):
-    # Это трудновыводимый костыль
+    # Это трудновыводимый костыль.
     def __init__(self):
         super(c_build_excessive_links, self).__init__(name=u"Конструирование the_firm")
 
     def run_task(self):
-        # TODO: kill
         #Пока в базе одна фирма, всё просто
         yield c_msg(u"%s - старт"%(self.name))
         the_firm = the_session_handler.get_singleton_object(c_trading_firm)
@@ -603,7 +664,9 @@ class c_build_excessive_links(c_task):
         the_firm.define_bank_account(the_session_handler.get_singleton_object(c_bank_account))
         the_firm.define_projects_list(the_session_handler.get_all_objects_list(c_project))
         the_firm.define_sell_prices_list(the_session_handler.get_all_objects_list(c_sell_price))
-        roubles = the_session_handler.get_account_system_object(c_currency, unicode("643"))
+        sklad = the_session_handler.get_account_system_object(c_warehouse_vault, u"БП0000008")
+        the_firm.define_default_wh_vault(sklad)
+        roubles = the_session_handler.get_account_system_object(c_currency, u"643")
         the_firm.define_main_currency(roubles)
         the_session_handler.commit_session()
         yield c_msg(u"%s - дело сделано"%(self.name))
