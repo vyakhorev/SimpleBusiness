@@ -1241,7 +1241,6 @@ class c_project_order(c_project):
         return v
 
 class c_order_position(BASE, abst_key, connected_to_DEVS):
-    #TODO: упаковки придется добавить для какой-никакой реалистичности. Потом.
     __tablename__ = 'order_position'
     rec_id = Column(Integer, primary_key=True)
     material_rec_id = Column(Integer, ForeignKey('materials.rec_id'))
@@ -1827,7 +1826,6 @@ class c_step_customs_clearance(c_step):
 """ Агенты: клиенты, поставщики, логисты """
 
 class c_agent(BASE, abst_key, connected_to_DEVS):
-    # TODO: обогатить логику агента договорами и учётной системой (отражение наших операций)
     # Любой контрагент
     __tablename__ = 'agents'
     discriminator = Column(Unicode(50))
@@ -1835,8 +1833,8 @@ class c_agent(BASE, abst_key, connected_to_DEVS):
     rec_id = Column(Integer, primary_key=True)
     name = Column(Unicode(255))
     full_name = Column(Unicode(255))
-    inn = Column(Unicode(255))   #Возможно, несколько через ";"
-    account_system_code = Column(Unicode(255))  #Возможно, несколько через ";"
+    inn = Column(Unicode(255))
+    account_system_code = Column(Unicode(255))
 
     def __repr__(self):
         return unicode(self.name)

@@ -9,7 +9,6 @@
 
 import collections
 
-
 ############
 # Basic
 ############
@@ -117,12 +116,46 @@ class cMedPrice(cAbstRecordMediator):
     # HTML нет
     def _reset_fields(self):
         super(cMedPrice, self)._reset_fields()
-        self.add_field(self.record.price_value, 'price_value', u'Цена', 'float')
+        price_value = unicode(self.record.price_value) + " " + unicode(self.record.payterm.ccy_quote)
+
         if self.record.is_for_group:
             item_name = unicode(self.record.material_type)
+            price_value += " / " + self.record.material_type.measure_unit
         else:
             item_name = unicode(self.record.material)
+            price_value += " / " + self.record.material.measure_unit
+
         self.add_field(item_name, 'item_name', u'Товар', 'string')
+        self.add_field(price_value, 'price_value', u'Цена', 'string')
+
+    def _build_HTML(self):
+        # Условия платежа
+        payterm = self.record.payterm
+        if payterm.ccy_quote <> payterm.ccy_pay:
+            ccy = u"%s (у.е.)"%(payterm.ccy_quote)
+            if payterm.fixation_at_shipment:
+                ccy += u" фиксация при отгрузке"
+            else:
+                ccy += u" курс по оплате"
+        else:
+            ccy = u"%s"%(payterm.ccy_quote)
+        prepaym = ""
+        for t, p in payterm.payterm_stages.get_prepayments():
+            if t < 0:
+                prepaym += u"аванс %d%%; "%(int(p))
+            elif t == 0:
+                prepaym += u"предоплата %d%%; "%(int(p))
+        postpaym = ""
+        for t, p in payterm.payterm_stages.get_postpayments():
+            prepaym += u"оплата %d%% через %d дней; "%(int(p), int(t))
+        payterm_desc = u"Расчеты в %s; %s %s"%(ccy, prepaym, postpaym)
+
+        # Неформальные условия
+        nonformal = ""
+        if not(self.record.nonformal_conditions is None):
+            nonformal = self.record.nonformal_conditions
+
+        self.html_text = payterm_desc + u"<br>" + nonformal
 
 class cMedMatFlow(cAbstRecordMediator):
     def _reset_fields(self):
@@ -130,14 +163,28 @@ class cMedMatFlow(cAbstRecordMediator):
         Заполняет поля по объекту (перетирает, если уже что-то было)
         '''
         super(cMedMatFlow, self)._reset_fields()
+        if self.record.stats_mean_volume == 0:
+            return
         self.add_field(self.record.material_type, 'material_type', u'Товар', 'string')
         self.add_field(self.record.stats_mean_volume, 'stats_mean_volume', u'Объем потребления', 'float')
         self.add_field(self.record.stats_mean_timedelta, 'stats_mean_timedelta', u'Частота потребления', 'float')
 
     def _build_HTML(self):
-        s = u'Распределение <b>вероятностей</b>:<br>'
-        for md_i in self.record.material_dist:
-            s += md_i.material.material_name + u' : ' + unicode(md_i.choice_prob) + '<br>'
+        # s = u'Распределение <b>вероятностей</b>:<br>'
+        # for md_i in self.record.material_dist:
+        #     s += md_i.material.material_name + u' : ' + unicode(md_i.choice_prob) + '<br>'
+        s = u''
+        if self.record.stats_mean_volume == 0:
+            s += unicode(self.record.material_type) + u' - поставки прекращены'
+            self.html_text = s
+            return
+
+        if not(self.record.next_expected_shipment_date is None):
+            next_date = self.record.next_expected_shipment_date
+            s += u'Следующий заказ ожидается ' + next_date.strftime('%x')
+        else:
+            s += u'Дата ожидаемого заказа не задана'
+        # TODO: расшифровать economy_orders_share на две суммы (со склада и напрямую)
         self.html_text = s
 
 class cMedSalesLead(cAbstRecordMediator):

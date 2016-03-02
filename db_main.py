@@ -311,7 +311,6 @@ def delete_hashtag_usage(hashtag_name):
     the_session_handler.active_session.delete(hashtag)
     the_session_handler.commit_session()
 
-
 def get_contacts_list(agent = None):
     if agent is None:
         for cnt_i in the_session_handler.get_all_objects_list_iter(c_crm_contact):
@@ -329,6 +328,55 @@ def get_contacts_by_email(email_address):
         if not(c_i in contacts):
             contacts += [c_i]
     return contacts
+
+def get_default_prices_from_orders(agent_model, material, is_group):
+    # По клиенту / поставщику и материалу достаем условия из последнего заказа.
+    # Тут временная реализация, поскольку потом придётся переделать проекты
+    # (в родительском проекте не хватает ссылки на агента).
+
+    # Задача - упростить форму ввода цены.
+
+    ans_dict = {}
+    ans_dict['price'] = 0
+    ans_dict['payment_term'] = None
+
+    if agent_model.discriminator == 'client':
+        sess = the_session_handler.get_active_session()
+        q = sess.query(c_project_client_order)
+        q.filter(c_project_client_order.client_model == agent_model)
+        q.order_by(c_project_client_order.DocDate.desc())
+    elif agent_model.discriminator == 'supplier':
+        sess = the_session_handler.get_active_session()
+        q = sess.query(c_project_supplier_order)
+        q.filter(c_project_supplier_order.supplier_model == agent_model)
+        q.order_by(c_project_supplier_order.DocDate.desc())
+    for order_i in q.all():
+        for pos_i in order_i.goods:
+            if not(is_group):
+                if pos_i.material == material:
+                    ans_dict['price'] = pos_i.price
+                    ans_dict['payment_term'] = order_i.payment_terms
+                    return ans_dict
+            elif pos_i.material.material_type == material: # is_group = True
+                ans_dict['price'] = pos_i.price
+                ans_dict['payment_term'] = order_i.payment_terms
+                return ans_dict
+    return None
+
+def get_default_price_terms(agent_model):
+    # Берем условия платежа из других цен агента
+    terms = []
+    if agent_model.discriminator == 'client':
+        for price_i in agent_model.sell_prices:
+            terms += [price_i.payterm]
+    elif agent_model.discriminator == 'supplier':
+        for price_i in agent_model.buy_prices:
+            terms += [price_i.payterm]
+    if len(terms) > 0:
+        return terms[0] # Можно выбрать и получше критерий, чем первый..
+    else:
+        return None
+
 
 ###########################################################
 

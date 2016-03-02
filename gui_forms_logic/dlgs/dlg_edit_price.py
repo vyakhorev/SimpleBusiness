@@ -21,9 +21,11 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
         self.payterm_model = cDataModel_PaymentTermsList()
         self.client_model = cDataModel_CounterpartySpecialList(agent_discriminator='client', do_load = 0)
         self.comboBox_SupPrForWichClient.setModel(self.client_model)
-        #TODO: фильтровать условия платежа
         self.comboBox_payment_terms.setModel(self.payterm_model)
         self.comboBox_material.setModel(self.general_materials_model)
+
+        self.connect(self.comboBox_material, QtCore.SIGNAL("currentIndexChanged(int)"), self.new_material_selected)
+
         self.var_is_correct = False
         self.my_mode = 0   #1 - edit, 0 - new
         self.dateEdit_PriceValidFrom.setMinimumDate(qtdate_pack(datetime.date.today()))
@@ -114,7 +116,7 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
                 self.checkBox_SpecialCond.setCheckState(QtCore.Qt.Unchecked)
                 self.update_sp_cond_chbox()
                 self.plainTextEdit_special_conditions.setPlainText(u"")
-            self.label_currency_name.setText(str(pr.payterm.ccy_quote))
+            self.label_currency_name.setText(unicode(pr.payterm.ccy_quote))
             # Новые фишки
             if pr.min_order_quantity is not None:
                 self.lineEdit_ClPrMinOQ.setText(str(pr.min_order_quantity))
@@ -200,6 +202,33 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
             self.checkBox_SpecialCond.setCheckState(QtCore.Qt.Unchecked)
             self.update_sp_cond_chbox()
 
+    def new_material_selected(self, new_index):
+        # Выбрали другой товар. Надо помочь пользователю с ценой и условиями платежа по умолчанию
+        if self.my_mode == 1:
+            return  # В этом режиме виджет заблокирован
+        if new_index <= 0:
+            return
+        new_item = self.comboBox_material.itemData(new_index, 35).toPyObject()
+
+        # Посмотрим на последний заказ клиента
+        is_group = self.get_is_for_group()
+        terms_last_order = db_main.get_default_prices_from_orders(self.agent_model, new_item, is_group)
+        if not(terms_last_order is None):
+            last_payterm = terms_last_order['payment_term']
+            last_price_value = terms_last_order['price']
+
+            indx = self.comboBox_payment_terms.findData(last_payterm.string_key(), 40)
+            self.comboBox_payment_terms.setCurrentIndex(indx)
+            self.label_currency_name.setText(unicode(last_payterm.ccy_quote))
+
+            self.lineEdit_price.setText(simple_locale.number2string(last_price_value))
+        else:
+            default_payterm = db_main.get_default_price_terms(self.agent_model)
+            self.lineEdit_price.setText(simple_locale.number2string(0.0))
+            if not(default_payterm is None):
+                indx = self.comboBox_payment_terms.findData(default_payterm.string_key(), 40)
+                self.comboBox_payment_terms.setCurrentIndex(indx)
+                self.label_currency_name.setText(unicode(default_payterm.ccy_quote))
 
     def update_valid_between(self):
         if self.checkBox_IsValidBetweenDates.checkState() == QtCore.Qt.Checked:
@@ -416,6 +445,12 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
             selected_item = self.comboBox_SupPrForWichClient.itemData(row, 35).toPyObject()
             return selected_item
 
+    def get_is_for_group(self):
+        if self.checkBox_is_for_group.checkState() == QtCore.Qt.Checked:
+            return True
+        elif self.checkBox_is_for_group.checkState() == QtCore.Qt.Unchecked:
+            return False
+
     def inp_erh(self,inp,a_message):
         if inp is None:
             QtGui.QMessageBox.information(self,unicode(u"Ошибка ввода"),unicode(u"Неверно указана графа: ") + a_message)
@@ -547,3 +582,4 @@ class gui_Dialog_EditPrice(QtGui.QDialog, Ui_Dialog_EditClientPrice):
             return [user_decision, self.my_price_entity]
         elif user_decision == QtGui.QDialog.Rejected:
             return [user_decision, None]
+
