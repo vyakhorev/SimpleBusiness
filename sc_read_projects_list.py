@@ -8,7 +8,7 @@
 import cnf
 import sc
 from scripts_interface import c_admin_tasks_manager
-from xml_synch import c_read_dynamic_data_from_1C_task
+from xml_synch import c_read_dynamic_data_from_1C_task, c_update_matflows_with_orders
 
 def main():
     load_file_dir = cnf.get_cnf_text("SynchData", "DirWith1Cdata")
@@ -21,7 +21,7 @@ def main():
 
     # Формируем список задач
     mng.add_task(c_read_dynamic_data_from_1C_task(load_file_dir + load_file_name))
-
+    mng.add_task(c_update_matflows_with_orders())
     # Запускаем (запустятся в порядке добавления)
     mng.run_tasks()
 

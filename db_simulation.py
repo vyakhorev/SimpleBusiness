@@ -401,9 +401,9 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
                     material = md_i.material
                     qtty = float(self.stats_mean_volume * md_i.choice_prob)
                     if qtty*sh > 0.01:
-                        yield sh_date, material, qtty*sh, True #urgent shipment
+                        yield sh_date, material, qtty*sh, False #economy order is not urgent - you may not use warehouse
                     if qtty*(1-sh) > 0.01:
-                        yield sh_date, material, qtty*(1-sh), False #non-urgent shipment
+                        yield sh_date, material, qtty*(1-sh), True #non-economy order is urgent - we may ship from WH
                 sh_date = sh_date + timestep
 
     def get_next_order_date_expectation(self):
@@ -1874,7 +1874,7 @@ class c_client_model(c_agent):
             gr = dict_mf_i["material_type"]
             if not(existing_mfs.has_key(gr)):
                 existing_mfs[gr] = c_material_flow(client_model=self, are_materials_equal=1,
-                                                   put_supplier_order_if_not_available=0, material_type=gr)
+                                                   economy_orders_share=1.0, material_type=gr)
             existing_mfs[gr].update_stats(dict_mf_i)
             existing_mfs.pop(gr)
         #Все, кто остались в словаре existing_mfs подлежат обнулению - их нет в статистике
@@ -2241,7 +2241,7 @@ class c_sell_price(c_material_price):
     is_factoring = Column(Boolean)
     is_delivery = Column(Boolean)
     delivery_place = Column(Unicode(255))
-    is_per_order_only = Column(Boolean) # Только под заказ - не завозим сразу на склад
+    is_per_order_only = Column(Boolean) # Только под заказ - не завозим сразу на склад # Очень важное условие
     order_fulfilment_timedelta = Column(Integer)
 
 class c_buy_price(c_material_price):

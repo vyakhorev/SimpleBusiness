@@ -670,3 +670,38 @@ class c_build_excessive_links(c_task):
         the_session_handler.commit_session()
         yield c_msg(u"%s - дело сделано"%(self.name))
 
+class c_update_matflows_with_orders(c_task):
+    # updates the "next expected order" if last order date changed
+    def __init__(self):
+        super(c_update_matflows_with_orders, self).__init__(name=u"Обновление прогноза дат отгрузки")
+
+    def run_task(self):
+        yield c_msg(u"%s - старт"%(self.name))
+        # Для каждого material flow находим подходящий заказ и сверяем дату последнего заказа
+        for mf_i in the_session_handler.get_all_objects_list_iter(c_material_flow):
+            # TODO: наверное, переоценку статистики нужно делать всегда и хранить больше полей
+            # (и когда статистика отличается от плана, уведомлять пользователя)
+            # поэтому тут такая затратная функция.
+            # TODO: эта тяжелая функция быстрей работает, если вызывать без аргументов,
+            # но ответ без ключа. Так что нужно думать..
+            statistics = estimate_shipment_stats(mf_i.client_model, mf_i.material_type)
+            if len(statistics) > 0:
+                stats = statistics[0]
+                last_event = stats['last_shipment_date']
+                if not(last_event is None): #откуда это..
+                    if mf_i.last_shipment_date is None:
+                        self.do_recalc(mf_i, stats)
+                        yield c_msg(u"%s для %s - новое событие, переношу план дальше"%(unicode(mf_i.material_type), unicode(mf_i.client_model)))
+                    elif last_event > mf_i.last_shipment_date:
+                        self.do_recalc(mf_i, stats)
+                        yield c_msg(u"%s для %s - новое событие, переношу план дальше"%(unicode(mf_i.material_type), unicode(mf_i.client_model)))
+
+        the_session_handler.commit_and_close_session()
+        yield c_msg(u"%s - дело сделано"%(self.name))
+
+    def do_recalc(self, mf_i, stats):
+        last_event = stats['last_shipment_date']
+        mf_i.last_shipment_date = last_event
+        dt = datetime.timedelta(days = max(mf_i.stats_mean_timedelta, 1.0))
+        mf_i.next_expected_shipment_date = last_event + dt
+

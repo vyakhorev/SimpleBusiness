@@ -30,16 +30,16 @@ def clean_old_temp_files():
                 print('failed to cleanup ' + temp_dir+f_i)
 
 def report_on_prices(agent=None):
-    # TODO more fields..
     from pyexcel_ods import save_data
     from collections import OrderedDict
     import db_main
     data = OrderedDict()
     prices_list = db_main.get_prices_list(agent) # Спокойно принимает None
     print_list = []
-    print_list.append(["Material",
-                       "Price",
-                       "Currency"])
+    print_list.append([u"Материал",
+                       u"Цена",
+                       u"Валюта",
+                       u"Условия платежа"])
     for pr_i in prices_list:
         if pr_i.is_for_group:
             mat_name = unicode(pr_i.material_type)
@@ -47,11 +47,71 @@ def report_on_prices(agent=None):
             mat_name = unicode(pr_i.material)
         print_list.append([mat_name,
                            pr_i.price_value,
-                           pr_i.payterm.ccy_quote])
+                           pr_i.payterm.ccy_quote,
+                           pr_i.payterm.payterm_name])
     data.update({'Prices': print_list})
     report_name = temp_dir+_tmpname() + "_prices.ods"
     save_data(report_name, data)
     os.startfile(report_name)
+
+def report_on_all_client_prices():
+    from pyexcel_ods import save_data
+    from collections import OrderedDict
+    import db_main
+    data = OrderedDict()
+    prices_list = db_main.get_sell_prices()
+    print_list = []
+    print_list.append([u"Материал",
+                       u"Цена",
+                       u"Валюта",
+                       u"Условия платежа"])
+    for pr_i in prices_list:
+        if pr_i.is_for_group:
+            mat_name = unicode(pr_i.material_type)
+        else:
+            mat_name = unicode(pr_i.material)
+        print_list.append([mat_name,
+                           pr_i.price_value,
+                           pr_i.payterm.ccy_quote,
+                           pr_i.payterm.payterm_name])
+    data.update({'Prices': print_list})
+    report_name = temp_dir+_tmpname() + "_prices.ods"
+    save_data(report_name, data)
+    os.startfile(report_name)
+
+def report_on_all_supplier_prices():
+    from pyexcel_ods import save_data
+    from collections import OrderedDict
+    import db_main
+    data = OrderedDict()
+    prices_list = db_main.get_buy_prices()
+    print_list = []
+    print_list.append([u"Материал",
+                       u"Цена",
+                       u"Валюта",
+                       u"Incoterms",
+                       u"Условия платежа",
+                       u"Особые условия"])
+    for pr_i in prices_list:
+        spec_cond = u''
+        if pr_i.is_only_for_sp_client:
+            spec_cond += u' только для ' + unicode(pr_i.for_client)
+        if pr_i.is_for_group:
+            mat_name = unicode(pr_i.material_type)
+        else:
+            mat_name = unicode(pr_i.material)
+        print_list.append([mat_name,
+                           pr_i.price_value,
+                           pr_i.payterm.ccy_quote,
+                           pr_i.incoterms_place,
+                           pr_i.payterm.payterm_name,
+                           spec_cond])
+    data.update({'Prices': print_list})
+    report_name = temp_dir+_tmpname() + "_prices.ods"
+    save_data(report_name, data)
+    os.startfile(report_name)
+
+
 
 def print_offer(agent_client):
     from docx import Document

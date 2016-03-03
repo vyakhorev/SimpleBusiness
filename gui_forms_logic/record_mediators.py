@@ -129,6 +129,12 @@ class cMedPrice(cAbstRecordMediator):
         self.add_field(price_value, 'price_value', u'Цена', 'string')
 
     def _build_HTML(self):
+        # Важные условия - со склада ли цена или нет
+        if self.record.is_per_order_only:
+            delivery_terms = u'Только <b>под заказ</b>'
+        else:
+            delivery_terms = u'Для срочных заказов <b>со склада</b>'
+
         # Условия платежа
         payterm = self.record.payterm
         if payterm.ccy_quote <> payterm.ccy_pay:
@@ -155,7 +161,7 @@ class cMedPrice(cAbstRecordMediator):
         if not(self.record.nonformal_conditions is None):
             nonformal = self.record.nonformal_conditions
 
-        self.html_text = payterm_desc + u"<br>" + nonformal
+        self.html_text = delivery_terms + u"<br>" + payterm_desc + u"<br>" + nonformal
 
 class cMedMatFlow(cAbstRecordMediator):
     def _reset_fields(self):
@@ -165,14 +171,17 @@ class cMedMatFlow(cAbstRecordMediator):
         super(cMedMatFlow, self)._reset_fields()
         if self.record.stats_mean_volume == 0:
             return
+
+        cons_vol = str(round(self.record.stats_mean_volume,0)) + u' ' + self.record.material_type.measure_unit
+        cons_vol += u' +/-' + str(round(self.record.stats_std_volume/100.0, 0))
+        cons_freq = u'каждые ' + str(round(self.record.stats_mean_timedelta,0)) + u' дней'
+        cons_freq += u' +/-' + str(round(self.record.stats_std_timedelta, 0))
+
         self.add_field(self.record.material_type, 'material_type', u'Товар', 'string')
-        self.add_field(self.record.stats_mean_volume, 'stats_mean_volume', u'Объем потребления', 'float')
-        self.add_field(self.record.stats_mean_timedelta, 'stats_mean_timedelta', u'Частота потребления', 'float')
+        self.add_field(cons_vol, 'stats_mean_volume', u'Объем потребления', 'string')
+        self.add_field(cons_freq, 'stats_mean_timedelta', u'Частота потребления', 'string')
 
     def _build_HTML(self):
-        # s = u'Распределение <b>вероятностей</b>:<br>'
-        # for md_i in self.record.material_dist:
-        #     s += md_i.material.material_name + u' : ' + unicode(md_i.choice_prob) + '<br>'
         s = u''
         if self.record.stats_mean_volume == 0:
             s += unicode(self.record.material_type) + u' - поставки прекращены'
@@ -181,10 +190,25 @@ class cMedMatFlow(cAbstRecordMediator):
 
         if not(self.record.next_expected_shipment_date is None):
             next_date = self.record.next_expected_shipment_date
-            s += u'Следующий заказ ожидается ' + next_date.strftime('%x')
+            s += u'Следующий заказ ожидается (дата отгрузки)' + next_date.strftime('%d %b %y')
         else:
-            s += u'Дата ожидаемого заказа не задана'
-        # TODO: расшифровать economy_orders_share на две суммы (со склада и напрямую)
+            s += u'Дата ожидаемой отгрузки не задана'
+
+        s+= u'<br>'
+
+        if not(self.record.last_shipment_date is None):
+            s+= u'Дата последней отгрузки ' + self.record.last_shipment_date.strftime('%d %b %y')
+            s+= u'<br>'
+
+        if self.record.economy_orders_share == 1.0:
+            s+= u'Только <b>под заказ</b>'
+        elif self.record.economy_orders_share == 0.0:
+            s+= u'Только <b>со склада</b>'
+        else:
+            econ_shar = self.record.economy_orders_share*100.
+            wh_shar = 100. - econ_shar
+            s+= u'Часть заказов <b>со склада</b> (%.0f%%), остальное <b>напрямую</b> (%.0f%%)' % (wh_shar, econ_shar)
+
         self.html_text = s
 
 class cMedSalesLead(cAbstRecordMediator):
@@ -200,8 +224,8 @@ class cMedSalesLead(cAbstRecordMediator):
     def _build_HTML(self):
         s = u'Вероятность успеха: <b>' + str(self.record.success_prob) + u'</b><br>'
         s+= u'Уверенность: <b>' + str(self.record.sure_level) + u'</b><br>'
-        s+= u'Начало продаж: <b>' + str(self.record.expected_start_date_from) + u" - "
-        s+= str(self.record.expected_start_date_till) + u'</b><br>'
+        s+= u'Начало продаж: <b>' + self.record.expected_start_date_from.strftime('%d %b %y') + u" - "
+        s+= self.record.expected_start_date_till.strftime('%d %b %y') + u'</b><br>'
         if self.record.instock_promise:
             s+= u'Обещаем держать на складе'
         self.html_text = s
@@ -224,8 +248,8 @@ class cMedKnBaseRecord(cAbstRecordMediator):
     # Полей нет
     def _build_HTML(self):
         s = u""
-        s += self.record.date_added.strftime('%x') + u"  " + self.record.headline + u'<br>'
-        s += u'<b>' + self.record.hashtags_string + u'</b><br>'
+        s += self.record.date_added.strftime('%d %b %y') + u" <u>" + self.record.headline + u'</u><br>'
+        s += u'<i>' + self.record.hashtags_string + u'</i><br>'
         s += self.record.long_html_text
         self.html_text = s
 

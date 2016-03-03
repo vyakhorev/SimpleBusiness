@@ -285,7 +285,7 @@ class gui_DialogCrm_EditSimpleRecord(QtGui.QDialog, Ui_DialogCrm_EditSimpleRecor
             # Собираем переменную и в базу
             if self.my_mode == 0: #Новый
                 self.record_entity = db_main.c_crm_record()
-                self.record_entity.date_added = datetime.date.today()
+                self.record_entity.date_added = datetime.datetime.now()
             self.record_entity.match_with_tags(record_tags)
             self.record_entity.fix_hashtag_text() #подобранные тэги записываются в строку для быстрого доступа
             self.record_entity.long_html_text = unicode(self.textEdit_longtext.toHtml(), encoding='utf-8')

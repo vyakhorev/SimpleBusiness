@@ -99,6 +99,14 @@ def get_prices_list(agent_model = None):
             for pr_i in the_session_handler.get_active_session().query(c_sell_price).filter_by(client_model_rec_id = agent_model.rec_id).all():
                 yield pr_i
 
+def get_sell_prices():
+    for pr_i in the_session_handler.get_all_objects_list_iter(c_sell_price):
+        yield pr_i
+
+def get_buy_prices():
+    for pr_i in the_session_handler.get_all_objects_list_iter(c_buy_price):
+        yield pr_i
+
 def get_payment_terms():
     for pay_term_i in the_session_handler.get_all_objects_list_iter(c_payment_terms):
         yield pay_term_i
@@ -139,9 +147,9 @@ def get_records_list():
 def get_records_list_iter():
     return the_session_handler.get_all_objects_list_iter(c_crm_record)
 
-def get_records_list_iter_from_hashtag(tag_i):
-    for rec_i in tag_i.records:
-        yield rec_i
+# def get_records_list_iter_from_hashtag(tag_i):
+#     for rec_i in tag_i.records:
+#         yield rec_i
 
 def get_records_list_andfilt_by_hashtags(hashtags):
     #вход - список объектов-хештегов. Выход - общие записи. Пришлось циклом. Благо оно ленивое и не всё грузится.
@@ -461,7 +469,6 @@ def get_shipments_history(client, material_group):
     return aggregate_shipments(fact_shipments_list)
 
 
-
 def get_hashtags_from_names(hashcode_list):
     #Получаем лист имен хэштегов и возвращаем инстансы базы (только существующие)
     found_hashtags = []
@@ -470,8 +477,6 @@ def get_hashtags_from_names(hashcode_list):
     return found_hashtags
 
 """ А вот эти надо сделать сильно проще """
-
-
 
 def init_system_from_database(the_devs):
     list_to_read = connected_to_DEVS.__subclasses__()

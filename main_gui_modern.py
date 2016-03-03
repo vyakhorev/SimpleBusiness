@@ -244,7 +244,7 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         header.set_key('Prices')
         header.set_label(u'Цены')
         header.add_call('report_prices_cp', u'Excel', cp)
-        header.add_call('report_print_offer', u'Offer (doc)', cp)
+        #header.add_call('report_print_offer', u'Offer (doc)', cp) #TODO
         header.add_call('dlg_add_price', u'+Добавить', cp)
         yield header
         for pr_i in db_main.get_prices_list(cp):
@@ -837,10 +837,10 @@ class gui_MainWindow(QtGui.QMainWindow, Ui_MainWindowModern):
         file_reports.print_offer(cp)
 
     def report_sale_prices_all(self):
-        print('reporting!')
+        file_reports.report_on_all_client_prices()
 
     def report_invoce_prices_all(self):
-        print('reporting!')
+        file_reports.report_on_all_supplier_prices()
 
     def report_sales_forecast(self):
         print('reporting!')
