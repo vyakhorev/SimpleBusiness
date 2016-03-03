@@ -1,13 +1,13 @@
-"""Added shipment date and economy share features
+"""Adding econshare and budget logics to matflows
 
-Revision ID: 1fd382fcc0b0
+Revision ID: 8533b41e6cdd
 Revises: 
-Create Date: 2016-02-28 17:23:26.876000
+Create Date: 2016-03-03 17:36:48.302000
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '1fd382fcc0b0'
+revision = '8533b41e6cdd'
 down_revision = None
 branch_labels = None
 depends_on = None

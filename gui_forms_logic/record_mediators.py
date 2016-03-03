@@ -204,6 +204,8 @@ class cMedMatFlow(cAbstRecordMediator):
             s+= u'Только <b>под заказ</b>'
         elif self.record.economy_orders_share == 0.0:
             s+= u'Только <b>со склада</b>'
+        elif self.record.economy_orders_share is None:
+            pass
         else:
             econ_shar = self.record.economy_orders_share*100.
             wh_shar = 100. - econ_shar

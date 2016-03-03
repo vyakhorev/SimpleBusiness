@@ -197,14 +197,19 @@ def get_dynamic_crm_records_iterator():
 def get_dynamic_crm_records_iterator_by_hashtag(hashtag):
     '''
     Итератор, подгружающий базу заметок по хештегу худо-бедно экономно и динамически
+    (можно получше сделать, из таблички..)
     '''
-    # s = the_session_handler.get_active_session()
-    # q = 'SELECT crm_record.rec_id FROM crm_record WHERE hashtags_string LIKE '%бюджет%' ORDER BY crm_record.date_added DESC'
-    # ids = s.execute(q)
-    # for id_i in ids:
-    #     yield s.query(c_crm_record).get(id_i.rec_id)
-    for rec_i in hashtag.records:
-        yield rec_i
+    s = the_session_handler.get_active_session()
+    ids = s.execute('SELECT crm_record.rec_id FROM crm_record ORDER BY crm_record.date_added DESC')
+    for id_i in ids:
+        rec_i = s.query(c_crm_record).options(lazyload('*')).get(id_i.rec_id)
+        if _match_crm_record_to_hashtag(rec_i, hashtag):
+            yield rec_i
+
+def _match_crm_record_to_hashtag(rec_i, hashtag):
+    search_string_l = hashtag.hashtext().lower()
+    if search_string_l in rec_i.hashtags_string.lower():
+        return True
 
 def get_dynamic_crm_records_iterator_search(search_string):
     s = the_session_handler.get_active_session()
