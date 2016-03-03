@@ -449,10 +449,10 @@ class c_read_dynamic_data_from_1C_task(c_task):
         tree = ElementTree.parse(self.xml_file_path)
         root = tree.getroot()
         priority_list = []  # Заполняем список того, что хотим сделать
-        priority_list.append(["Inventory", xml_LoadWarehousePosition, 1, the_WH]) #1 - commit, 0 - no commit till end of routine
-        priority_list.append(["Money", xml_LoadMoney, 1, the_BANK])
+        #priority_list.append(["Inventory", xml_LoadWarehousePosition, 1, the_WH]) #1 - commit, 0 - no commit till end of routine
+        #priority_list.append(["Money", xml_LoadMoney, 1, the_BANK])
         priority_list.append(["ClientOrders", xml_LoadClientOrder, 0, None])
-        priority_list.append(["ShipmentProjects", xml_LoadShipmentProject, 0, None])
+        #priority_list.append(["SupplierOrders", xml_LoadSupplierOrder, 0, None])
         for (nodename, load_function, do_commit, cont_i) in priority_list:
             for child1 in root.iter(nodename):
                 yield c_msg(u"загружаю " + nodename)
@@ -526,15 +526,16 @@ def xml_LoadClientOrder(xml_node):
 
     nappend(msgs, attr_ch(cl_ord, "DocDate", convert_str_2_date(xml_node.attrib['OrderDate'])))
     nappend(msgs, attr_ch(cl_ord, "DateShipmentScheduled", convert_str_2_date(xml_node.attrib['DateWhenDone'])))
-    nappend(msgs, attr_ch(cl_ord, "MadePrepayments", convert(xml_node.attrib['PrepaymentMade'])))
-    nappend(msgs, attr_ch(cl_ord, "MadePostpayments", convert(xml_node.attrib['PostpaymentMade'])))
+    # TODO: alternate DB schema and delete MadePrepayments, MadePostpayments
+    # nappend(msgs, attr_ch(cl_ord, "MadePrepayments", convert(xml_node.attrib['PrepaymentMade'])))
+    # nappend(msgs, attr_ch(cl_ord, "MadePostpayments", convert(xml_node.attrib['PostpaymentMade'])))
     nappend(msgs, attr_ch(cl_ord, "AgreementName", unicode(xml_node.attrib['Specification'])))
-    sh_date = convert_str_2_date(xml_node.attrib['DateShipped'])
-    if type(sh_date) == datetime.datetime:
-        nappend(msgs, attr_ch(cl_ord, "IsShipped", True))
-        nappend(msgs, attr_ch(cl_ord, "DateFactShipment", sh_date))
-    elif sh_date == 0:
-        nappend(msgs, attr_ch(cl_ord, "IsShipped", False))
+    # sh_date = convert_str_2_date(xml_node.attrib['DateShipped'])
+    # if type(sh_date) == datetime.datetime:
+    #     nappend(msgs, attr_ch(cl_ord, "IsShipped", True))
+    #     nappend(msgs, attr_ch(cl_ord, "DateFactShipment", sh_date))
+    # elif sh_date == 0:
+    #     nappend(msgs, attr_ch(cl_ord, "IsShipped", False))
     list_with_items = list()
     for item_i in xml_node:
         if item_i.tag == "ordered_position":
@@ -543,8 +544,7 @@ def xml_LoadClientOrder(xml_node):
                 it_i = the_session_handler.get_account_system_object(c_material, it_i_code)
                 item_qtty = convert(item_i.attrib['Qtty'])
                 item_price = convert(item_i.attrib['Price'])
-                #TODO: export VAT rates
-                vat_rate = 0.18
+                vat_rate = convert(item_i.attrib['VAT_rate_above'])/100
                 list_with_items += [[it_i, item_qtty, item_price, vat_rate]]
             else:
                 msgs += [u"ошибка: не найден товар %s для заказа %s"%(it_i_code, cl_ord.account_system_code)]
@@ -556,13 +556,12 @@ def xml_LoadClientOrder(xml_node):
     else:
         for pos_list_i in list_with_items:
             cl_ord.add_position(pos_list_i[0], pos_list_i[1], pos_list_i[2], pos_list_i[3])
-        cl_ord.build_order_steps()
+        #cl_ord.build_order_steps()
     return [1, msgs]
 
 @synch_error_handler
 def xml_LoadSupplierOrder(xml_node):
-    #TODO: наверное, лучше сделать метод самопроверки и обновления всех этапов
-    #TODO: прямо тут этапы обновлять (но без прямого доступа к этапам - через методы)
+    msgs = []
     #Считываем строки
     account_system_code = unicode(xml_node.attrib['account_system_code'])
     #Проверяем, нету ли в системе такого заказа. Если нет, то создается:
@@ -570,7 +569,7 @@ def xml_LoadSupplierOrder(xml_node):
     sup_ord = the_session_handler.recieve_account_system_object(c_project_supplier_order,account_system_code)
     #Поставщик
     supplier_code = unicode(xml_node.attrib['supplier_system_code'])
-    a_supplier = the_session_handler.get_account_system_object(c_supplier_model, supplier_code)
+    a_supplier = the_session_handler.get_account_system_object(c_agent, supplier_code)
     sup_ord.supplier_model = a_supplier
     #Условия платежа
     payment_cond_code = unicode(xml_node.attrib['PaymentTerms_code'])
@@ -583,15 +582,16 @@ def xml_LoadSupplierOrder(xml_node):
     #Прочие детали
     sup_ord.DocDate = convert_str_2_date(xml_node.attrib['OrderDate'])
     sup_ord.DateShipmentScheduled = convert_str_2_date(xml_node.attrib['DateWhenDone'])
-    sup_ord.MadePrepayments = convert(xml_node.attrib['PrepaymentMade'])
-    sup_ord.MadePostpayments = convert(xml_node.attrib['PostpaymentMade'])
+    # TODO: alternate db and kill these
+    # sup_ord.MadePrepayments = convert(xml_node.attrib['PrepaymentMade'])
+    # sup_ord.MadePostpayments = convert(xml_node.attrib['PostpaymentMade'])
     sup_ord.AgreementName = unicode(xml_node.attrib['Specification'])
-    sh_date = convert_str_2_date(xml_node.attrib['DateShipped'])
-    if type(sh_date) == datetime.datetime:
-        sup_ord.IsShipped = True
-        sup_ord.DateFactShipment = sh_date
-    elif sh_date == 0:
-        sup_ord.IsShipped = False
+    # sh_date = convert_str_2_date(xml_node.attrib['DateShipped'])
+    # if type(sh_date) == datetime.datetime:
+    #     sup_ord.IsShipped = True
+    #     sup_ord.DateFactShipment = sh_date
+    # elif sh_date == 0:
+    #     sup_ord.IsShipped = False
     #Обновляем список материалов
     list_with_items = list()
     for item_i in xml_node:
@@ -600,8 +600,7 @@ def xml_LoadSupplierOrder(xml_node):
             it_i = the_session_handler.get_account_system_object(c_material, it_i_code)
             item_qtty = convert(item_i.attrib['Qtty'])
             item_price = convert(item_i.attrib['Price'])
-            #TODO: export VAT rates
-            vat_rate = 0.18
+            vat_rate = convert(item_i.attrib['VAT_rate_above'])/100
             list_with_items += [[it_i, item_qtty, item_price, vat_rate]]
     if does_the_proj_exist: #Проект уже существует в базе. Передаем его целиком в заказ - он будет синхронизироваться
         sup_ord.synchronize_positions_with_a_list(list_with_items)
@@ -609,7 +608,7 @@ def xml_LoadSupplierOrder(xml_node):
         for pos_list_i in list_with_items:
             sup_ord.add_position(pos_list_i[0], pos_list_i[1], pos_list_i[2], pos_list_i[3])
         #Строим шаги проекта
-        sup_ord.build_order_steps()
+        #sup_ord.build_order_steps()
     return [1, msgs]
 
 @synch_error_handler

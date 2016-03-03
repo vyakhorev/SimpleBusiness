@@ -131,7 +131,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         if self.my_mf_entity.economy_orders_share is None:
             self.horizontalSlider_EconomyShare.setValue(0.)
         else:
-            self.horizontalSlider_EconomyShare.setValue(self.my_mf_entity.economy_orders_share*100)
+            self.horizontalSlider_EconomyShare.setValue((1.0-self.my_mf_entity.economy_orders_share)*100)
 
     def run_dialog(self):
         user_decision = self.exec_()  #0 или 1
@@ -192,7 +192,7 @@ class gui_Dialog_EditMatFlow(QtGui.QDialog, Ui_Dialog_EditMatFlow):
         self.my_mf_entity.stats_mean_volume = cons_expectation
         # Проценты только после заполнения объёма
         self.my_mf_entity.set_volume_std_from_proc(cons_deviation)
-        self.my_mf_entity.economy_orders_share = economy_share
+        self.my_mf_entity.economy_orders_share = 1.0 - economy_share # Ошибся называя переменную
 
         self.my_mf_entity.next_expected_shipment_date = next_date_prediction
 
