@@ -113,7 +113,7 @@ class cAbstRecordMediator(cSimpleMediator):
 ############
 
 class cMedPrice(cAbstRecordMediator):
-    # HTML нет
+
     def _reset_fields(self):
         super(cMedPrice, self)._reset_fields()
         price_value = unicode(self.record.price_value) + " " + unicode(self.record.payterm.ccy_quote)
@@ -130,10 +130,16 @@ class cMedPrice(cAbstRecordMediator):
 
     def _build_HTML(self):
         # Важные условия - со склада ли цена или нет
-        if self.record.is_per_order_only:
-            delivery_terms = u'Только <b>под заказ</b>'
-        else:
-            delivery_terms = u'Для срочных заказов <b>со склада</b>'
+        delivery_terms = u''
+        if self.record.discriminator == 'sell_price':
+            if self.record.is_per_order_only:
+                delivery_terms += u'Только <b>под заказ</b>'
+            else:
+                delivery_terms += u'Для срочных заказов <b>со склада</b>'
+        elif self.record.discriminator == 'buy_price':
+            delivery_terms += u'<b>' + self.record.incoterms_place + u'</b>'
+            if self.record.is_only_for_sp_client:
+                delivery_terms += u' только для <b>' + unicode(self.record.for_client) + u'</b>'
 
         # Условия платежа
         payterm = self.record.payterm
@@ -155,6 +161,9 @@ class cMedPrice(cAbstRecordMediator):
         for t, p in payterm.payterm_stages.get_postpayments():
             prepaym += u"оплата %d%% через %d дней; "%(int(p), int(t))
         payterm_desc = u"Расчеты в %s; %s %s"%(ccy, prepaym, postpaym)
+
+        if self.record.is_agent_scheme:
+            payterm_desc = u'<b>Агентская</b> схема, ' + payterm_desc
 
         # Неформальные условия
         nonformal = ""
