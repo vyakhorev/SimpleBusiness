@@ -1,0 +1,16 @@
+python_docx == 0.8.5
+matplotlib == 1.4.3
+numpy == 1.9.2
+pandas == 0.16.2
+pdfminer == 20140328
+PyDocX == 0.9.5
+pyexcel_ods == 0.1.0
+pyzmail == 1.0.3
+scipy == 0.15.1
+simpy == 3.0.8
+SQLAlchemy == 1.0.6
+unittest2 == 1.0.1
+BeautifulSoup == 3.2.1
+PyQt4 == 4.11.4
+admin_scripts == 0.3.15
+docx == 0.2.4

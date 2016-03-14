@@ -407,7 +407,6 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
                 sh_date = sh_date + timestep
 
     def get_next_order_date_expectation(self):
-        #gui А?
         if self.stats_mean_volume > 0 and self.is_active:
             if not self.next_expected_shipment_date is None:
                 return self.next_expected_shipment_date
@@ -456,6 +455,16 @@ class c_material_flow(BASE, abst_key, connected_to_DEVS):
                 new_md = c_material_flow_matdist(material_flow = self, material = mat_i, choice_prob = prob_i)
                 self.material_dist += [new_md]
                 tmp_mat_dict[mat_i] = new_md
+
+    def propose_todos(self):
+        # helps to generate reminders in todoist (or any other platform I choose..)
+        # returns a list with a single dictionary that corresponds to a reminder
+        next_todo = {}
+        next_todo["date"] = self.get_next_order_date_expectation()
+        next_todo["label"] = self.client_model.name + u" - план отгрузки " + self.material_type.material_type_name
+        todos = [next_todo]
+        return todos
+
 
     def prepare_for_simulation(self):
         if self.disconnected_from_session:
@@ -2292,7 +2301,6 @@ class c_fact_payment(BASE):
 
     def __repr__(self):
         return 'A [c_fact_payment] of type ' + self.paytype.name
-
 
 class c_dummy(object):
     # Пустой объект для фиксации аттрибутов

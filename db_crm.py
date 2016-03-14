@@ -15,6 +15,8 @@ records_to_hastags = Table('crm_records_to_hastags', BASE.metadata,
                            Column('hash_id', Integer, ForeignKey('crm_hastag.rec_id')),
                            PrimaryKeyConstraint('rec_id', 'hash_id'))
 
+# Hashtags and records
+
 class c_hastag(BASE, abst_key):
     __tablename__ = "crm_hastag"
     rec_id = Column(Integer, primary_key=True)
@@ -176,6 +178,22 @@ class c_crm_contact_details(BASE, abst_key):
         self.cont_type = a_dict['cont_type']
         self.cont_value = a_dict['cont_value']
         self.is_type_fixed = a_dict['is_type_fixed']
+
+# ToDoIst mechanics
+
+class c_todo_item(BASE, abst_key):
+    __tablename__ = "crm_todo_item"
+    rec_id = Column(Integer, primary_key=True)
+    parent_object_id = Column(String(255))  # string_key() of todoing instance
+    label = Column(Unicode(255))
+    description = Column(UnicodeText)
+    marks = Column(PickleType) # Лист со строками, без "@"
+    project_name = Column(Unicode(255)) # Если пусто, то в inbox
+    is_active = Column(Boolean)
+    due_date = Column(DateTime)
+
+# crm message templates are below
+
 
 def crm_template_priceoffer(client):
     s = u"<b>Коммерческие предложения клиенту (#Офер)</b><br>"
@@ -403,7 +421,6 @@ def crm_template_change_sales_lead(old_lead, new_lead):
     elif old_lead.sure_level < new_lead.sure_level:
         s += u"Получена уточняющая информация: <...> <br>"
     return s, headline
-
 
 def crm_template_material_request(client = None, a_mat_flow = None):
     if client is None and a_mat_flow is not None:

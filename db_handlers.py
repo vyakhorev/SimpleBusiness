@@ -16,6 +16,7 @@ from sqlalchemy.orm import subqueryload, immediateload, joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from simple_locale import ultimate_encoding
 from sqlalchemy.orm import with_polymorphic
+
 import traceback
 import gl_shared
 

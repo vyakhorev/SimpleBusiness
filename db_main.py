@@ -390,6 +390,34 @@ def get_default_price_terms(agent_model):
     else:
         return None
 
+def update_todos_with_object(todoing):
+    # receives a todoing inheritor, gets the dictionary with proposed todos,
+    # checks the database - does everything comply.
+    # in case updates required, returns a dict with updates.
+    # todoing instance must inherit abst_key as well
+    if not hasattr(todoing, 'propose_todos'):
+        raise BaseException('Not supposed to see this class instance here')
+
+    todo_proposed_schedule = todoing.propose_todos() # dictionaries
+    todo_active_schedule = get_todo_schedule(todoing) # c_todo_item instances
+
+    # TODO: а здесь можно просто старые удалить и новые записать, если есть отличия по датам
+
+
+
+
+def get_todo_schedule(todoing):
+    # все ремайндеры хранятся в crm_todo_item. Для объекта их можно подобрать по
+    # object_id - это string_key() - метод abst_key.
+    key_for_search = todoing.string_key()
+    sess = the_session_handler.get_active_session()
+    q = sess.query(c_todo_item)
+    q.filter(c_todo_item.parent_object_id == key_for_search)
+    q.filter(c_todo_item.is_active == True)
+    active_todos = q.all()
+    return active_todos
+
+
 
 ###########################################################
 
